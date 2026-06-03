@@ -223,7 +223,6 @@ export default function Page() {
         </section>
       </main>
 
-      <Footer />
     </div>
   );
 }
