@@ -1,228 +1,74 @@
-# ☕ Cafe Digitalization System (MERN Stack)
+# ☕ RR Cafe Management System
 
-A professional **Cafe Digitalization Web Application** built using the MERN stack.
-This system allows customers to view the menu, place orders, and enables the admin to manage menu items and orders efficiently.
-
----
-
-# 🚀 Features
-
-### Customer Side
-
-* View digital cafe menu
-* Browse food items
-* Place orders
-* Responsive landing page
-
-### Admin Side
-
-* Add menu items
-* Edit / Delete menu items
-* Manage orders
-* View order status
+A modern and responsive Café Management System built using React / Next.js.  
+This project helps manage café menu, customers, orders, and billing in an easy and efficient way.
 
 ---
 
-# 🛠 Tech Stack
+## 🚀 Features
 
-Frontend
+### 🏠 Home Page
+- Attractive landing page with café branding
+- Hero section with modern UI
+- Featured menu items display
+- Smooth navigation between pages
 
-* React.js
+### 🍽️ Menu Management
+- Add, update, delete, and view menu items
+- Categories like Coffee, Tea, Snacks, Drinks, etc.
+- Price and image support for each item
+- Easy menu organization
 
-Backend
+### 🧑‍💼 Customer Management
+- Add and manage customer details
+- View customer list
+- Edit or delete customer records
 
-* Node.js
-* Express.js
+### 📦 Order Management
+- Place new orders from menu
+- Track order status (Pending / Preparing / Completed)
+- View order history
+- Easy order handling system
 
-Database
+### 💰 Billing System
+- Automatic bill calculation
+- Total price generation
+- Simple invoice format
+- Printable bill support
 
-* MongoDB
+### 🛠️ Admin Dashboard
+- Full control panel for admin
+- Manage menu, orders, and customers
+- Clean and user-friendly interface
 
----
+### 📊 Reports (Optional)
+- Daily sales report
+- Popular item tracking
+- Revenue overview
 
-# 📁 Project Structure
-
-```
-cafe-digitalization
-│
-├── client
-│
-└── server
-```
-
----
-
-# 📂 Frontend Structure (client)
-
-```
-client
-│
-├── public
-│   └── index.html
-│
-├── src
-│
-│   ├── assets
-│   │   ├── images
-│   │   └── icons
-│
-│   ├── components
-│   │   ├── Navbar.jsx
-│   │   ├── Hero.jsx
-│   │   ├── MenuCard.jsx
-│   │   ├── ReviewCard.jsx
-│   │   └── Footer.jsx
-│
-│   ├── pages
-│   │   ├── Home.jsx
-│   │   ├── Menu.jsx
-│   │   ├── About.jsx
-│   │   ├── Contact.jsx
-│   │   └── Order.jsx
-│
-│   ├── services
-│   │   └── api.js
-│
-│   ├── context
-│   │   └── AuthContext.jsx
-│
-│   ├── styles
-│   │   └── main.css
-│
-│   ├── App.jsx
-│   └── main.jsx
-│
-└── package.json
-```
+### 🌐 UI/UX Features
+- Fully responsive design (Mobile + Desktop)
+- Modern UI with Tailwind CSS / CSS
+- Fast performance
+- Clean and simple navigation
 
 ---
 
-# ⚙️ Backend Structure (server)
+## 🧰 Tech Stack
 
-```
-server
-│
-├── config
-│   └── db.js
-│
-├── controllers
-│   ├── menuController.js
-│   ├── orderController.js
-│   └── userController.js
-│
-├── models
-│   ├── Menu.js
-│   ├── Order.js
-│   └── User.js
-│
-├── routes
-│   ├── menuRoutes.js
-│   ├── orderRoutes.js
-│   └── userRoutes.js
-│
-├── middleware
-│   └── authMiddleware.js
-│
-├── utils
-│   └── helpers.js
-│
-├── server.js
-└── package.json
-```
+- React.js / Next.js
+- Node.js (if backend included)
+- Express.js
+- MongoDB / JSON Storage
+- Tailwind CSS / CSS
+- Leaflet (for map/location feature if used)
 
 ---
 
-# 🗄 Database Models
+## ⚙️ Installation
 
-### Menu
-
-```
-name
-price
-category
-image
-description
-```
-
-### Order
-
-```
-customerName
-items
-tableNumber
-totalPrice
-status
-date
-```
-
-### User
-
-```
-name
-email
-password
-role
-```
-
----
-
-# 🔗 API Routes
-
-```
-GET     /api/menu
-POST    /api/menu
-
-GET     /api/orders
-POST    /api/orders
-
-POST    /api/login
-POST    /api/register
-```
-
----
-
-# ▶️ Installation
-
-Clone the repository
-
-```
-git clone https://github.com/yourusername/cafe-digitalization.git
-```
-
-### Install Frontend
-
-```
-cd client
+```bash
+git clone https://github.com/your-username/rr-cafe.git
+cd rr-cafe
 npm install
 npm run dev
-```
-
-### Install Backend
-
-```
-cd server
-npm install
-npm run start
-```
-
----
-
-# 🌐 Future Improvements
-
-* QR Code Menu
-* Online Payment Integration
-* Real-time Order Tracking
-* Admin Analytics Dashboard
-
----
-
-# 👨‍💻 Author
-
-Shyam Thakuri
-BCA Student | Nepal 🇳🇵
-
----
-
-# ⭐ Support
-
-If you like this project, please give it a **star ⭐ on GitHub**.
