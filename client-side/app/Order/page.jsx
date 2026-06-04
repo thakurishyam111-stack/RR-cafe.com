@@ -113,6 +113,12 @@ export default function OrderPage() {
 const handleSubmit = async (e) => {
   e.preventDefault();
 
+const phoneRegex = /^(97|98)\d{8}$/;
+
+if (!phoneRegex.test(phone)) {
+  alert("Invalid phone number. ");
+  return;
+}
   const selectedItems = cart.filter(
     (item) => item.quantity > 0
   );
@@ -149,6 +155,7 @@ const handleSubmit = async (e) => {
     alert("Order failed");
   }
 };
+
 
   // Loading
   if (loading) {
@@ -465,6 +472,7 @@ const handleSubmit = async (e) => {
               />
               <input
                 type="number"
+                pattern="^(97|98)[0-9]{8}$"
                 placeholder="Table Number"
                 value={number}
                 onChange={(e) =>

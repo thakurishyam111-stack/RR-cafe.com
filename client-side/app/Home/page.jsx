@@ -5,6 +5,7 @@ import Dashbord from "@/components/Dashbord";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import Today from "@/components/Today";
+import Map from "@/components/Map";
 import { Clock, Wifi } from "lucide-react";
 
 export default function Page() {
@@ -99,7 +100,7 @@ export default function Page() {
             </div>
           </div>
         </section>
-
+<Map/>
         <section className="mt-12 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
           <article className="rounded-[1.75rem] border border-slate-200 bg-white p-8 shadow-sm">
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-amber-700">

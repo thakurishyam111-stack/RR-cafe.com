@@ -158,11 +158,12 @@ export default function AdminDashboard() {
             <ShoppingCart size={20} />
             Orders
           </div>
-
+<Link href="/Admin/Menu" className="flex items-center gap-3 hover:bg-gray-800 p-3 rounded-xl">
   <div className="flex items-center gap-3 hover:bg-gray-800 p-3 rounded-xl cursor-pointer">
     <Coffee size={20} />
     Menu
   </div>
+</Link>
 
           <div className="flex items-center gap-3 hover:bg-gray-800 p-3 rounded-xl">
             <Wallet size={20} />
