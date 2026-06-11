@@ -9,6 +9,7 @@ import {
   Mail,
   ShieldCheck,
 } from 'lucide-react'
+import Link from 'next/link'
 
 const Page = () => {
 
@@ -258,17 +259,22 @@ localStorage.setItem("adminToken", data.token);
           </form>
 
           {/* Footer */}
-          <div className="mt-8 text-center text-gray-400 text-sm">
+        
+            <div className="flex items-center my-6">
+              <div className="flex-1 border-t-2 border-gray-300"></div>
+              <span className="px-4 text-white text-lg">or</span>
+              <div className="flex-1 border-t-2 border-gray-300"></div>
+            </div>
 
-            Secure Admin Access • RR Cafe
-
+            <p className="text-center text-white">
+              Don't have an account? <Link href="/Admin/Register" className="text-blue-400 hover:text-blue-800 font-semibold">Sign Up</Link>
+            </p>
           </div>
 
         </div>
 
       </div>
 
-    </div>
   )
 }
 

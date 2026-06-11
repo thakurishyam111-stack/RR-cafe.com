@@ -46,14 +46,14 @@ export default function Footer() {
         </div>
 
         <div className="space-y-3 text-sm text-white">
-          <p className="font-semibold text-green-600 text-2xl">Opening Hours</p>
+          <p className="font-semibold text-white text-2xl">Opening Hours</p>
           <p>Monday – Friday: 8am – 10pm</p>
           <p>Saturday – Sunday: 8am – 11pm</p>
           <p>Holiday brunch service available</p>
         </div>
 
         <div className="space-y-3 text-sm text-white">
-          <p className="font-semibold text-green-600 text-2xl">Contact</p>
+          <p className="font-semibold text-white text-2xl">Contact</p>
           <p>Phone: +91 98765 43210</p>
           <p>Email: hello@caferoyale.com</p>
           <p>Follow us on Instagram @CafeRoyale</p>

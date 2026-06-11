@@ -5,7 +5,7 @@ import { Bell, Home, Menu, User } from "lucide-react";
 
 export default function Navbar() {
   return (
-    <header className="sticky top-0 z-40 bg-black/50 text-white  rounded-xl shadow-lg">
+    <header className="sticky top-0 z-40 bg-gray-100 text-gray-950  rounded-xl shadow-lg">
       <div className="mx-auto flex flex-wrap items-center justify-between  px-6 py-4 sm:px-8">
         <img
           src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQPxFu6LJIesS0epmaYAoG5xsfhzOkkucRxg&s"
@@ -13,14 +13,14 @@ export default function Navbar() {
           className="h-20 w-20 rounded-full mr-2 flex-shrink-0"
         />
 
-        <h2 className="mt-2 text-3xl font-cursive text-yellow-400 font-semibold">
-          <i> The Royale Cafe</i>
+        <h2 className="mt-2 text-3xl font-cursive text-gray-400 font-semibold ">
+          <i> The Royal Cafe</i>
         </h2>
 
-        <nav className="flex items-center gap-4 text-sm font-medium text-white">
+        <nav className="flex items-center gap-4 text-sm font-medium text-gray-950 ">
           <Link
             href="/Home"
-            className="text-xl transition hover:text-blue-400 border-black"
+            className="text-xl transition hover:text-blue-400 border-black "
           >
            Home
           </Link>
@@ -32,7 +32,7 @@ export default function Navbar() {
           </Link>
           <Link
             href="/Order"
-            className="transition hover:text-blue-400 text-xl"
+            className="transition hover:text-blue-400 text-xl "
           >
             Order
           </Link>
@@ -71,21 +71,22 @@ export default function Navbar() {
           </form>
 
           <Link
-            href=""
-            className="flex items-center gap-3 transition hower:text-slate-950 text-white"
+            href="/"
+            className="flex items-center gap-3 transition hower:text-slate-950 text-white bg-gray-500 rounded-full px-3 py-3 "
           >
-            <Bell className="h-6 w-6 text-slate-700 text-white " />
+            <Bell className="h-6 w-6 text-white text-whit" />
           </Link>
+         
 
-          <Link
+          {/* <Link
             href="/Login"
             className="flex items-center transition hower:text-slate-950 "
           >
-            <User className="h-6 w-6 text-slate-700 text-white" />
-          </Link>
+            <User className="h-6 w-6 text-slate-700 text-gray-950" />
+          </Link> */}
 
           <div>
-            <Menu className="text-white " />
+            <Menu className="text-gray-950 " />
           </div>
         </nav>
       </div>

@@ -40,7 +40,7 @@ const specials = [
 
 export default function Page() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 via-amber-50 to-white text-slate-900">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 via-amber-50 to-white text-slate-900 shadow-sm flex flex-col rounded-xl m-2 ">
 
       <main className="mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:px-10">
         {/* HERO SECTION */}

@@ -34,7 +34,7 @@ export default function CafeMap() {
   }, []);
 
   return (
-    <section className="py-16 px-4 bg-gray-500 mt-10 rounded-4xl">
+    <section className="py-16 px-4 bg-gray-300 mt-10 rounded-4xl">
       <div className="max-w-7xl mx-auto">
 
         <div className="text-center mb-10">

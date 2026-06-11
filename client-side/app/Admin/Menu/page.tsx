@@ -130,7 +130,7 @@ export default function AdminMenuPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-600 text-white p-6">
+    <div className="min-h-screen bg-gray-400 text-white p-6">
 
       {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
@@ -149,19 +149,19 @@ export default function AdminMenuPage() {
 
       {/* STATS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-gray-800 p-5 rounded-2xl">
-          <p className="text-gray-400">Total Menus</p>
-          <h2 className="text-3xl font-bold">{total}</h2>
+        <div className="bg-gray-700 p-5 rounded-2xl">
+          <p className="text-white text-center">Total Menus</p>
+          <h2 className="text-3xl font-bold text-center">{total}</h2>
         </div>
 
-        <div className="bg-gray-800 p-5 rounded-2xl">
-          <p className="text-gray-400">Active Items</p>
-          <h2 className="text-3xl font-bold">{total}</h2>
+        <div className="bg-blue-800 p-5 rounded-2xl">
+          <p className="text-white text-center">Active Items</p>
+          <h2 className="text-3xl font-bold text-center">{total}</h2>
         </div>
 
-        <div className="bg-gray-800 p-5 rounded-2xl">
-          <p className="text-gray-400">Categories</p>
-          <h2 className="text-3xl font-bold">
+        <div className="bg-gray-500 p-5 rounded-2xl">
+          <p className="text-white text-center">Categories</p>
+          <h2 className="text-3xl font-bold text-center text-center">
             {new Set(menus.map((m) => m.category)).size}
           </h2>
         </div>
@@ -172,7 +172,7 @@ export default function AdminMenuPage() {
         placeholder="Search menu..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="w-full mb-6 p-3 rounded-xl bg-gray-800 outline-none"
+        className="w-150 mb-6 p-3 rounded-xl bg-gray-300 text-black outline-none ml-2 "
       />
 
       {/* MENU GRID */}

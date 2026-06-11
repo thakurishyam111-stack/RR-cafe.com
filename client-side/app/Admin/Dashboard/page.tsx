@@ -246,7 +246,7 @@ export default function AdminDashboard() {
                 <tr className="border-b border-gray-700 text-left">
                   <th>Customer</th>
                   <th>Phone</th>
-                  <th>Items -/    - Queantity</th>
+                  <th>Items </th>
                   <th>Total</th>
                   <th>Status</th>
                   <th>Action</th>
@@ -271,8 +271,11 @@ export default function AdminDashboard() {
                              Qty: {item.quantity}
                           </li>
                         ))}
+                        
                       </ul>
+                      
                     </td>
+                   
                    
                     <td>Rs {order.total}</td>
 
