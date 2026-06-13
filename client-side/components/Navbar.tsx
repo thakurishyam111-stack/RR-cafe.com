@@ -71,7 +71,7 @@ export default function Navbar() {
           </form>
 
           <Link
-            href="/"
+            href="/Bill"
             className="flex items-center gap-3 transition hower:text-slate-950 text-white bg-gray-500 rounded-full px-3 py-3 "
           >
             <Bell className="h-6 w-6 text-white text-whit" />

@@ -25,14 +25,12 @@ export default function BillPage() {
       setOrder(null);
 
       const res = await axios.get(
-        `http://localhost:8080/api/orders/bill/${billNo}`
+        `http://localhost:8080/api/orders/order/${billNo}`,
       );
 
-      setOrder(res.data);
+      setOrder(res.data.order);
     } catch (error) {
-      setMessage(
-        error?.response?.data?.message || "Bill Not Found"
-      );
+      setMessage(error?.response?.data?.message || "Bill Not Found");
     } finally {
       setLoading(false);
     }
@@ -43,10 +41,9 @@ export default function BillPage() {
   // ======================
   const handlePayment = async (method) => {
     try {
-      await axios.put(
-        `http://localhost:8080/api/orders/pay/${order._id}`,
-        { method }
-      );
+      await axios.put(`http://localhost:8080/api/orders/pay/${order._id}`, {
+        method,
+      });
 
       setOrder({ ...order, paymentStatus: "Paid" });
       alert(`Payment Successful via ${method}`);
@@ -57,7 +54,6 @@ export default function BillPage() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center p-6">
-
       {/* INPUT SECTION */}
       <div className="w-full max-w-md bg-gray-800 p-5 rounded-xl shadow">
         <h2 className="text-xl font-bold text-center text-green-400">
@@ -80,21 +76,16 @@ export default function BillPage() {
         </button>
 
         {message && (
-          <p className="text-red-400 text-sm mt-2 text-center">
-            {message}
-          </p>
+          <p className="text-red-400 text-sm mt-2 text-center">{message}</p>
         )}
       </div>
 
       {/* LOADING */}
-      {loading && (
-        <p className="mt-6 text-gray-300">Loading bill...</p>
-      )}
+      {loading && <p className="mt-6 text-gray-300">Loading bill...</p>}
 
       {/* BILL CARD */}
       {order && (
         <div className="w-full max-w-md bg-gray-800 mt-6 p-6 rounded-2xl shadow-xl">
-
           {/* HEADER */}
           <h1 className="text-2xl font-bold text-center text-green-400">
             Royal Cafe Bill
@@ -108,19 +99,14 @@ export default function BillPage() {
           <div className="text-center mt-2">
             <span
               className={`px-3 py-1 rounded text-xs ${
-                order.orderStatus === "Approved"
-                  ? "bg-green-600"
-                  : "bg-yellow-600"
+                order.status === "approved" ? "bg-green-600" : "bg-yellow-600"
               }`}
             >
-              {order.orderStatus}
+              {order.status}
             </span>
-
             <span
               className={`ml-2 px-3 py-1 rounded text-xs ${
-                order.paymentStatus === "Paid"
-                  ? "bg-blue-600"
-                  : "bg-red-600"
+                order.paymentStatus === "Paid" ? "bg-blue-600" : "bg-red-600"
               }`}
             >
               {order.paymentStatus}
@@ -130,7 +116,7 @@ export default function BillPage() {
           <hr className="my-4 border-gray-700" />
 
           {/* BLOCK IF NOT APPROVED */}
-          {order.orderStatus !== "Approved" ? (
+          {order.status !== "approved" ? (
             <p className="text-center text-yellow-400">
               ⏳ Your order is not approved yet
             </p>
@@ -140,7 +126,7 @@ export default function BillPage() {
               <div className="text-sm space-y-1">
                 <p>Customer: {order.customerName}</p>
                 <p>Phone: {order.phone}</p>
-                <p>Table: {order.tableNo}</p>
+                <p>Table: {order.number}</p>
               </div>
 
               <hr className="my-4 border-gray-700" />
@@ -152,9 +138,7 @@ export default function BillPage() {
                     <span>
                       {item.title} × {item.quantity}
                     </span>
-                    <span>
-                      Rs {item.price * item.quantity}
-                    </span>
+                    <span>Rs {item.price * item.quantity}</span>
                   </div>
                 ))}
               </div>
@@ -164,18 +148,15 @@ export default function BillPage() {
               {/* TOTAL */}
               <div className="flex justify-between font-bold text-green-400">
                 <span>Total</span>
-                <span>Rs {order.totalAmount}</span>
+                <span>Rs {order.total}</span>
               </div>
 
               {/* PAYMENT */}
               {order.paymentStatus !== "Paid" && (
                 <div className="mt-5">
-                  <p className="text-center mb-3 text-gray-300">
-                    Pay via
-                  </p>
+                  <p className="text-center mb-3 text-gray-300">Pay via</p>
 
                   <div className="flex justify-center gap-6">
-
                     <button
                       onClick={() => handlePayment("eSewa")}
                       className="flex flex-col items-center"
@@ -201,7 +182,6 @@ export default function BillPage() {
                       />
                       <span className="text-xs mt-1">Khalti</span>
                     </button>
-
                   </div>
                 </div>
               )}

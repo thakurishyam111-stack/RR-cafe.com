@@ -54,9 +54,9 @@ export default function Footer() {
 
         <div className="space-y-3 text-sm text-white">
           <p className="font-semibold text-white text-2xl">Contact</p>
-          <p>Phone: +91 98765 43210</p>
-          <p>Email: hello@caferoyale.com</p>
-          <p>Follow us on Instagram @CafeRoyale</p>
+          <p>Phone: +977 98765 43210</p>
+          <p>Email: caferoyal555@gmail.com</p>
+          <p>Follow us on Instagram @CafeRoyal</p>
         </div>
       </div>
       <div>

@@ -16,6 +16,7 @@ export default function OrderPage() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [number, setNumber] = useState("");
+  const [billNo, setBillNo] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [submitted, setSubmitted] = useState(false);
@@ -49,7 +50,7 @@ export default function OrderPage() {
   // Categories
   const categories = useMemo(() => {
     const unique = Array.from(
-      new Set(menus.map((item) => item.category).filter(Boolean))
+      new Set(menus.map((item) => item.category).filter(Boolean)),
     );
 
     return ["All", ...unique];
@@ -59,9 +60,7 @@ export default function OrderPage() {
   const filteredItems = useMemo(() => {
     if (selectedCategory === "All") return cart;
 
-    return cart.filter(
-      (item) => item.category === selectedCategory
-    );
+    return cart.filter((item) => item.category === selectedCategory);
   }, [cart, selectedCategory]);
 
   // Update Quantity
@@ -73,8 +72,8 @@ export default function OrderPage() {
               ...item,
               quantity: Math.max(item.quantity + delta, 0),
             }
-          : item
-      )
+          : item,
+      ),
     );
   };
 
@@ -87,8 +86,8 @@ export default function OrderPage() {
               ...item,
               quantity: 0,
             }
-          : item
-      )
+          : item,
+      ),
     );
   };
 
@@ -98,79 +97,68 @@ export default function OrderPage() {
       prev.map((item) => ({
         ...item,
         quantity: 0,
-      }))
+      })),
     );
   };
 
   // Total
   const total = useMemo(() => {
-    return cart.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
+    return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   }, [cart]);
-// Submit Order
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  // Submit Order
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-const phoneRegex = /^(97|98)\d{8}$/;
+    const phoneRegex = /^(97|98)\d{8}$/;
 
-if (!phoneRegex.test(phone)) {
-  alert("Invalid phone number. ");
-  return;
-}
-  const selectedItems = cart.filter(
-    (item) => item.quantity > 0
-  );
+    if (!phoneRegex.test(phone)) {
+      alert("Invalid phone number. ");
+      return;
+    }
+    const selectedItems = cart.filter((item) => item.quantity > 0);
 
-  if (selectedItems.length === 0) {
-    alert("Please add items first");
-    return;
-  }
+    if (selectedItems.length === 0) {
+      alert("Please add items first");
+      return;
+    }
 
-  try {
-    const { data } = await axios.post(
-      `${API_BASE_URL}/api/orders/create`,
-      {
+    try {
+      const { data } = await axios.post(`${API_BASE_URL}/api/orders/create`, {
         customerName: name,
         phone: phone,
         tableNumber: number,
         items: selectedItems,
         total: total,
+      });
+
+      console.log(data);
+
+      if (data.success) {
+        setSubmitted(true);
+
+        // clearCart();
+        // setName("");
+        // setPhone("");
+        setBillNo(data.order.billNo);
       }
-    );
+    } catch (error) {
+      console.log("ORDER ERROR:", error);
 
-    console.log(data);
-
-    if (data.success) {
-      setSubmitted(true);
-
-      // clearCart();
-      // setName("");
-      // setPhone("");
+      alert("Order failed");
     }
-  } catch (error) {
-    console.log("ORDER ERROR:", error);
-
-    alert("Order failed");
-  }
-};
-
+  };
 
   // Loading
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center text-white">
-        <h1 className="text-3xl font-bold animate-pulse">
-          Loading Menu...
-        </h1>
+        <h1 className="text-3xl font-bold animate-pulse">Loading Menu...</h1>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-400">
-
       <main className="max-w-7xl mx-auto px-4 py-10">
         {/* Heading */}
         <div className="text-center mb-10">
@@ -178,9 +166,7 @@ if (!phoneRegex.test(phone)) {
             🍽 Cafe Order System
           </h1>
 
-          <p className="text-black mt-3">
-            Order your favorite delicious foods
-          </p>
+          <p className="text-black mt-3">Order your favorite delicious foods</p>
         </div>
 
         {/* Categories */}
@@ -245,10 +231,7 @@ if (!phoneRegex.test(phone)) {
                       <div className="flex items-center gap-3">
                         <button
                           onClick={() =>
-                            updateQuantity(
-                              item._id || item.id,
-                              -1
-                            )
+                            updateQuantity(item._id || item.id, -1)
                           }
                           className="w-10 h-10 rounded-full bg-green-400 hover:bg-slate-300 text-xl"
                         >
@@ -260,12 +243,7 @@ if (!phoneRegex.test(phone)) {
                         </span>
 
                         <button
-                          onClick={() =>
-                            updateQuantity(
-                              item._id || item.id,
-                              1
-                            )
-                          }
+                          onClick={() => updateQuantity(item._id || item.id, 1)}
                           className="w-10 h-10 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-xl"
                         >
                           +
@@ -273,12 +251,7 @@ if (!phoneRegex.test(phone)) {
                       </div>
 
                       <button
-                        onClick={() =>
-                          updateQuantity(
-                            item._id || item.id,
-                            1
-                          )
-                        }
+                        onClick={() => updateQuantity(item._id || item.id, 1)}
                         className="bg-black hover:bg-slate-800 text-white px-4 py-2 rounded-xl"
                       >
                         Add
@@ -316,8 +289,7 @@ if (!phoneRegex.test(phone)) {
 
             {/* Items */}
             <div className="mt-6 space-y-4 max-h-[400px] overflow-y-auto pr-1">
-              {cart.filter((item) => item.quantity > 0).length >
-              0 ? (
+              {cart.filter((item) => item.quantity > 0).length > 0 ? (
                 cart
                   .filter((item) => item.quantity > 0)
                   .map((item) => (
@@ -328,9 +300,7 @@ if (!phoneRegex.test(phone)) {
                       <div className="flex gap-4">
                         {/* Image */}
                         <img
-                          src={
-                            item.image || "/placeholder.png"
-                          }
+                          src={item.image || "/placeholder.png"}
                           alt={item.title}
                           className="w-20 h-20 rounded-2xl object-cover"
                         />
@@ -338,16 +308,10 @@ if (!phoneRegex.test(phone)) {
                         {/* Info */}
                         <div className="flex-1">
                           <div className="flex justify-between">
-                            <h3 className="font-bold text-lg">
-                              {item.title}
-                            </h3>
+                            <h3 className="font-bold text-lg">{item.title}</h3>
 
                             <button
-                              onClick={() =>
-                                removeItem(
-                                  item._id || item.id
-                                )
-                              }
+                              onClick={() => removeItem(item._id || item.id)}
                               className="text-red-400 hover:text-red-500 text-sm"
                             >
                               ✕
@@ -363,26 +327,18 @@ if (!phoneRegex.test(phone)) {
                             <div className="flex items-center gap-2">
                               <button
                                 onClick={() =>
-                                  updateQuantity(
-                                    item._id || item.id,
-                                    -1
-                                  )
+                                  updateQuantity(item._id || item.id, -1)
                                 }
                                 className="w-8 h-8 rounded-full bg-slate-700"
                               >
                                 −
                               </button>
 
-                              <span className="font-bold">
-                                {item.quantity}
-                              </span>
+                              <span className="font-bold">{item.quantity}</span>
 
                               <button
                                 onClick={() =>
-                                  updateQuantity(
-                                    item._id || item.id,
-                                    1
-                                  )
+                                  updateQuantity(item._id || item.id, 1)
                                 }
                                 className="w-8 h-8 rounded-full bg-amber-500"
                               >
@@ -391,9 +347,7 @@ if (!phoneRegex.test(phone)) {
                             </div>
 
                             <span className="font-bold text-amber-400">
-                              Rs{" "}
-                              {item.price *
-                                item.quantity}
+                              Rs {item.price * item.quantity}
                             </span>
                           </div>
                         </div>
@@ -402,13 +356,9 @@ if (!phoneRegex.test(phone)) {
                   ))
               ) : (
                 <div className="bg-slate-800 rounded-3xl p-8 text-center">
-                  <div className="text-5xl mb-3">
-                    
-                  </div>
+                  <div className="text-5xl mb-3"></div>
 
-                  <h3 className="text-xl font-bold">
-                    Cart Empty
-                  </h3>
+                  <h3 className="text-xl font-bold">Cart Empty</h3>
 
                   <p className="text-slate-400 mt-2">
                     Add some delicious foods
@@ -431,31 +381,18 @@ if (!phoneRegex.test(phone)) {
                 </div>
 
                 <div className="text-right text-xl  text-white">
-                  <p>
-                    {
-                      cart.filter(
-                        (item) => item.quantity > 0
-                      ).length
-                    }{" "}
-                    Items
-                  </p>
-
+                  <p>{cart.filter((item) => item.quantity > 0).length} Items</p>
                 </div>
               </div>
             </div>
 
             {/* Form */}
-            <form
-              onSubmit={handleSubmit}
-              className="mt-6 space-y-4"
-            >
+            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
               <input
                 type="text"
                 placeholder="Your Name"
                 value={name}
-                onChange={(e) =>
-                  setName(e.target.value)
-                }
+                onChange={(e) => setName(e.target.value)}
                 required
                 className="w-full rounded-2xl bg-white text-black px-4 py-3 outline-none"
               />
@@ -464,9 +401,7 @@ if (!phoneRegex.test(phone)) {
                 type="tel"
                 placeholder="Phone Number"
                 value={phone}
-                onChange={(e) =>
-                  setPhone(e.target.value)
-                }
+                onChange={(e) => setPhone(e.target.value)}
                 required
                 className="w-full rounded-2xl bg-white text-black px-4 py-3 outline-none"
               />
@@ -475,9 +410,7 @@ if (!phoneRegex.test(phone)) {
                 pattern="^(97|98)[0-9]{8}$"
                 placeholder="Table Number"
                 value={number}
-                onChange={(e) =>
-                  setNumber(e.target.value)
-                }
+                onChange={(e) => setNumber(e.target.value)}
                 required
                 className="w-full rounded-2xl bg-white text-black px-4 py-3 outline-none"
               />
@@ -498,18 +431,18 @@ if (!phoneRegex.test(phone)) {
         <div className="fixed inset-0 bg-black/60  flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-[2rem] p-8 max-w-md w-full text-center shadow-2xl relative">
             <button
-  onClick={() => {
-    setSubmitted(false);
+              onClick={() => {
+                setSubmitted(false);
 
-    clearCart();
+                clearCart();
 
-    setName("");
-    setPhone("");
-  }}
-  className="absolute top-4 right-4 w-10 h-10 rounded-full bg-red-100 hover:bg-red-500 hover:text-white transition text-xl font-bold text-red-500"
->
-  ✕
-</button>
+                setName("");
+                setPhone("");
+              }}
+              className="absolute top-4 right-4 w-10 h-10 rounded-full bg-red-100 hover:bg-red-500 hover:text-white transition text-xl font-bold text-red-500"
+            >
+              ✕
+            </button>
             {/* Icon */}
             <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto">
               <span className="text-5xl">✅</span>
@@ -521,10 +454,7 @@ if (!phoneRegex.test(phone)) {
             </h2>
 
             <p className="text-slate-600 mt-3">
-              Thank you{" "}
-              <span className="font-bold text-gray-800">
-                {name}
-              </span>{" "}
+              Thank you <span className="font-bold text-gray-800">{name}</span>{" "}
               🎉
             </p>
 
@@ -535,32 +465,29 @@ if (!phoneRegex.test(phone)) {
             {/* Summary */}
             <div className="bg-slate-100 rounded-2xl p-4 mt-5 text-left">
               <div className="flex justify-between mb-2">
-                <span className="text-slate-500">
-                  Phone
-                </span>
+                <span className="text-slate-500">Phone</span>
 
-                <span className="font-semibold text-black">
-                  {phone}
-                </span>
+                <span className="font-semibold text-black">{phone}</span>
               </div>
 
               <div className="flex justify-between">
-                <span className="text-green-500">
-                  Total
-                </span>
+                <span className="text-green-500">Total</span>
 
-                <span className="font-bold text-amber-600">
-                  Rs .{total}
-                </span>
+                <span className="font-bold text-amber-600">Rs .{total}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-black">
-                  Table Number
-                </span>
+                <span className="text-black">Table Number</span>
 
-                <span className="font-bold text-green-600">
-                  {number}
-                </span>
+                <span className="font-bold text-green-600">{number}</span>
+              </div>
+              
+              <span className="text-black p-5  text-l text-center text-bold text-green-950 m-4">remember this bill no for Billing process</span>
+              <div className="flex justify-between">
+               
+                
+                <span className="text-black">Bill Number</span>
+
+                <span className="font-bold text-green-600">{billNo}</span>
               </div>
             </div>
 
