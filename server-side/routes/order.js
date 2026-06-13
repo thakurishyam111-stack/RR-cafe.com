@@ -8,7 +8,7 @@ const generateBillNo = () => {
   const date = new Date();
   const random = Math.floor(1000 + Math.random() * 9000);
 
-  return `CAF-${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}-${random}`;
+  return `CAF-${date.getFullYear()}${date.getMonth() + 1}${date.getDate()}-${random}`;
 };
 // CREATE ORDER
 router.post("/create", async (req, res) => {
