@@ -147,13 +147,13 @@ cafe-management-system/
 ## Clone Repository
 
 ```bash
-git clone https://github.com/yourusername/cafe-management-system.git
+git clone https://github.com/thakurishyam111-stack/RR-cafe.com.git
 ```
 
 ## Move Project Folder
 
 ```bash
-cd cafe-management-system
+cd RR-cafe.com
 ```
 
 ## Install Dependencies
@@ -177,7 +177,7 @@ Create a `.env` file:
 ```env
 MONGODB_URI=your_mongodb_connection
 JWT_SECRET=your_secret_key
-PORT=5000
+PORT=8080
 ```
 
 ---
@@ -283,7 +283,7 @@ npm start
 
 # 👨‍💻 Author
 
-**Shyam Thakuri**
+**Shyam Shah Thakuri**
 
 BCA Student | MERN Stack Developer | Nepal 🇳🇵
 
