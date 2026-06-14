@@ -1,23 +1,30 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { Bell, Home, Menu, User } from "lucide-react";
+import { Bell, Home, IndianRupee, Menu, User, } from "lucide-react";
 
 export default function Navbar() {
+  const[search,setSearch]=useState("")
+  
   return (
     <header className="sticky top-0 z-40 bg-gray-100 text-gray-950  rounded-xl shadow-lg">
       <div className="mx-auto flex flex-wrap items-center justify-between  px-6 py-4 sm:px-8">
+        
+        <div>
         <img
           src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQPxFu6LJIesS0epmaYAoG5xsfhzOkkucRxg&s"
           alt="Logo"
-          className="h-20 w-20 rounded-full mr-2 flex-shrink-0"
+          className="h-20 w-20 rounded-full mr-2 flex-shrink-0 p-1"
+          
         />
+           <i className="text-l"> The Royal Cafe</i>
+        </div>
 
-        <h2 className="mt-2 text-3xl font-cursive text-gray-400 font-semibold ">
+        {/* <h2 className="mt-2 text-3xl font-cursive text-gray-400 font-semibold ">
           <i> The Royal Cafe</i>
-        </h2>
+        </h2> */}
 
-        <nav className="flex items-center gap-4 text-sm font-medium text-gray-950 ">
+        <nav className="flex items-center gap-5 text-sm font-medium text-gray-950 pr-7">
           <Link
             href="/Home"
             className="text-xl transition hover:text-blue-400 border-black "
@@ -57,11 +64,12 @@ export default function Navbar() {
             className="flex flex-1 min-w-[220px] max-w-sm items-center gap-2 rounded-full border border-slate-200 bg-slate-100 px-3 py-2"
           >
             <input
-              type="search"
-              name="q"
-              placeholder="Search menu..."
+             placeholder="Search ..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
               className="flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-500"
             />
+
             <button
               type="submit"
               className="rounded-full bg-slate-400 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
@@ -71,7 +79,7 @@ export default function Navbar() {
           </form>
 
           <Link
-            href="/Bill"
+            href="/Notification"
             className="flex items-center gap-3 transition hower:text-slate-950 text-white bg-gray-500 rounded-full px-3 py-3 "
           >
             <Bell className="h-6 w-6 text-white text-whit" />
@@ -85,9 +93,12 @@ export default function Navbar() {
             <User className="h-6 w-6 text-slate-700 text-gray-950" />
           </Link> */}
 
-          <div>
-            <Menu className="text-gray-950 " />
-          </div>
+          <Link
+            href="/Bill"
+            className="flex items-center gap-3 transition hower:text-slate-950 text-white bg-blue-600 rounded-full px-3 py-3 "
+          >
+            <IndianRupee className="h-6 w-6 text-white text-whit" />Bill
+          </Link>
         </nav>
       </div>
     </header>
