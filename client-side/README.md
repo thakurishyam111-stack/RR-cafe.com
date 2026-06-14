@@ -1,36 +1,294 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ☕ Cafe Management System
 
-## Getting Started
+A modern Cafe Management System built with the MERN Stack to manage menu items, customer orders, billing, tables, and admin operations efficiently.
 
-First, run the development server:
+---
+
+## 🚀 Features
+
+### 👨‍💼 Admin Panel
+
+* Admin Login Authentication
+* Dashboard Overview
+* Manage Menu Items
+
+  * Add Menu Item
+  * Update Menu Item
+  * Delete Menu Item
+  * View Menu Item
+* Manage Categories
+* Manage Tables
+* View Customer Orders
+* Order Status Management
+* Billing Management
+* Sales Reports
+
+### 🍽️ Customer Features
+
+* Browse Menu
+* Search Food Items
+* View Food Details
+* Add Items to Cart
+* Place Order
+* View Order Summary
+* Generate Bill
+* Online Payment Support (Optional)
+
+### 🧾 Billing System
+
+* Auto Bill Number Generation
+* Customer Name Validation
+* Phone Number Validation
+* Table Number Validation
+* Order Amount Calculation
+* Tax Calculation
+* Grand Total Calculation
+* Print Bill
+
+---
+
+# 🛠️ Tech Stack
+
+## Frontend
+
+* Next.js
+* React.js
+* Tailwind CSS
+* Axios
+* React Icons
+
+## Backend
+
+* Node.js
+* Express.js
+
+## Database
+
+* MongoDB
+* Mongoose
+
+---
+
+# 📁 Project Structure
+
+```bash
+cafe-management-system/
+│
+├── app/
+│   ├── admin/
+│   │   ├── dashboard/
+│   │   ├── menu/
+│   │   ├── orders/
+│   │   ├── billing/
+│   │   └── reports/
+│   │
+│   ├── customer/
+│   │   ├── menu/
+│   │   ├── cart/
+│   │   ├── checkout/
+│   │   └── order/
+│   │
+│   ├── login/
+│   ├── register/
+│   └── page.jsx
+│
+├── components/
+│   ├── Navbar.jsx
+│   ├── Footer.jsx
+│   ├── Sidebar.jsx
+│   ├── MenuCard.jsx
+│   ├── Cart.jsx
+│   ├── BillCard.jsx
+│   ├── OrderTable.jsx
+│   └── Loader.jsx
+│
+├── models/
+│   ├── User.js
+│   ├── Menu.js
+│   ├── Order.js
+│   ├── Bill.js
+│   └── Table.js
+│
+├── routes/
+│   ├── authRoutes.js
+│   ├── menuRoutes.js
+│   ├── orderRoutes.js
+│   ├── billRoutes.js
+│   └── tableRoutes.js
+│
+├── controllers/
+│   ├── authController.js
+│   ├── menuController.js
+│   ├── orderController.js
+│   ├── billController.js
+│   └── tableController.js
+│
+├── middleware/
+│   ├── authMiddleware.js
+│   └── errorMiddleware.js
+│
+├── public/
+│   ├── images/
+│   └── logo.png
+│
+├── utils/
+│   └── generateBillNo.js
+│
+├── server.js
+├── package.json
+├── .env
+└── README.md
+```
+
+---
+
+# 📦 Installation
+
+## Clone Repository
+
+```bash
+git clone https://github.com/yourusername/cafe-management-system.git
+```
+
+## Move Project Folder
+
+```bash
+cd cafe-management-system
+```
+
+## Install Dependencies
+
+```bash
+npm install
+```
+
+or
+
+```bash
+pnpm install
+```
+
+---
+
+# ⚙️ Environment Variables
+
+Create a `.env` file:
+
+```env
+MONGODB_URI=your_mongodb_connection
+JWT_SECRET=your_secret_key
+PORT=5000
+```
+
+---
+
+# ▶️ Run Project
+
+## Development
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+or
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Production
 
-## Learn More
+```bash
+npm run build
+npm start
+```
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# 📊 Database Collections
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Users
 
-## Deploy on Vercel
+```json
+{
+  "_id": "",
+  "name": "",
+  "email": "",
+  "password": "",
+  "role": "admin"
+}
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Menu
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```json
+{
+  "_id": "",
+  "name": "",
+  "price": 0,
+  "category": "",
+  "image": ""
+}
+```
+
+### Orders
+
+```json
+{
+  "_id": "",
+  "customerName": "",
+  "phone": "",
+  "tableNo": "",
+  "items": [],
+  "totalAmount": 0,
+  "status": "Pending"
+}
+```
+
+### Bills
+
+```json
+{
+  "_id": "",
+  "billNo": "",
+  "orderId": "",
+  "totalAmount": 0,
+  "paymentStatus": "Paid"
+}
+```
+
+---
+
+# 🔒 Security Features
+
+* JWT Authentication
+* Protected Routes
+* Password Hashing
+* Input Validation
+* Error Handling
+
+---
+
+# 📈 Future Enhancements
+
+* QR Menu Ordering
+* eSewa Payment Integration
+* Khalti Payment Integration
+* Receipt PDF Download
+* Real-time Order Tracking
+* Kitchen Dashboard
+* Inventory Management
+
+---
+
+# 👨‍💻 Author
+
+**Shyam Thakuri**
+
+BCA Student | MERN Stack Developer | Nepal 🇳🇵
+
+---
+
+# ⭐ Support
+
+If you like this project, please give it a ⭐ on GitHub.
