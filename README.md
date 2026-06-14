@@ -1,74 +1,294 @@
-# ☕ RR Cafe Management System
+# ☕ Cafe Management System
 
-A modern and responsive Café Management System built using React / Next.js.  
-This project helps manage café menu, customers, orders, and billing in an easy and efficient way.
+A modern Cafe Management System built with the MERN Stack to manage menu items, customer orders, billing, tables, and admin operations efficiently.
 
 ---
 
 ## 🚀 Features
 
-### 🏠 Home Page
-- Attractive landing page with café branding
-- Hero section with modern UI
-- Featured menu items display
-- Smooth navigation between pages
+### 👨‍💼 Admin Panel
 
-### 🍽️ Menu Management
-- Add, update, delete, and view menu items
-- Categories like Coffee, Tea, Snacks, Drinks, etc.
-- Price and image support for each item
-- Easy menu organization
+* Admin Login Authentication
+* Dashboard Overview
+* Manage Menu Items
 
-### 🧑‍💼 Customer Management
-- Add and manage customer details
-- View customer list
-- Edit or delete customer records
+  * Add Menu Item
+  * Update Menu Item
+  * Delete Menu Item
+  * View Menu Item
+* Manage Categories
+* Manage Tables
+* View Customer Orders
+* Order Status Management
+* Billing Management
+* Sales Reports
 
-### 📦 Order Management
-- Place new orders from menu
-- Track order status (Pending / Preparing / Completed)
-- View order history
-- Easy order handling system
+### 🍽️ Customer Features
 
-### 💰 Billing System
-- Automatic bill calculation
-- Total price generation
-- Simple invoice format
-- Printable bill support
+* Browse Menu
+* Search Food Items
+* View Food Details
+* Add Items to Cart
+* Place Order
+* View Order Summary
+* Generate Bill
+* Online Payment Support (Optional)
 
-### 🛠️ Admin Dashboard
-- Full control panel for admin
-- Manage menu, orders, and customers
-- Clean and user-friendly interface
+### 🧾 Billing System
 
-### 📊 Reports (Optional)
-- Daily sales report
-- Popular item tracking
-- Revenue overview
-
-### 🌐 UI/UX Features
-- Fully responsive design (Mobile + Desktop)
-- Modern UI with Tailwind CSS / CSS
-- Fast performance
-- Clean and simple navigation
+* Auto Bill Number Generation
+* Customer Name Validation
+* Phone Number Validation
+* Table Number Validation
+* Order Amount Calculation
+* Tax Calculation
+* Grand Total Calculation
+* Print Bill
 
 ---
 
-## 🧰 Tech Stack
+# 🛠️ Tech Stack
 
-- React.js / Next.js
-- Node.js (if backend included)
-- Express.js
-- MongoDB / JSON Storage
-- Tailwind CSS / CSS
-- Leaflet (for map/location feature if used)
+## Frontend
+
+* Next.js
+* React.js
+* Tailwind CSS
+* Axios
+* React Icons
+
+## Backend
+
+* Node.js
+* Express.js
+
+## Database
+
+* MongoDB
+* Mongoose
 
 ---
 
-## ⚙️ Installation
+# 📁 Project Structure
 
 ```bash
-git clone https://github.com/your-username/rr-cafe.git
-cd rr-cafe
+cafe-management-system/
+│
+├── app/
+│   ├── admin/
+│   │   ├── dashboard/
+│   │   ├── menu/
+│   │   ├── orders/
+│   │   ├── billing/
+│   │   └── reports/
+│   │
+│   ├── customer/
+│   │   ├── menu/
+│   │   ├── cart/
+│   │   ├── checkout/
+│   │   └── order/
+│   │
+│   ├── login/
+│   ├── register/
+│   └── page.jsx
+│
+├── components/
+│   ├── Navbar.jsx
+│   ├── Footer.jsx
+│   ├── Sidebar.jsx
+│   ├── MenuCard.jsx
+│   ├── Cart.jsx
+│   ├── BillCard.jsx
+│   ├── OrderTable.jsx
+│   └── Loader.jsx
+│
+├── models/
+│   ├── User.js
+│   ├── Menu.js
+│   ├── Order.js
+│   ├── Bill.js
+│   └── Table.js
+│
+├── routes/
+│   ├── authRoutes.js
+│   ├── menuRoutes.js
+│   ├── orderRoutes.js
+│   ├── billRoutes.js
+│   └── tableRoutes.js
+│
+├── controllers/
+│   ├── authController.js
+│   ├── menuController.js
+│   ├── orderController.js
+│   ├── billController.js
+│   └── tableController.js
+│
+├── middleware/
+│   ├── authMiddleware.js
+│   └── errorMiddleware.js
+│
+├── public/
+│   ├── images/
+│   └── logo.png
+│
+├── utils/
+│   └── generateBillNo.js
+│
+├── server.js
+├── package.json
+├── .env
+└── README.md
+```
+
+---
+
+# 📦 Installation
+
+## Clone Repository
+
+```bash
+https://github.com/thakurishyam111-stack/RR-cafe.com
+```
+
+## Move Project Folder
+
+```bash
+cd RR-cafe.com
+```
+
+## Install Dependencies
+
+```bash
 npm install
+```
+
+or
+
+```bash
+pnpm install
+```
+
+---
+
+# ⚙️ Environment Variables
+
+Create a `.env` file:
+
+```env
+MONGODB_URI=your_mongodb_connection
+JWT_SECRET=your_secret_key
+PORT=8080
+```
+
+---
+
+# ▶️ Run Project
+
+## Development
+
+```bash
 npm run dev
+```
+
+or
+
+```bash
+pnpm dev
+```
+
+## Production
+
+```bash
+npm run build
+npm start
+```
+
+---
+
+# 📊 Database Collections
+
+### Users
+
+```json
+{
+  "_id": "",
+  "name": "",
+  "email": "",
+  "password": "",
+  "role": "admin"
+}
+```
+
+### Menu
+
+```json
+{
+  "_id": "",
+  "name": "",
+  "price": 0,
+  "category": "",
+  "image": ""
+}
+```
+
+### Orders
+
+```json
+{
+  "_id": "",
+  "customerName": "",
+  "phone": "",
+  "tableNo": "",
+  "items": [],
+  "totalAmount": 0,
+  "status": "Pending"
+}
+```
+
+### Bills
+
+```json
+{
+  "_id": "",
+  "billNo": "",
+  "orderId": "",
+  "totalAmount": 0,
+  "paymentStatus": "Paid"
+}
+```
+
+---
+
+# 🔒 Security Features
+
+* JWT Authentication
+* Protected Routes
+* Password Hashing
+* Input Validation
+* Error Handling
+
+---
+
+# 📈 Future Enhancements
+
+* QR Menu Ordering
+* eSewa Payment Integration
+* Khalti Payment Integration
+* Receipt PDF Download
+* Real-time Order Tracking
+* Kitchen Dashboard
+* Inventory Management
+
+---
+
+# 👨‍💻 Author
+
+**Shyam Shah Thakuri**
+
+BCA Student | MERN Stack Developer | Nepal 🇳🇵
+
+---
+
+# ⭐ Support
+
+If you like this project, please give it a ⭐ on GitHub.
