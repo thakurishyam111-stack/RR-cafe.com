@@ -2,16 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-
-import {
-  LayoutDashboard,
-  ShoppingCart,
-  Coffee,
-  Wallet,
-  Users,
-} from "lucide-react";
+import AdminSidebar from "@/components/AdminSidebar";
+import { TrendingUp, Clock, CheckCircle, XCircle } from "lucide-react";
+import Navbar from "@/components/Navbar";
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -23,14 +17,18 @@ export default function AdminDashboard() {
   // AUTH CHECK
   // ======================
   useEffect(() => {
-    // const token = localStorage.getItem("adminToken");
+    const token = localStorage.getItem("adminToken");
 
-    // if (!token) {
-    //   router.push("/Admin/Dashboard");
-    //   return;
-    // }
+    if (!token) {
+      router.push("/Admin/Login");
+      return;
+    }
 
     fetchOrders();
+
+    // Refresh orders every 5 seconds
+    const interval = setInterval(fetchOrders, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   // ======================
@@ -38,14 +36,8 @@ export default function AdminDashboard() {
   // ======================
   const fetchOrders = async () => {
     try {
-      setLoading(true);
-
       const res = await axios.get("http://localhost:8080/api/orders");
-
-      console.log("API DATA:", res.data);
-
       const data = res.data?.orders;
-
       setOrders(Array.isArray(data) ? data : []);
     } catch (error) {
       console.log("Fetch Error:", error.message);
@@ -58,7 +50,7 @@ export default function AdminDashboard() {
   // ======================
   // APPROVE ORDER
   // ======================
-  const approveOrder = async (id) => {
+  const approveOrder = async (id: string) => {
     try {
       await axios.put(
         `http://localhost:8080/api/orders/approve/${id}`,
@@ -67,9 +59,8 @@ export default function AdminDashboard() {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
           },
-        }
+        },
       );
-
       fetchOrders();
     } catch (err) {
       console.log("Approve Error:", err.message);
@@ -79,7 +70,7 @@ export default function AdminDashboard() {
   // ======================
   // REJECT ORDER
   // ======================
-  const rejectOrder = async (id) => {
+  const rejectOrder = async (id: string) => {
     try {
       await axios.put(
         `http://localhost:8080/api/orders/reject/${id}`,
@@ -88,9 +79,8 @@ export default function AdminDashboard() {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
           },
-        }
+        },
       );
-
       fetchOrders();
     } catch (err) {
       console.log("Reject Error:", err.message);
@@ -106,19 +96,13 @@ export default function AdminDashboard() {
   // STATS
   // ======================
   const totalOrders = safeOrders.length;
-
-  const pendingOrders = safeOrders.filter(
-    (o) => o.status === "pending"
-  ).length;
-
+  const pendingOrders = safeOrders.filter((o) => o.status === "pending").length;
   const approvedOrders = safeOrders.filter(
-    (o) => o.status === "approved"
+    (o) => o.status === "approved",
   ).length;
-
   const rejectedOrders = safeOrders.filter(
-    (o) => o.status === "rejected"
+    (o) => o.status === "rejected",
   ).length;
-
   const revenue = safeOrders
     .filter((o) => o.status === "approved")
     .reduce((sum, o) => sum + (o.total || 0), 0);
@@ -128,8 +112,11 @@ export default function AdminDashboard() {
   // ======================
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-[#0f172a] text-white">
-        Loading Dashboard...
+      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-gray-900 to-gray-950 text-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500 mx-auto mb-4"></div>
+          <p>Loading Dashboard...</p>
+        </div>
       </div>
     );
   }
@@ -138,204 +125,200 @@ export default function AdminDashboard() {
   // UI
   // ======================
   return (
-    <div className="flex min-h-screen bg-[#0f172a] text-white">
-
+    <>
       {/* SIDEBAR */}
-      <div className="w-72 bg-gray-900 border-r border-gray-800 p-6">
-
-        <h1 className="text-3xl font-bold text-green-500 mb-10">
-          RR Cafe Admin
-        </h1>
-
-        <div className="space-y-3">
-
-          <div className="flex items-center gap-3 bg-green-500 p-3 rounded-xl">
-            <LayoutDashboard size={20} />
-            Dashboard
-          </div>
-
-          <div className="flex items-center gap-3 hover:bg-gray-800 p-3 rounded-xl">
-            <ShoppingCart size={20} />
-            Orders
-          </div>
-<Link href="/Admin/Menu" className="flex items-center gap-3 hover:bg-gray-800 p-3 rounded-xl">
-  <div className="flex items-center gap-3 hover:bg-gray-800 p-3 rounded-xl cursor-pointer">
-    <Coffee size={20} />
-    Menu
-  </div>
-</Link>
-
-          <div className="flex items-center gap-3 hover:bg-gray-800 p-3 rounded-xl">
-            <Wallet size={20} />
-            Revenue
-          </div>
-
-          <div className="flex items-center gap-3 hover:bg-gray-800 p-3 rounded-xl">
-            <Users size={20} />
-            Customers
-          </div>
-
-        </div>
-      </div>
+      <AdminSidebar />
 
       {/* MAIN CONTENT */}
-      <div className="flex-1 p-8">
-
-        {/* TOP BAR */}
-        <div className="flex justify-between items-center mb-8">
-
-          <div>
-            <h1 className="text-4xl font-bold">Dashboard</h1>
-            <p className="text-gray-400">Manage Orders ☕</p>
-          </div>
-
-          <button
-            onClick={() => {
-              localStorage.removeItem("adminToken");
-              router.push("/Admin/Login");
-            }}
-            className="bg-red-500 px-5 py-2 rounded-xl"
-          >
-            Logout
-          </button>
-
+      <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-black text-white p-4 md:p-8 md:pt-6 md:ml-72">
+        {/* Header */}
+        <div className="mb-8 text-center">
+          <h1 className="text-4xl font-bold mb-2">Dashboard</h1>
+          <p className="text-gray-400">
+            Welcome back! Here's your order overview ☕
+          </p>
         </div>
 
-        {/* STATS */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-10">
-
-          <div className="bg-orange-600 p-4 rounded-2xl">
-            Total<br />
-            <span className="text-2xl font-bold">{totalOrders}</span>
+        {/* STATS CARDS */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+          {/* Total Orders */}
+          <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 border border-blue-500/20 p-6 rounded-xl hover:border-blue-500/40 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-300 text-sm font-medium">
+                  Total Orders
+                </p>
+                <p className="text-3xl font-bold mt-2">{totalOrders}</p>
+              </div>
+              <TrendingUp className="w-12 h-12 text-blue-400 opacity-50" />
+            </div>
           </div>
 
-          <div className="bg-yellow-600 p-4 rounded-2xl">
-            Pending<br />
-            <span className="text-2xl font-bold">{pendingOrders}</span>
+          {/* Pending Orders */}
+          <div className="bg-gradient-to-br from-yellow-500/10 to-yellow-600/10 border border-yellow-500/20 p-6 rounded-xl hover:border-yellow-500/40 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-yellow-300 text-sm font-medium">Pending</p>
+                <p className="text-3xl font-bold mt-2">{pendingOrders}</p>
+              </div>
+              <Clock className="w-12 h-12 text-yellow-400 opacity-50" />
+            </div>
           </div>
 
-          <div className="bg-green-600 p-4 rounded-2xl">
-            Approved<br />
-            <span className="text-2xl font-bold">{approvedOrders}</span>
+          {/* Approved Orders */}
+          <div className="bg-gradient-to-br from-green-500/10 to-green-600/10 border border-green-500/20 p-6 rounded-xl hover:border-green-500/40 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-300 text-sm font-medium">Approved</p>
+                <p className="text-3xl font-bold mt-2">{approvedOrders}</p>
+              </div>
+              <CheckCircle className="w-12 h-12 text-green-400 opacity-50" />
+            </div>
           </div>
 
-          <div className="bg-red-600 p-4 rounded-2xl">
-            Rejected<br />
-            <span className="text-2xl font-bold">{rejectedOrders}</span>
+          {/* Rejected Orders */}
+          <div className="bg-gradient-to-br from-red-500/10 to-red-600/10 border border-red-500/20 p-6 rounded-xl hover:border-red-500/40 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-red-300 text-sm font-medium">Rejected</p>
+                <p className="text-3xl font-bold mt-2">{rejectedOrders}</p>
+              </div>
+              <XCircle className="w-12 h-12 text-red-400 opacity-50" />
+            </div>
           </div>
 
-          <div className="bg-blue-600 p-4 rounded-2xl">
-            Revenue<br />
-            <span className="text-xl font-bold">Rs {revenue}</span>
+          {/* Revenue */}
+          <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/10 border border-purple-500/20 p-6 rounded-xl hover:border-purple-500/40 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-300 text-sm font-medium">Revenue</p>
+                <p className="text-3xl font-bold mt-2">Rs {revenue}</p>
+              </div>
+              <TrendingUp className="w-12 h-12 text-purple-400 opacity-50" />
+            </div>
           </div>
-
         </div>
 
-        {/* TABLE */}
-        <div className="bg-gray-900 p-6 rounded-2xl border border-gray-800">
-
-          <h2 className="text-2xl font-bold mb-4">
-            Orders List
-          </h2>
+        {/* ORDERS TABLE */}
+        <div className="bg-gray-900/50 border border-gray-800 rounded-xl overflow-hidden shadow-lg">
+          <div className="p-6 border-b border-gray-800">
+            <h2 className="text-2xl font-bold">Recent Orders</h2>
+          </div>
 
           <div className="overflow-x-auto">
-
             <table className="w-full">
-
               <thead>
-                <tr className="border-b border-gray-700 text-left">
-                  <th>Customer</th>
-                  <th>Phone</th>
-                  <th>Items </th>
-                  <th>Total</th>
-                  <th>Status</th>
-                  <th>Action</th>
+                <tr className="border-b border-gray-800 bg-gray-800/30">
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
+                    Customer
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
+                    Phone
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
+                    Items
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
+                    Total
+                  </th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-300">
+                    Status
+                  </th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-300">
+                    Action
+                  </th>
                 </tr>
               </thead>
 
               <tbody>
-
-                {safeOrders.map((order) => (
-                  <tr key={order._id} className="border-b border-gray-800">
-
-                    <td className="py-3">
-                      {order.customerName}
+                {safeOrders.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="px-6 py-8 text-center text-gray-400"
+                    >
+                      No orders found
                     </td>
-
-                    <td>{order.phone}</td>
-                    <td>
-                      <ul>
-                        {order.items.map((item, index) => (
-                          <li key={index}>
-                            {item.title} --
-                             Qty: {item.quantity}
-                          </li>
-                        ))}
-                        
-                      </ul>
-                      
-                    </td>
-                   
-                   
-                    <td>Rs {order.total}</td>
-
-                    <td>
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm ${
-                          order.status === "pending"
-                            ? "bg-yellow-500/20 text-yellow-400"
-                            : order.status === "approved"
-                            ? "bg-green-500/20 text-green-400"
-                            : "bg-red-500/20 text-red-400"
-                        }`}
-                      >
-                        {order.status}
-                      </span>
-                    </td>
-
-                    <td className="space-x-2">
-
-                      {order.status === "pending" && (
-                        <>
-                          <button
-                            onClick={() => approveOrder(order._id)}
-                            className="bg-green-500 px-3 py-1 rounded"
-                          >
-                            Approve
-                          </button>
-
-                          <button
-                            onClick={() => rejectOrder(order._id)}
-                            className="bg-red-500 px-3 py-1 rounded"
-                          >
-                            Reject
-                          </button>
-                        </>
-                      )}
-
-                      {order.status === "approved" && (
-                        <span className="text-green-400">Approved ✔</span>
-                      )}
-
-                      {order.status === "rejected" && (
-                        <span className="text-red-400">Rejected ✖</span>
-                      )}
-
-                    </td>
-
                   </tr>
-                ))}
+                ) : (
+                  safeOrders.map((order) => (
+                    <tr
+                      key={order._id}
+                      className="border-b border-gray-800 hover:bg-gray-800/30 transition-colors duration-200"
+                    >
+                      <td className="px-6 py-4 font-medium">
+                        {order.customerName}
+                      </td>
+                      <td className="px-6 py-4 text-gray-300">{order.phone}</td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-300">
+                          {order.items.slice(0, 2).map((item, index) => (
+                            <div key={index}>
+                              {item.title} (×{item.quantity})
+                            </div>
+                          ))}
+                          {order.items.length > 2 && (
+                            <div className="text-gray-400">
+                              +{order.items.length - 2} more
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 font-semibold text-green-400">
+                        Rs {order.total}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <span
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                            order.status === "pending"
+                              ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+                              : order.status === "approved"
+                                ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                                : "bg-red-500/20 text-red-400 border border-red-500/30"
+                          }`}
+                        >
+                          {order.status.charAt(0).toUpperCase() +
+                            order.status.slice(1)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {order.status === "pending" && (
+                          <div className="flex gap-2 justify-center">
+                            <button
+                              onClick={() => approveOrder(order._id)}
+                              className="bg-green-500/20 hover:bg-green-500/30 text-green-400 px-3 py-1 rounded text-sm transition-colors duration-200 border border-green-500/30"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => rejectOrder(order._id)}
+                              className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-3 py-1 rounded text-sm transition-colors duration-200 border border-red-500/30"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        )}
 
+                        {order.status === "approved" && (
+                          <span className="text-green-400 text-sm">
+                            ✓ Approved
+                          </span>
+                        )}
+
+                        {order.status === "rejected" && (
+                          <span className="text-red-400 text-sm">
+                            ✕ Rejected
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
-
             </table>
-
           </div>
-
         </div>
-
-      </div>
-
-    </div>
+      </main>
+    </>
   );
 }
