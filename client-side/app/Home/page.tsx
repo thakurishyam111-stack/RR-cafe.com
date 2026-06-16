@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import About from "@/components/About";
-import Dashbord from "@/components/Dashbord";
+import Dashbord from "@/components/Sidebar";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import Today from "@/components/Today";
@@ -11,11 +11,12 @@ import { Clock, Wifi } from "lucide-react";
 export default function Page() {
   return (
     <div className="min-h-screen  text-slate-900">
-      <main className="mx-auto w-full max-w-6xl px-6 py-10 sm:px-8"
-        > 
-        <img src="https://pub-ba1a74be17d7442a9f2541946eb9510e.r2.dev/shops/1f9d454c-3294-4b26-9606-97ca603ce304/2.jpg" 
-        alt="Cafe background" 
-        className="absolute inset-0 h-full w-full object-cover opacity-70" />
+      <main className="mx-auto w-full max-w-6xl px-6 py-10 sm:px-8">
+        <img
+          src="https://pub-ba1a74be17d7442a9f2541946eb9510e.r2.dev/shops/1f9d454c-3294-4b26-9606-97ca603ce304/2.jpg"
+          alt="Cafe background"
+          className="absolute inset-0 h-full w-full object-cover opacity-70"
+        />
         <section className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-center rounded-[2rem] bg-gray-200 p-8 shadow-xl shadow-orange-100 backdrop-blur transition-colors duration-500">
           <div>
             <span className="inline-flex rounded-full bg-amber-100 px-4 py-1 text-sm font-semibold text-amber-700">
@@ -41,36 +42,26 @@ export default function Page() {
               >
                 Order Now
               </Link>
-
             </div>
             <div className="mt-8 grid grid-cols-2 gap-4 max-w-md">
-  <div className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-md">
-    <Wifi className="h-8 w-8 text-amber-600" />
-    <div>
-      <h4 className="font-semibold text-slate-900">
-        Free Wi-Fi
-      </h4>
-      <p className="text-sm text-slate-600">
-        Stay Connected
-      </p>
-    </div>
-  </div>
+              <div className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-md">
+                <Wifi className="h-8 w-8 text-amber-600" />
+                <div>
+                  <h4 className="font-semibold text-slate-900">Free Wi-Fi</h4>
+                  <p className="text-sm text-slate-600">Stay Connected</p>
+                </div>
+              </div>
 
-  <div className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-md">
-    <Clock className="h-8 w-8 text-amber-600" />
-    <div>
-      <h4 className="font-semibold text-slate-900">
-        Open Daily
-      </h4>
-      <p className="text-sm text-slate-600">
-        7:00 AM - 11:00 PM
-      </p>
-    </div>
-  </div>
-</div>
+              <div className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-md">
+                <Clock className="h-8 w-8 text-amber-600" />
+                <div>
+                  <h4 className="font-semibold text-slate-900">Open Daily</h4>
+                  <p className="text-sm text-slate-600">7:00 AM - 11:00 PM</p>
+                </div>
+              </div>
             </div>
+          </div>
 
-  
           <div className="rounded-[2rem] bg-orange-50 p-6 shadow-inner shadow-orange-100">
             <div className="overflow-hidden rounded-[1.75rem] border border-amber-100 bg-white shadow-xl">
               <img
@@ -100,7 +91,7 @@ export default function Page() {
             </div>
           </div>
         </section>
-<Map/>
+        <Map />
         <section className="mt-12 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
           <article className="rounded-[1.75rem] border border-slate-200 bg-white p-8 shadow-sm">
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-amber-700">
@@ -172,55 +163,47 @@ export default function Page() {
             </div>
           </div>
         </section>
-        <Today/>
+        <Today />
         <section className="mt-12 rounded-[2rem] bg-white p-8 shadow-xl">
-  <div className="text-center">
-    <p className="text-sm uppercase tracking-[0.24em] text-amber-700">
-      Customer Reviews
-    </p>
+          <div className="text-center">
+            <p className="text-sm uppercase tracking-[0.24em] text-amber-700">
+              Customer Reviews
+            </p>
 
-    <h2 className="mt-3 text-3xl font-bold text-slate-950">
-      What Our Customers Say
-    </h2>
-  </div>
+            <h2 className="mt-3 text-3xl font-bold text-slate-950">
+              What Our Customers Say
+            </h2>
+          </div>
 
-  <div className="mt-8 grid gap-6 md:grid-cols-3">
-    
-    <div className="rounded-3xl border border-slate-200 p-6">
-      <p className="text-slate-600">
-        "The coffee is amazing and the atmosphere is very relaxing.
-        My favorite cafe in town."
-      </p>
-      <h4 className="mt-4 font-semibold text-slate-900">
-        Sarah M.
-      </h4>
-      <p className="text-amber-500">★★★★★</p>
-    </div>
+          <div className="mt-8 grid gap-6 md:grid-cols-3">
+            <div className="rounded-3xl border border-slate-200 p-6">
+              <p className="text-slate-600">
+                "The coffee is amazing and the atmosphere is very relaxing. My
+                favorite cafe in town."
+              </p>
+              <h4 className="mt-4 font-semibold text-slate-900">Sarah M.</h4>
+              <p className="text-amber-500">★★★★★</p>
+            </div>
 
-    <div className="rounded-3xl border border-slate-200 p-6">
-      <p className="text-slate-600">
-        "Excellent service and delicious pastries. Highly recommended!"
-      </p>
-      <h4 className="mt-4 font-semibold text-slate-900">
-        David K.
-      </h4>
-      <p className="text-amber-500">★★★★★</p>
-    </div>
+            <div className="rounded-3xl border border-slate-200 p-6">
+              <p className="text-slate-600">
+                "Excellent service and delicious pastries. Highly recommended!"
+              </p>
+              <h4 className="mt-4 font-semibold text-slate-900">David K.</h4>
+              <p className="text-amber-500">★★★★★</p>
+            </div>
 
-    <div className="rounded-3xl border border-slate-200 p-6">
-      <p className="text-slate-600">
-        "Perfect place for work meetings and enjoying a quality cup of coffee."
-      </p>
-      <h4 className="mt-4 font-semibold text-slate-900">
-        Emma R.
-      </h4>
-      <p className="text-amber-500">★★★★★</p>
-    </div>
-
-  </div>
-</section>
+            <div className="rounded-3xl border border-slate-200 p-6">
+              <p className="text-slate-600">
+                "Perfect place for work meetings and enjoying a quality cup of
+                coffee."
+              </p>
+              <h4 className="mt-4 font-semibold text-slate-900">Emma R.</h4>
+              <p className="text-amber-500">★★★★★</p>
+            </div>
+          </div>
+        </section>
         <About />
-        <Dashbord />
       </main>
       <Footer />
     </div>

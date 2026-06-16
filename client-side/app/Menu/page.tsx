@@ -37,7 +37,6 @@ const Page = () => {
     fetchMenus();
   }, []);
 
-  // Unique categories
   const categories = useMemo(() => {
     const unique = Array.from(
       new Set(menus.map((item) => item.category).filter(Boolean)),
@@ -45,98 +44,124 @@ const Page = () => {
     return ["All", ...unique];
   }, [menus]);
 
-  // Filter items
   const filteredItems = useMemo(() => {
     if (selectedCategory === "All") return menus;
     return menus.filter((item) => item.category === selectedCategory);
   }, [menus, selectedCategory]);
 
-  // Loading UI
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-        <p className="text-xl font-semibold">Loading menu...</p>
+      <div className="min-h-screen bg-slate-950 text-amber-100 flex items-center justify-center px-4">
+        <div className="rounded-[2rem] border border-amber-300/30 bg-slate-900/95 px-8 py-10 text-center shadow-2xl shadow-amber-500/10">
+          <p className="text-xl font-semibold">Loading our cafe menu...</p>
+          <p className="mt-2 text-sm text-slate-400">Fresh specials are on their way.</p>
+        </div>
       </div>
     );
   }
 
-  // Empty state or API error
   if (!menus.length) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-        <p className="text-xl font-semibold">
-          {apiError || "No menu items found in database."}
-        </p>
+      <div className="min-h-screen bg-slate-950 text-amber-100 flex items-center justify-center px-4">
+        <div className="rounded-[2rem] border border-amber-300/30 bg-slate-900/95 px-8 py-10 text-center shadow-2xl shadow-amber-500/10">
+          <p className="text-xl font-semibold">{apiError || "No menu items found."}</p>
+          <p className="mt-2 text-sm text-slate-400">Try refreshing or check back in a few moments.</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-500 text-white p-6">
-      
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(251,191,36,0.15),_transparent_45%),_linear-gradient(to_bottom,_#fff7ed,_#fbf1e0)] text-slate-900 ">
+      <main className="mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:px-10">
+       
+       
+        <section className="mt-10 rounded-[2rem] bg-white/90 p-6 shadow-xl ring-1 ring-slate-200/70 shadow-slate-200/40 backdrop-blur-sm sm:p-8">
+         <div className="text-center">
+        <i className="text-xl  text-center">Royal cafe all menu items </i>
+       </div>
 
-
-
-      <h1 className="text-4xl font-bold text-center mb-10">☕ Cafe Menu</h1>
-
-      {/* Category Buttons */}
-      <div className="flex justify-center flex-wrap gap-3 mb-10">
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setSelectedCategory(cat)}
-            className={`px-5 py-2 rounded-full transition ${
-              selectedCategory === cat
-                ? "bg-yellow-500 text-black"
-                : "bg-gray-700 hover:bg-yellow-500 hover:text-black"
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
-      </div>
-
-      {/* Menu Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-        {filteredItems.map((item) => (
-          <div
-            key={item._id || item.id}
-            className="bg-gray-800 rounded-2xl overflow-hidden shadow-lg hover:scale-105 transition"
-          >
-            {/* Image */}
-            <img
-              src={item.image || "/placeholder.png"}
-              alt={item.title}
-              className="h-56 w-full object-cover"
-            />
-
-            {/* Content */}
-            <div className="p-5">
-              <div className="flex justify-between items-center mb-2">
-                <h2 className="text-xl font-semibold">{item.title}</h2>
-                <span className="text-yellow-400 font-bold">
-                  Rs {item.price}
-                </span>
-              </div>
-
-              <p className="text-gray-100 text-sm mb-4">{item.description}</p>
-
-              <div className="flex justify-between items-center">
-                <span className="text-xs bg-gray-700 px-3 py-1 rounded-full">
-                  {item.category}
-                </span>
-
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-amber-600">Menu categories</p>
+              <i className="mt-2 text-3xl font-bold text-slate-950">Find your favorite flavor</i>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              {categories.map((cat) => (
                 <button
-                  onClick={() => router.push("/Order")}
-                  className="bg-yellow-500 text-black px-4 py-2 rounded-lg hover:bg-yellow-400"
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                    selectedCategory === cat
+                      ? "border-amber-500 bg-amber-500 text-slate-950 shadow-sm"
+                      : "border-slate-300 bg-white text-slate-700 hover:border-amber-400 hover:bg-amber-50"
+                  }`}
                 >
-                  Order Now
+                  {cat}
                 </button>
-              </div>
+              ))}
             </div>
           </div>
-        ))}
-      </div>
+
+          <div className="mt-10 grid gap-8 md:grid-cols-2 xl:grid-cols-3">
+            {filteredItems.map((item) => (
+              <article
+                key={item._id || item.id}
+                className="group overflow-hidden rounded-[2rem] bg-slate-950 text-white shadow-[0_30px_90px_-60px_rgba(15,23,42,0.4)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_35px_100px_-50px_rgba(251,191,36,0.3)]"
+              >
+                <div className="relative h-72 overflow-hidden">
+                  <img
+                    src={item.image || "/placeholder.png"}
+                    alt={item.title || item.name}
+                    className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent" />
+                  <div className="absolute left-5 top-5 rounded-full bg-amber-500/95 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-950 shadow-lg">
+                    {item.category || "Special"}
+                  </div>
+                </div>
+
+                <div className="space-y-4 p-6">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="max-w-[calc(100%-5rem)]">
+                      <h3 className="text-2xl font-semibold text-white">
+                        {item.title || item.name}
+                      </h3>
+                      <p className="mt-3 text-sm leading-6 text-slate-300">
+                        {item.description}
+                      </p>
+                    </div>
+                    <div className="rounded-xl bg-amber-200 w-25 text-center text-lg font-bold text-amber-800 shadow-sm">
+                      Rs .{item.price}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 rounded-[1.75rem] bg-slate-900/90 p-4 text-sm text-slate-300">
+                    <span className="inline-flex items-center gap-2">
+                      <span className="h-2.5 w-2.5 rounded-full bg-amber-400" /> Fresh
+                    </span>
+                    <span className="inline-flex items-center gap-2">
+                      <span className="h-2.5 w-2.5 rounded-full bg-slate-400" /> Fast serve
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <button
+                      onClick={() => router.push("/Order")}
+                      className="inline-flex items-center justify-center rounded-full bg-amber-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-300"
+                    >
+                      Order now
+                    </button>
+                    <span className="rounded-full bg-white/10 px-4 py-2 text-sm uppercase tracking-[0.18em] text-white-300">
+                      {item.category || "Cafe"}
+                    </span>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      </main>
     </div>
   );
 };

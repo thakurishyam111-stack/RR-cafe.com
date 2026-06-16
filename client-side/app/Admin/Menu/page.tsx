@@ -92,7 +92,7 @@ export default function AdminMenuPage() {
       };
 
       if (editId) {
-        await axios.put(`${API_BASE_URL}/api/menus/update/${editId}`, payload);
+        await axios.put(`${API_BASE_URL}/api/menus/${editId}`, payload);
       } else {
         // ✅ FIXED ROUTE (your backend uses /add)
         await axios.post(`${API_BASE_URL}/api/menus/add`, payload);
@@ -100,7 +100,8 @@ export default function AdminMenuPage() {
 
       setShowModal(false);
       fetchMenus();
-    } catch (err) {
+    }
+     catch (err) {
       console.log("SAVE ERROR:", err.response?.data || err.message);
       alert(
         err.response?.data?.message ||
@@ -116,7 +117,7 @@ export default function AdminMenuPage() {
     if (!confirm("Delete this menu?")) return;
 
     try {
-      await axios.delete(`${API_BASE_URL}/api/menus/delete/${id}`);
+      await axios.delete(`${API_BASE_URL}/api/menus/${id}`);
       fetchMenus();
     } catch (err) {
       console.log("DELETE ERROR:", err.response?.data || err.message);
