@@ -2,14 +2,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Bell,
-  Menu,
-  X,
-  ShoppingCart,
-  Search,
-  Wallet,
-} from "lucide-react";
+import { Bell, Menu, X, ShoppingCart, Search, Wallet } from "lucide-react";
 
 export default function Navbar() {
   const [search, setSearch] = useState("");
@@ -57,10 +50,8 @@ export default function Navbar() {
                 src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQPxFu6LJIesS0epmaYAoG5xsfhzOkkucRxg&s"
                 alt="Cafe logo"
                 className="h-12 w-12 rounded-full object-cover"
-                
               />
-              <i className="text-gray-700">   The Royal Cafe</i>
-              
+              <i className="text-gray-700"> The Royal Cafe</i>
             </div>
           </div>
 
@@ -100,27 +91,19 @@ export default function Navbar() {
               )}
             </Link>
 
+
             <Link
               href="/Bill"
-              className="hidden sm:inline-flex items-center gap-2 rounded-full bg-blue-500 px-3 py-2 text-white text-sm font-medium hover:brightness-95"
+              className="hidden sm:inline-flex items-center p-2 gap-3 text-slate-700 hover:bg-gray-200 rounded-full relative"
             >
-              <Wallet className="h-4 w-4 gap-3" />
-              Bill
+               <img 
+               src={"https://d1csarkz8obe9u.cloudfront.net/posterpreviews/cash-logo-design-template-f2d7e3d4a6bfd90d4a18bfa2ec7db301_screen.jpg?ts=1735191066"}
+                        width={40}
+                        height={40}
+                        alt="cash"
+                        className=" rounded-full  "
+                      />
             </Link>
-
-            {/* <Link
-              href="/cart"
-              className="hidden sm:inline-flex items-center p-2 text-slate-700 hover:bg-slate-100 rounded-full relative"
-            >
-              <ShoppingCart className="h-5 w-5" />
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full bg-rose-500 text-white text-[10px] px-1.5 py-0.5">
-                  {cartCount}
-                </span>
-              )}
-            </Link> */}
-
-
 
             <button
               type="button"
@@ -147,7 +130,10 @@ export default function Navbar() {
       >
         <div className="flex items-center justify-between p-4 border-b bg-gray-200">
           <div>
-            <div className="text-lg font-semibold text-gray-800 text-center"> The Royal Cafe</div>
+            <div className="text-lg font-semibold text-gray-800 text-center">
+              {" "}
+              The Royal Cafe
+            </div>
           </div>
           <button
             onClick={() => setDrawerOpen(false)}
@@ -170,16 +156,16 @@ export default function Navbar() {
             </Link>
           ))}
 
-           <form className="hidden md:flex items-center gap-2 rounded-full border border-gray-500 bg-gray-100 px-3 py-1">
-              <Search className="h-4 w-4 text-gray-500 " />
-              <input
-                aria-label="Search"
-                placeholder="Search ..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-40 bg-transparent text-sm outline-none placeholder:text-gray-700"
-              />
-            </form>
+          <form className="hidden md:flex items-center gap-2 rounded-full border border-gray-500 bg-gray-100 px-3 py-1">
+            <Search className="h-4 w-4 text-gray-500 " />
+            <input
+              aria-label="Search"
+              placeholder="Search ..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-40 bg-transparent text-sm outline-none placeholder:text-gray-700"
+            />
+          </form>
 
           <div className="mt-4 space-y-2 text-gray-800">
             <Link
@@ -198,8 +184,6 @@ export default function Navbar() {
               <Wallet className="h-4 w-4" />
               Bill
             </Link>
-            
-            
           </div>
         </nav>
       </aside>

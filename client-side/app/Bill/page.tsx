@@ -157,6 +157,22 @@ export default function BillPage() {
                   <p className="text-xl text-center mb-3 text-gray-100">Pay via</p>
 
                   <div className="flex justify-center gap-6">
+
+                     <button
+                      onClick={() => handlePayment("Cash")}
+                      className="flex flex-col items-center"
+                    >
+                      <img 
+                      src={"https://thumbs.dreamstime.com/b/money-transaction-vector-logo-icon-design-buying-cash-symbol-illustration-illustrations-152825421.jpg"}
+                        width={60}
+                        height={60}
+                        alt="cash"
+                        className=" rounded-full  "
+                      />
+                      <span className="text-l mt-1">Cash</span>
+                    </button>
+
+
                     <button
                       onClick={() => handlePayment("eSewa")}
                       className="flex flex-col items-center"
