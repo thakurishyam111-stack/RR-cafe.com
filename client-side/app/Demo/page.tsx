@@ -1,469 +1,268 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
-  ArrowUpRight,
-  DollarSign,
-  TrendingUp,
-  BarChart3,
-  CalendarDays,
-  Wallet,
+  CheckCircle,
+  XCircle,
+  Trash2,
+  Phone,
+  Table,
+  AlertCircle,
+  CarTaxiFront,
+  ShoppingCart,
 } from "lucide-react";
 import AdminSidebar from "@/components/AdminSidebar";
 
-type OrderStatus = "pending" | "approved" | "rejected";
+export default function OrdersPage() {
+  const [orders, setOrders] = useState([]);
 
-type Order = {
-  _id: string;
-  total?: number;
-  status?: OrderStatus;
-  paymentStatus?: string;
-  createdAt?: string;
-  updatedAt?: string;
-};
+  const fetchOrders = async () => {
+    try {
+      const res = await axios.get("http://localhost:8080/api/orders");
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
-
-const monthlyLabels = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
-
-export default function RevenuePage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+      setOrders(res.data.orders);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   useEffect(() => {
-    const fetchRevenue = async () => {
-      try {
-        const res = await axios.get(`${API_BASE_URL}/api/orders`);
-        setOrders(Array.isArray(res.data.orders) ? res.data.orders : []);
-      } catch (error) {
-        console.error("Revenue load error:", error);
-        setOrders([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+    fetchOrders();
 
-    fetchRevenue();
+    const interval = setInterval(() => {
+      fetchOrders();
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
-  const approvedOrders = useMemo(
-    () => orders.filter((order) => order.status === "approved"),
-    [orders],
-  );
+  const approveOrder = async (id) => {
+    try {
+      await axios.put(`http://localhost:8080/api/orders/approve/${id}`);
 
-  const totalRevenue = useMemo(
-    () =>
-      approvedOrders.reduce((sum, order) => sum + Number(order.total || 0), 0),
-    [approvedOrders],
-  );
+      fetchOrders();
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
-  const monthlyRevenue = useMemo(() => {
-    const monthTotals = Array(12).fill(0);
-    approvedOrders.forEach((order) => {
-      const date = new Date(order.createdAt || order.updatedAt || Date.now());
-      monthTotals[date.getMonth()] += Number(order.total || 0);
-    });
-    return monthTotals;
-  }, [approvedOrders]);
+  const rejectOrder = async (id) => {
+    try {
+      await axios.put(`http://localhost:8080/api/orders/reject/${id}`);
 
-  const inProgressRevenue = useMemo(
-    () =>
-      orders
-        .filter((order) => order.status === "pending")
-        .reduce((sum, order) => sum + Number(order.total || 0), 0),
-    [orders],
-  );
+      fetchOrders();
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
-  const rejectedRevenue = useMemo(
-    () =>
-      orders
-        .filter((order) => order.status === "rejected")
-        .reduce((sum, order) => sum + Number(order.total || 0), 0),
-    [orders],
-  );
+  const deleteOrder = async (id) => {
+    const ok = window.confirm("Delete this order?");
 
-  const changePercent = 8.4;
+    if (!ok) return;
+
+    try {
+      await axios.delete(`http://localhost:8080/api/orders/${id}`);
+
+      fetchOrders();
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <>
+      {/* SIDEBAR */}
       <AdminSidebar />
 
-      <main className="min-h-screen bg-gradient-to-br from-slate-600 via-slate-500 to-slate-950 text-white p-4 md:p-8 md:pt-6 md:ml-72">
-        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h1 className="text-4xl font-semibold tracking-tight">
-              Sales & Revenue
-            </h1>
-            <p className="mt-2 max-w-2xl text-gray-300">
-              Monitor order revenue flow, income growth, and real-time sales
-              performance across the cafe.
+      {/* MAIN CONTENT */}
+      <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-black text-white p-4 md:p-8 md:pt-6 md:ml-72">
+        {/* Header */}
+        <div className="mb-8 text-center">
+          <h1 className="text-4xl font-bold mb-2"
+       >
+        
+            Orders</h1>
+          <p className="text-gray-200">Manage and track all customer orders</p>
+        </div>
+
+        {/* STATS CARDS */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          {/* Total Orders */}
+          <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 border border-blue-500/20 p-6 rounded-xl hover:border-blue-500/40 transition-all duration-300">
+            <p className="text-blue-300 text-sm font-medium">Total Orders</p>
+            <p className="text-3xl font-bold mt-2">{orders.length}</p>
+          </div>
+
+          {/* Approved */}
+          <div className="bg-gradient-to-br from-green-500/10 to-green-600/10 border border-green-500/20 p-6 rounded-xl hover:border-green-500/40 transition-all duration-300">
+            <p className="text-green-300 text-sm font-medium">Approved</p>
+            <p className="text-3xl font-bold mt-2">
+              {orders.filter((o) => o.status === "approved").length}
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <div className="rounded-3xl bg-white/5 border border-white/10 p-4 shadow-lg shadow-black/10 backdrop-blur-md">
-              <p className="text-sm text-gray-100">Approved revenue</p>
-              <p className="mt-3 text-3xl font-semibold">
-                Rs. {totalRevenue.toLocaleString()}
-              </p>
-              <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-white text-xs font-medium">
-                <ArrowUpRight className="h-4 w-4" /> {changePercent}% vs last
-                month
-              </div>
-            </div>
-            <div className="rounded-3xl bg-white/5 border border-white/10 p-4 shadow-lg shadow-black/10 backdrop-blur-md">
-              <p className="text-sm text-gray-90">Pending orders</p>
-              <p className="mt-3 text-3xl font-semibold">
-                {orders.filter((order) => order.status === "pending").length}
-              </p>
-              <p className="mt-2 text-sm text-gray-100">
-                Rs {inProgressRevenue.toLocaleString()}
-              </p>
-            </div>
-            <div className="rounded-3xl bg-white/5 border border-white/10 p-4 shadow-lg shadow-black/10 backdrop-blur-md">
-              <p className="text-sm text-gray-100">Rejected revenue</p>
-              <p className="mt-3 text-3xl font-semibold">
-                Rs {rejectedRevenue.toLocaleString()}
-              </p>
-              <p className="mt-2 text-sm text-gray-90">
-                from{" "}
-                {orders.filter((order) => order.status === "rejected").length}{" "}
-                orders
-              </p>
-            </div>
+          {/* Pending */}
+          <div className="bg-gradient-to-br from-yellow-500/10 to-yellow-600/10 border border-yellow-500/20 p-6 rounded-xl hover:border-yellow-500/40 transition-all duration-300">
+            <p className="text-yellow-300 text-sm font-medium">Pending</p>
+            <p className="text-3xl font-bold mt-2">
+              {orders.filter((o) => o.status === "pending").length}
+            </p>
+          </div>
+
+          {/* Paid */}
+          <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/10 border border-purple-500/20 p-6 rounded-xl hover:border-purple-500/40 transition-all duration-300">
+            <p className="text-purple-300 text-sm font-medium">Paid</p>
+            <p className="text-3xl font-bold mt-2">
+              {orders.filter((o) => o.paymentStatus === "paid").length}
+            </p>
           </div>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
-          <section className="rounded-[2rem] bg-gradient-to-br from-slate-950/90 via-slate-900/80 to-slate-950/90 border border-white/10 p-6 shadow-2xl shadow-black/20">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-sm text-gray-400 uppercase tracking-[0.25em]">
-                  Revenue trend
-                </p>
-                <h2 className="text-2xl font-semibold mt-2">
-                  Monthly income flow
-                </h2>
-              </div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200">
-                <CalendarDays className="h-4 w-4 text-emerald-300" /> Last 12
-                months
-              </div>
-            </div>
+        {/* ORDERS TABLE */}
+        <div className="bg-gray-900/50 border border-gray-800 rounded-xl overflow-hidden shadow-lg">
+          <div className="p-6 border-b border-gray-800">
+            <h2 className="text-2xl font-bold">Orders List</h2>
+          </div>
 
-            <div className="mt-6 grid gap-4">
-              <div className="flex items-end gap-3 overflow-hidden rounded-[1.5rem] bg-slate-900/70 p-5">
-                {monthlyRevenue.map((value, index) => {
-                  const height = Math.min(
-                    240,
-                    value === 0
-                      ? 18
-                      : Math.max(
-                          18,
-                          (value / Math.max(...(monthlyRevenue || [1]))) * 240,
-                        ),
-                  );
-                  return (
-                    <div
-                      key={monthlyLabels[index]}
-                      className="flex-1 text-center"
+          {orders.length === 0 ? (
+            <div className="p-8 text-center">
+              <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-400">No orders found</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-800 bg-gray-800/30">
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
+                      Bill No
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
+                      Customer
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
+                      Phone
+                    </th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-300">
+                      Table
+                    </th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-300">
+                      Amount
+                    </th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-300">
+                      Status
+                    </th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-300">
+                      Payment
+                    </th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-300">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {orders.map((order) => (
+                    <tr
+                      key={order._id}
+                      className="border-b border-gray-800 hover:bg-gray-800/30 transition-colors duration-200"
                     >
-                      <div
-                        className="mx-auto mb-2 h-0 w-2 rounded-full bg-blue-500/40"
-                        style={{ height: `${height}px` }}
-                      />
-                      <p className="text-xs text-gray-200">
-                        {monthlyLabels[index]}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
+                      <td className="px-6 py-4 font-medium text-green-400">
+                        #{order.billNo}
+                      </td>
 
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-3xl bg-slate-950/80 p-4 border border-white/10">
-                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-300">
-                    <DollarSign className="h-5 w-5" />
-                  </div>
-                  <p className="mt-4 text-sm text-gray-400">
-                    Average order value
-                  </p>
-                  <p className="mt-2 text-xl font-semibold">
-                    Rs{" "}
-                    {orders.length
-                      ? Math.round(
-                          totalRevenue / orders.length,
-                        ).toLocaleString()
-                      : 0}
-                  </p>
-                </div>
-                <div className="rounded-3xl bg-slate-950/80 p-4 border border-white/10">
-                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-300">
-                    <TrendingUp className="h-5 w-5" />
-                  </div>
-                  <p className="mt-4 text-sm text-gray-400">Approved orders</p>
-                  <p className="mt-2 text-xl font-semibold">
-                    {approvedOrders.length}
-                  </p>
-                </div>
-                <div className="rounded-3xl bg-slate-950/80 p-4 border border-white/10">
-                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-300">
-                    <Wallet className="h-5 w-5" />
-                  </div>
-                  <p className="mt-4 text-sm text-gray-400">Total orders</p>
-                  <p className="mt-2 text-xl font-semibold">{orders.length}</p>
-                </div>
-              </div>
+                      <td className="px-6 py-4 font-medium">
+                        {order.customerName}
+                      </td>
+
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2 text-gray-300">
+                          <Phone size={16} className="text-blue-400" />
+                          <a
+                            href={`tel:${order.phone}`}
+                            className="hover:text-blue-400 transition-colors"
+                          >
+                            {order.phone}
+                          </a>
+                        </div>
+                      </td>
+
+                      <td className="px-6 py-4 text-center">
+                        <div className="flex items-center justify-center gap-2 text-gray-300">
+                          <Table size={16} className="text-orange-400" />
+                          {order.number}
+                        </div>
+                      </td>
+
+                      <td className="px-6 py-4 text-center font-semibold text-green-400">
+                        Rs {order.total}
+                      </td>
+
+                      <td className="px-6 py-4 text-center">
+                        <span
+                          className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold border ${
+                            order.status === "approved"
+                              ? "bg-green-500/20 text-green-400 border-green-500/30"
+                              : order.status === "rejected"
+                                ? "bg-red-500/20 text-red-400 border-red-500/30"
+                                : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+                          }`}
+                        >
+                          {order.status.charAt(0).toUpperCase() +
+                            order.status.slice(1)}
+                        </span>
+                      </td>
+
+                      <td className="px-6 py-4 text-center">
+                        <span
+                          className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold border ${
+                            order.paymentStatus === "paid"
+                              ? "bg-blue-500/20 text-blue-400 border-blue-500/30"
+                              : "bg-red-500/20 text-red-400 border-red-500/30"
+                          }`}
+                        >
+                          {order.paymentStatus.charAt(0).toUpperCase() +
+                            order.paymentStatus.slice(1)}
+                        </span>
+                      </td>
+
+                      <td className="px-6 py-4">
+                        <div className="flex gap-2 justify-center">
+                          <button
+                            onClick={() => approveOrder(order._id)}
+                            className="bg-green-500/20 hover:bg-green-500/30 text-green-400 p-2 rounded-lg transition-colors border border-green-500/30"
+                            title="Approve"
+                          >
+                            <CheckCircle size={18} />
+                          </button>
+
+                          <button
+                            onClick={() => rejectOrder(order._id)}
+                            className="bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 p-2 rounded-lg transition-colors border border-yellow-500/30"
+                            title="Reject"
+                          >
+                            <XCircle size={18} />
+                          </button>
+
+                          <button
+                            onClick={() => deleteOrder(order._id)}
+                            className="bg-red-500/20 hover:bg-red-500/30 text-red-400 p-2 rounded-lg transition-colors border border-red-500/30"
+                            title="Delete"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          </section>
-
-          <section className="rounded-[2rem] bg-gradient-to-br from-slate-950/90 via-slate-900/80 to-slate-950/90 border border-white/10 p-6 shadow-2xl shadow-black/20">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm uppercase tracking-[0.25em] text-gray-400">
-                  Revenue flow
-                </p>
-                <h2 className="text-2xl font-semibold mt-2">
-                  Order income stream
-                </h2>
-              </div>
-              <div className="rounded-3xl bg-white/5 px-3 py-2 text-xs uppercase tracking-[0.2em] text-emerald-300">
-                live view
-              </div>
-            </div>
-
-            <div className="mt-8 space-y-5">
-              <div className="rounded-3xl border border-white/10 bg-slate-950/70 p-5">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm text-gray-400">Income recognized</p>
-                    <p className="mt-2 text-3xl font-semibold">
-                      Rs {totalRevenue.toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-300">
-                    <BarChart3 className="h-5 w-5" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-3xl border border-white/10 bg-slate-950/70 p-5">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm text-gray-400">Revenue pipeline</p>
-                    <p className="mt-2 text-lg font-semibold text-gray-100">
-                      Rs{" "}
-                      {(inProgressRevenue + rejectedRevenue).toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-300">
-                    <TrendingUp className="h-5 w-5" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-3xl border border-white/10 bg-slate-950/70 p-5">
-                <p className="text-sm text-gray-400">
-                  Real-time order composition
-                </p>
-                <div className="mt-4 grid gap-3">
-                  <div className="rounded-2xl bg-white/5 p-4">
-                    <div className="flex items-center justify-between text-sm text-gray-300">
-                      <span>Completed revenue</span>
-                      <span>Rs {totalRevenue.toLocaleString()}</span>
-                    </div>
-                  </div>
-                  <div className="rounded-2xl bg-white/5 p-4">
-                    <div className="flex items-center justify-between text-sm text-gray-300">
-                      <span>Pending income</span>
-                      <span>Rs {inProgressRevenue.toLocaleString()}</span>
-                    </div>
-                  </div>
-                  <div className="rounded-2xl bg-white/5 p-4">
-                    <div className="flex items-center justify-between text-sm text-gray-300">
-                      <span>Declined value</span>
-                      <span>Rs {rejectedRevenue.toLocaleString()}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
+          )}
         </div>
-
-        <div className="mt-6 rounded-[2rem] border border-white/10 bg-slate-950/90 p-6 shadow-2xl shadow-black/20">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-sm text-gray-400 uppercase tracking-[0.25em]">
-                Revenue sources
-              </p>
-              <h2 className="text-2xl font-semibold mt-2">
-                Income breakdown by order type
-              </h2>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <span className="rounded-full bg-emerald-500/10 px-4 py-2 text-sm text-emerald-300">
-                Approved
-              </span>
-              <span className="rounded-full bg-yellow-500/10 px-4 py-2 text-sm text-yellow-300">
-                Pending
-              </span>
-              <span className="rounded-full bg-red-500/10 px-4 py-2 text-sm text-red-300">
-                Rejected
-              </span>
-            </div>
-          </div>
-
-          <div className="mt-6 grid gap-4 sm:grid-cols-3">
-            <div className="rounded-3xl bg-slate-900/80 p-5 border border-white/10">
-              <p className="text-sm text-gray-400">Revenue earned</p>
-              <p className="mt-3 text-2xl font-semibold">
-                Rs {totalRevenue.toLocaleString()}
-              </p>
-            </div>
-            <div className="rounded-3xl bg-slate-900/80 p-5 border border-white/10">
-              <p className="text-sm text-gray-400">Pending income</p>
-              <p className="mt-3 text-2xl font-semibold">
-                Rs {inProgressRevenue.toLocaleString()}
-              </p>
-            </div>
-            <div className="rounded-3xl bg-slate-900/80 p-5 border border-white/10">
-              <p className="text-sm text-gray-400">Rejected lost</p>
-              <p className="mt-3 text-2xl font-semibold">
-                Rs {rejectedRevenue.toLocaleString()}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="mt-10 rounded-3xl bg-white/5 border border-white/10 p-6 text-center text-gray-300">
-            Loading revenue data...
-          </div>
-        ) : (
-          <div className="mt-8 grid gap-6 lg:grid-cols-2">
-            <div className="rounded-[2rem] border border-white/10 bg-slate-950/90 p-6 shadow-2xl shadow-black/15">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm uppercase tracking-[0.25em] text-gray-400">
-                    Income velocity
-                  </p>
-                  <h3 className="mt-2 text-xl font-semibold">
-                    Order revenue flow
-                  </h3>
-                </div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-2 text-sm text-emerald-300">
-                  <BarChart3 className="h-4 w-4" /> Trend
-                </div>
-              </div>
-              <div className="mt-6 grid gap-4">
-                <div className="space-y-3">
-                  <div className="rounded-3xl bg-slate-900/80 p-4">
-                    <div className="flex items-center justify-between text-sm text-gray-400">
-                      <span>Total orders</span>
-                      <span>{orders.length}</span>
-                    </div>
-                  </div>
-                  <div className="rounded-3xl bg-slate-900/80 p-4">
-                    <div className="flex items-center justify-between text-sm text-gray-400">
-                      <span>Approved orders</span>
-                      <span>{approvedOrders.length}</span>
-                    </div>
-                  </div>
-                  <div className="rounded-3xl bg-slate-900/80 p-4">
-                    <div className="flex items-center justify-between text-sm text-gray-400">
-                      <span>Pending orders</span>
-                      <span>
-                        {
-                          orders.filter((order) => order.status === "pending")
-                            .length
-                        }
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-[2rem] border border-white/10 bg-slate-950/90 p-6 shadow-2xl shadow-black/15">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm uppercase tracking-[0.25em] text-gray-400">
-                    Revenue insight
-                  </p>
-                  <h3 className="mt-2 text-xl font-semibold">
-                    Order income breakdown
-                  </h3>
-                </div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-2 text-sm text-sky-300">
-                  <Wallet className="h-4 w-4" /> Income
-                </div>
-              </div>
-
-              <div className="mt-6 space-y-4">
-                <div className="rounded-3xl bg-slate-900/80 p-4">
-                  <div className="flex justify-between text-sm text-gray-400">
-                    <span>Average value per approved order</span>
-                    <span>
-                      Rs{" "}
-                      {approvedOrders.length
-                        ? Math.round(
-                            totalRevenue / approvedOrders.length,
-                          ).toLocaleString()
-                        : 0}
-                    </span>
-                  </div>
-                </div>
-                <div className="rounded-3xl bg-slate-900/80 p-4">
-                  <div className="flex justify-between text-sm text-gray-400">
-                    <span>Average total order amount</span>
-                    <span>
-                      Rs{" "}
-                      {orders.length
-                        ? Math.round(
-                            (approvedOrders.reduce(
-                              (sum, order) => sum + Number(order.total || 0),
-                              0,
-                            ) +
-                              inProgressRevenue +
-                              rejectedRevenue) /
-                              orders.length,
-                          ).toLocaleString()
-                        : 0}
-                    </span>
-                  </div>
-                </div>
-                <div className="rounded-3xl bg-slate-900/80 p-4">
-                  <div className="flex justify-between text-sm text-gray-400">
-                    <span>Most active month</span>
-                    <span>
-                      {monthlyLabels[
-                        monthlyRevenue.indexOf(Math.max(...monthlyRevenue))
-                      ] || "N/A"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </main>
-      
     </>
   );
 }

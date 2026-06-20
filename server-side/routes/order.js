@@ -49,26 +49,22 @@ router.post("/create", async (req, res) => {
 // APPROVE ORDER
 router.put("/approve/:id", async (req, res) => {
   try {
-
-    const updatedOrder =
-      await Order.findByIdAndUpdate(
-        req.params.id,
-        {
-          status: "approved",
-        },
-        {
-          new: true,
-        }
-      );
+    const updatedOrder = await Order.findByIdAndUpdate(
+      req.params.id,
+      {
+        status: "approved",
+      },
+      {
+        new: true,
+      },
+    );
 
     res.status(200).json({
       success: true,
       message: "Order Approved",
       order: updatedOrder,
     });
-
   } catch (error) {
-
     console.log(error);
 
     res.status(500).json({
@@ -102,28 +98,63 @@ router.get("/", async (req, res) => {
 // REJECT ORDER
 router.put("/reject/:id", async (req, res) => {
   try {
+    const updatedOrder = await Order.findByIdAndUpdate(
+      req.params.id,
+      {
+        status: "rejected",
+      },
+      { new: true },
+    );
 
-    const updatedOrder =
-      await Order.findByIdAndUpdate(
-        req.params.id,
-        {
-          status: "rejected",
-        },
-        {
-          new: true,
-        }
-      );
+    if (!updatedOrder) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
 
     res.status(200).json({
       success: true,
-      message: "Order Rejected",
+      message: "Order rejected successfully",
       order: updatedOrder,
     });
-
   } catch (error) {
-
     console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+});
 
+// PAYMENT STATUS UPDATE
+router.put("/payment/:id", async (req, res) => {
+  try {
+    const { method } = req.body;
+
+    const updatedOrder = await Order.findByIdAndUpdate(
+      req.params.id,
+      {
+        paymentStatus: "paid",
+        paymentMethod: method || "unknown", // optional add
+      },
+      { new: true },
+    );
+
+    if (!updatedOrder) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Payment marked as paid via ${method || "unknown"}`,
+      order: updatedOrder,
+    });
+  } catch (error) {
+    console.log(error);
     res.status(500).json({
       success: false,
       message: "Server Error",
@@ -170,10 +201,10 @@ router.get("/billNo/:billNo", async (req, res) => {
         message: "Order not approved yet",
       });
     }
-res.status(200).json({
-  success: true,
-  order,
-});
+    res.status(200).json({
+      success: true,
+      order,
+    });
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
   }

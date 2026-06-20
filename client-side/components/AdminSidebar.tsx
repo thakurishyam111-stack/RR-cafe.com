@@ -12,6 +12,7 @@ import {
   LogOut,
   Menu,
   X,
+  Flame,
 } from "lucide-react";
 
 export default function AdminSidebar() {
@@ -46,6 +47,11 @@ export default function AdminSidebar() {
       href: "/Admin/Revenue",
       icon: Wallet,
     },
+    {
+      label: "Today-special",
+      href: "/Admin/Today-special",
+      icon: Flame,
+    },
   ];
 
   const isActive = (href: string) => pathname === href;
@@ -74,7 +80,7 @@ export default function AdminSidebar() {
         {/* Logo */}
         <div className="mb-12">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-green-400 to-green-600 bg-clip-text text-transparent mb-2">
-            Royel Cafe
+            Deurali Cafe
           </h1>
           <p className="text-gray-400 text-sm">Admin Dashboard</p>
         </div>

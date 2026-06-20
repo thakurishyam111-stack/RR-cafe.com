@@ -18,7 +18,7 @@ export default function HomePage() {
         <div className="bg-black/60 w-full h-full flex items-center justify-center">
           <div className="text-center text-white px-5">
             <h1 className="text-5xl md:text-7xl font-bold mb-5">
-              Welcome to Royal Cafe
+              Welcome to Deurali Cafe
             </h1>
             <p className="text-lg md:text-2xl mb-8">
               Fresh Coffee • Delicious Food • Amazing Experience
@@ -41,7 +41,7 @@ export default function HomePage() {
           />
 
           <div>
-            <h2 className="text-4xl font-bold mb-5 text-gray-950">About Royal Cafe</h2>
+            <h2 className="text-4xl font-bold mb-5 text-gray-950">About Deurali Cafe</h2>
 
             <p className="text-gray-700 text-lg leading-relaxed">
               RR Cafe is a perfect destination for coffee lovers, food

@@ -78,7 +78,7 @@ const Page = () => {
        
         <section className="mt-10 rounded-[2rem] bg-white/90 p-6 shadow-xl ring-1 ring-slate-200/70 shadow-slate-200/40 backdrop-blur-sm sm:p-8">
          <div className="text-center">
-        <i className="text-xl  text-center">Royal cafe all menu items </i>
+        <i className="text-xl  text-center">Deurali cafe all menu items </i>
        </div>
 
           <div className="flex flex-wrap items-center justify-between gap-4">

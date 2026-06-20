@@ -2,7 +2,18 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Menu, X, ShoppingCart, Search, Wallet } from "lucide-react";
+import {
+  Bell,
+  Menu,
+  X,
+  ShoppingCart,
+  Search,
+  Wallet,
+  MapIcon,
+  LocateIcon,
+  Map,
+  MapPin,
+} from "lucide-react";
 
 export default function Navbar() {
   const [search, setSearch] = useState("");
@@ -44,14 +55,14 @@ export default function Navbar() {
     <>
       <header className="sticky top-0 z-100 bg-amber-50 backdrop-blur-md border-b shadow-xl rounded-xl border-slate-200">
         <div className="mx-auto flex items-center justify-between max-w-6xl px-4 py-3 ">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 ">
             <div className="flex items-center gap-3 pr-5">
               <img
                 src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQPxFu6LJIesS0epmaYAoG5xsfhzOkkucRxg&s"
                 alt="Cafe logo"
                 className="h-12 w-12 rounded-full object-cover"
               />
-              <i className="text-gray-700"> The Royal Cafe</i>
+              <i className="text-gray-700"> The Deurali Cafe</i>
             </div>
           </div>
 
@@ -90,19 +101,25 @@ export default function Navbar() {
                 </span>
               )}
             </Link>
-
+            <Link href="/Map"
+            className="hidden sm:inline-flex items-center rounded-full p-2 text-slate-700 hover:bg-slate-100 relative"
+            >
+              <MapPin/>
+            </Link>
 
             <Link
               href="/Bill"
               className="hidden sm:inline-flex items-center p-2 gap-3 text-slate-700 hover:bg-gray-200 rounded-full relative"
             >
-               <img 
-               src={"https://d1csarkz8obe9u.cloudfront.net/posterpreviews/cash-logo-design-template-f2d7e3d4a6bfd90d4a18bfa2ec7db301_screen.jpg?ts=1735191066"}
-                        width={40}
-                        height={40}
-                        alt="cash"
-                        className=" rounded-full  "
-                      />
+              <img
+                src={
+                  "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/cash-logo-design-template-f2d7e3d4a6bfd90d4a18bfa2ec7db301_screen.jpg?ts=1735191066"
+                }
+                width={40}
+                height={40}
+                alt="cash"
+                className=" rounded-full  "
+              />
             </Link>
 
             <button
@@ -132,7 +149,7 @@ export default function Navbar() {
           <div>
             <div className="text-lg font-semibold text-gray-800 text-center">
               {" "}
-              The Royal Cafe
+              The Deurali Cafe
             </div>
           </div>
           <button

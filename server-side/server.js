@@ -8,6 +8,7 @@ import userRoutes from "./routes/user.js";
 import menuRoutes from "./routes/menu.js";
 import orderRoutes from "./routes/order.js";
 import adminRoutes from "./routes/admin.js";
+import todayRoutes from "./routes/today.js";
 
 
 
@@ -26,6 +27,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/menus", menuRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/today", todayRoutes);
 
 app.get("/", (req, res) => {
   res.send("Server Running");

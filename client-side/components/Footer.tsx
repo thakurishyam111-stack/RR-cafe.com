@@ -8,7 +8,7 @@ export default function Footer() {
             <h3 className="mb-4 text-lg font-semibold text-white underline underline-offset-4">
     Follow Us
   </h3>
-<h3> The Royale Cafe</h3>
+<h3> The Deurali Cafe</h3>
            
             <div className="flex gap-4">
            <a

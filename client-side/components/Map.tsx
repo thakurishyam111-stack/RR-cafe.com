@@ -45,7 +45,7 @@ export default function CafeMap() {
             Find us on the map
           </span>
           <h2 className="mt-5 text-4xl font-bold tracking-tight sm:text-5xl">
-            Visit Royal Cafe
+            Visit Deurali Cafe
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-slate-300">
             Explore our cafe location with a real map experience, custom marker,
@@ -64,7 +64,7 @@ export default function CafeMap() {
                   Cafe
                 </p>
                 <h3 className="mt-2 text-2xl font-semibold text-white">
-                  Royal Cafe
+                  Deurali Cafe
                 </h3>
               </div>
             </div>

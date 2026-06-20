@@ -49,8 +49,10 @@ export default function OrdersPage() {
 
   const rejectOrder = async (id) => {
     try {
-      await axios.put(`http://localhost:8080/api/orders/reject/${id}`);
+   await axios.put(`http://localhost:8080/api/orders/reject/${id}`);
 
+
+      
       fetchOrders();
     } catch (error) {
       console.log(error);
@@ -80,10 +82,7 @@ export default function OrdersPage() {
       <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-black text-white p-4 md:p-8 md:pt-6 md:ml-72">
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold mb-2"
-       >
-        
-            Orders</h1>
+          <h1 className="text-4xl font-bold mb-2">Orders</h1>
           <p className="text-gray-200">Manage and track all customer orders</p>
         </div>
 
@@ -240,8 +239,17 @@ export default function OrdersPage() {
 
                           <button
                             onClick={() => rejectOrder(order._id)}
-                            className="bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 p-2 rounded-lg transition-colors border border-yellow-500/30"
-                            title="Reject"
+                            disabled={order.paymentStatus === "paid"}
+                            className={`p-2 rounded-lg transition-colors border ${
+                              order.paymentStatus === "paid"
+                                ? "bg-gray-500/10 text-gray-500 border-gray-500/20 cursor-not-allowed opacity-50"
+                                : "bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 border-yellow-500/30"
+                            }`}
+                            title={
+                              order.paymentStatus === "paid"
+                                ? "Cannot reject paid orders"
+                                : "Reject"
+                            }
                           >
                             <XCircle size={18} />
                           </button>

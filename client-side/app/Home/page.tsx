@@ -23,7 +23,7 @@ export default function Page() {
               Open daily · Fresh coffee
             </span>
             <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-slate-950 sm:text-5xl">
-              Welcome to Cafe Royale
+              Welcome to Cafe Deurali
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-8 text-slate-700">
               Enjoy café-style coffee, seasonal brunch dishes, and a relaxed
@@ -136,7 +136,7 @@ export default function Page() {
             <div>
               <h2 className="text-3xl font-bold">A real cafe experience.</h2>
               <p className="mt-4 max-w-xl text-slate-200">
-                From handcrafted coffee to seasonal brunch plates, Cafe Royale
+                From handcrafted coffee to seasonal brunch plates, Cafe Deurali
                 delivers a warm, polished cafe atmosphere with friendly service
                 and memorable flavors.
               </p>
