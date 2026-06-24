@@ -81,12 +81,19 @@ cafe-management-system/
 │   │   ├── orders/
 │   │   ├── billing/
 │   │   └── reports/
+│   │   └── revenue/
+│   │   └── customer/
+│   │   └── today special/
 │   │
 │   ├── customer/
 │   │   ├── menu/
 │   │   ├── cart/
 │   │   ├── checkout/
 │   │   └── order/
+│   │   └── home/
+│   │   └── map/
+│   │   └── service/
+│   │   └── today special/
 │   │
 │   ├── login/
 │   ├── register/
@@ -175,10 +182,9 @@ pnpm install
 Create a `.env` file:
 
 ```env
-MONGODB_URI=your_mongodb_connection
-JWT_SECRET=your_secret_key
+MONGO_URI=mongodb://127.0.0.1:27017/CafeDB
 PORT=8080
-```
+JWT_SECRET=shyamsecret
 
 ---
 
