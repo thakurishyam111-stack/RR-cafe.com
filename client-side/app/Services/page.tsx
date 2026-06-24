@@ -177,7 +177,7 @@ export default function HomePage() {
       </section>
 
       {/* Stats */}
-      <section className="bg-orange-500 text-white py-20">
+      {/* <section className="bg-orange-500 text-white py-20">
 
         <div className="max-w-6xl mx-auto px-6">
 
@@ -207,7 +207,7 @@ export default function HomePage() {
         </div>
       </section>
 
-     
+      */}
      
       <Footer/>
       

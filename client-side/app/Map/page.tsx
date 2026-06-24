@@ -37,7 +37,7 @@ export default function CafeMap() {
   }, []);
 
   return (
-    <section className="relative overflow-hidden rounded-[3rem] bg-slate-950 px-4 m-10 py-16 text-slate-100 shadow-[0_40px_120px_rgba(15,23,42,0.45)]">
+    <section className="relative overflow-hidden rounded-[3rem] bg-slate-500 px-4 m-10 py-16 text-slate-100 shadow-[0_40px_120px_rgba(15,23,42,0.45)]">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(251,191,36,0.14),_transparent_28%),linear-gradient(180deg,_rgba(15,23,42,0.96),_rgba(15,23,42,0.86))]" />
       <div className="relative mx-auto max-w-7xl">
         <div className="text-center mb-12">
@@ -129,7 +129,7 @@ export default function CafeMap() {
                   </div>
                 </Popup>
                 <Tooltip direction="top" offset={[0, -25]} opacity={0.95}>
-                  RR Cafe - Tap for details
+                Deurali Cafe - Tap for details
                 </Tooltip>
               </Marker>
 

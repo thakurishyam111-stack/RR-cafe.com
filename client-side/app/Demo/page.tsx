@@ -1,73 +1,152 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import {
-  CheckCircle,
-  XCircle,
-  Trash2,
-  Phone,
-  Table,
-  AlertCircle,
-  CarTaxiFront,
-  ShoppingCart,
-} from "lucide-react";
 import AdminSidebar from "@/components/AdminSidebar";
+import { Plus, Search } from "lucide-react";
 
-export default function OrdersPage() {
-  const [orders, setOrders] = useState([]);
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 
-  const fetchOrders = async () => {
+export default function AdminMenuPage() {
+  const [menus, setMenus] = useState([]);
+  const [search, setSearch] = useState("");
+
+  const [showModal, setShowModal] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState("All");
+
+  const [loading, setLoading] = useState(false);
+
+  const [form, setForm] = useState({
+    title: "",
+    price: "",
+    category: "",
+    description: "",
+    image: "",
+  });
+
+  // ================= FETCH MENUS =================
+  const fetchMenus = async () => {
     try {
-      const res = await axios.get("http://localhost:8080/api/orders");
-
-      setOrders(res.data.orders);
-    } catch (error) {
-      console.log(error);
+      const { data } = await axios.get(`${API_BASE_URL}/api/menus`);
+      setMenus(data.menus || []);
+    } catch (err) {
+      console.log("FETCH ERROR:", err.response?.data || err.message);
     }
   };
 
   useEffect(() => {
-    fetchOrders();
-
-    const interval = setInterval(() => {
-      fetchOrders();
-    }, 5000);
-
-    return () => clearInterval(interval);
+    fetchMenus();
   }, []);
 
-  const approveOrder = async (id) => {
-    try {
-      await axios.put(`http://localhost:8080/api/orders/approve/${id}`);
+  const total = menus.length;
+  const categories = useMemo(() => {
+    const uniqueCategories = [
+      ...new Set(menus.map((item) => item.category).filter(Boolean)),
+    ];
 
-      fetchOrders();
-    } catch (error) {
-      console.log(error);
+    return ["All", ...uniqueCategories];
+  }, [menus]);
+
+  const filteredMenus = useMemo(() => {
+  return menus.filter((item) => {
+    const searchTerm = search.trim().toLowerCase();
+
+    const matchesCategory =
+      selectedCategory === "All" ||
+      item.category?.toLowerCase() === selectedCategory.toLowerCase();
+
+    const matchesSearch =
+      !searchTerm ||
+      item.title?.toLowerCase().includes(searchTerm) ||
+      item.category?.toLowerCase().includes(searchTerm) ||
+      item.description?.toLowerCase().includes(searchTerm);
+
+    return matchesCategory && matchesSearch;
+  });
+}, [menus, search, selectedCategory]);
+  // ================= FILTER =================
+  // const filteredMenus = useMemo(() => {
+  //   return menus.filter((m) =>
+  //     (m.title || "").toLowerCase().includes(search.toLowerCase()),
+  //   );
+  // }, [menus, search]);
+
+  // const total = menus.length;
+
+  // ================= OPEN ADD =================
+  const openAdd = () => {
+    setEditId(null);
+    setForm({
+      title: "",
+      price: "",
+      category: "",
+      description: "",
+      image: "",
+    });
+    setShowModal(true);
+  };
+
+  // ================= OPEN EDIT =================
+  const openEdit = (menu) => {
+    setEditId(menu._id);
+
+    setForm({
+      title: menu.title || "",
+      price: menu.price?.toString() || "",
+      category: menu.category || "",
+      description: menu.description || "",
+      image: menu.image || "",
+    });
+
+    setShowModal(true);
+  };
+
+  // ================= SAVE (ADD / UPDATE) =================
+  const handleSave = async () => {
+    if (!form.title || !form.price) {
+      alert("Title and Price required");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const payload = {
+        ...form,
+        price: Number(form.price), // IMPORTANT FIX
+      };
+
+      if (editId) {
+        await axios.put(`${API_BASE_URL}/api/menus/${editId}`, payload);
+      } else {
+        // ✅ FIXED ROUTE (your backend uses /add)
+        await axios.post(`${API_BASE_URL}/api/menus/add`, payload);
+      }
+
+      setShowModal(false);
+      fetchMenus();
+    } catch (err) {
+      console.log("SAVE ERROR:", err.response?.data || err.message);
+      alert(
+        err.response?.data?.message ||
+          "Save failed! Check backend or API route.",
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
-  const rejectOrder = async (id) => {
-    try {
-      await axios.put(`http://localhost:8080/api/orders/reject/${id}`);
-
-      fetchOrders();
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const deleteOrder = async (id) => {
-    const ok = window.confirm("Delete this order?");
-
-    if (!ok) return;
+  // ================= DELETE =================
+  const deleteMenu = async (id) => {
+    if (!confirm("Delete this menu?")) return;
 
     try {
-      await axios.delete(`http://localhost:8080/api/orders/${id}`);
-
-      fetchOrders();
-    } catch (error) {
-      console.log(error);
+      await axios.delete(`${API_BASE_URL}/api/menus/${id}`);
+      fetchMenus();
+    } catch (err) {
+      console.log("DELETE ERROR:", err.response?.data || err.message);
     }
   };
 
@@ -79,189 +158,206 @@ export default function OrdersPage() {
       {/* MAIN CONTENT */}
       <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-black text-white p-4 md:p-8 md:pt-6 md:ml-72">
         {/* Header */}
-        <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold mb-2"
-       >
-        
-            Orders</h1>
-          <p className="text-gray-200">Manage and track all customer orders</p>
+        <div className="mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-4xl font-bold mb-2">🍽 Menu Management</h1>
+            <p className="text-gray-400">
+              Add, edit, or manage cafe menu items
+            </p>
+          </div>
+
+          <button
+            onClick={openAdd}
+            className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 px-6 py-3 rounded-xl font-bold transition-all duration-200 flex items-center gap-2 shadow-lg shadow-green-500/30"
+          >
+            <Plus size={20} />
+            Add Menu
+          </button>
         </div>
 
+        <div className="mb-10 flex flex-wrap gap-3">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
+                selectedCategory === cat
+                  ? "bg-amber-500 text-white shadow-lg"
+                  : "bg-white text-slate-700 border border-slate-200 hover:bg-amber-50 hover:border-amber-300"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
         {/* STATS CARDS */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          {/* Total Orders */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="bg-gradient-to-br from-orange-500/10 to-orange-600/10 border border-orange-500/20 p-6 rounded-xl hover:border-orange-500/40 transition-all duration-300">
+            <p className="text-orange-300 text-sm font-medium">Total Items</p>
+            <h2 className="text-3xl font-bold mt-2">{total}</h2>
+          </div>
+
           <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 border border-blue-500/20 p-6 rounded-xl hover:border-blue-500/40 transition-all duration-300">
-            <p className="text-blue-300 text-sm font-medium">Total Orders</p>
-            <p className="text-3xl font-bold mt-2">{orders.length}</p>
+            <p className="text-blue-300 text-sm font-medium">Categories</p>
+            <h2 className="text-3xl font-bold mt-2">
+              {new Set(menus.map((m) => m.category)).size}
+            </h2>
           </div>
 
-          {/* Approved */}
           <div className="bg-gradient-to-br from-green-500/10 to-green-600/10 border border-green-500/20 p-6 rounded-xl hover:border-green-500/40 transition-all duration-300">
-            <p className="text-green-300 text-sm font-medium">Approved</p>
-            <p className="text-3xl font-bold mt-2">
-              {orders.filter((o) => o.status === "approved").length}
-            </p>
-          </div>
-
-          {/* Pending */}
-          <div className="bg-gradient-to-br from-yellow-500/10 to-yellow-600/10 border border-yellow-500/20 p-6 rounded-xl hover:border-yellow-500/40 transition-all duration-300">
-            <p className="text-yellow-300 text-sm font-medium">Pending</p>
-            <p className="text-3xl font-bold mt-2">
-              {orders.filter((o) => o.status === "pending").length}
-            </p>
-          </div>
-
-          {/* Paid */}
-          <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/10 border border-purple-500/20 p-6 rounded-xl hover:border-purple-500/40 transition-all duration-300">
-            <p className="text-purple-300 text-sm font-medium">Paid</p>
-            <p className="text-3xl font-bold mt-2">
-              {orders.filter((o) => o.paymentStatus === "paid").length}
-            </p>
+            <p className="text-green-300 text-sm font-medium">Active Items</p>
+            <h2 className="text-3xl font-bold mt-2">{total}</h2>
           </div>
         </div>
 
-        {/* ORDERS TABLE */}
-        <div className="bg-gray-900/50 border border-gray-800 rounded-xl overflow-hidden shadow-lg">
-          <div className="p-6 border-b border-gray-800">
-            <h2 className="text-2xl font-bold">Orders List</h2>
-          </div>
+        {/* SEARCH */}
+        <div className="relative mb-8">
+          <Search
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 "
+            size={20}
+          />
 
-          {orders.length === 0 ? (
-            <div className="p-8 text-center">
-              <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-400">No orders found</p>
+          <input
+            type="text"
+            placeholder="Search..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded-2xl border border-slate-200 bg-white py-4 pl-12 pr-4 text-slate-900 shadow-sm outline-none transition focus:border-amber-500 focus:ring-4 focus:ring-amber-100"
+          />
+        </div>
+
+        {/* MENU GRID */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredMenus.length === 0 ? (
+            <div className="col-span-full text-center py-12">
+              <p className="text-gray-400">No menu items found</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-800 bg-gray-800/30">
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
-                      Bill No
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
-                      Customer
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
-                      Phone
-                    </th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-300">
-                      Table
-                    </th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-300">
-                      Amount
-                    </th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-300">
-                      Status
-                    </th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-300">
-                      Payment
-                    </th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-300">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
+            filteredMenus.map((item) => (
+              <div
+                key={item._id}
+                className="bg-gray-900/50 border border-gray-800 rounded-xl overflow-hidden hover:border-green-500/40 hover:shadow-lg hover:shadow-green-500/10 transition-all duration-300"
+              >
+                <div className="h-48 w-full overflow-hidden bg-gray-800">
+                  <img
+                    src={item.image}
+                    className="h-full w-full object-cover hover:scale-110 transition-transform duration-300"
+                    alt={item.title}
+                  />
+                </div>
 
-                <tbody>
-                  {orders.map((order) => (
-                    <tr
-                      key={order._id}
-                      className="border-b border-gray-800 hover:bg-gray-800/30 transition-colors duration-200"
+                <div className="p-5">
+                  <div className="flex justify-between items-start gap-2 mb-2">
+                    <h2 className="font-bold text-lg flex-1">{item.title}</h2>
+                    <span className="text-green-400 font-bold whitespace-nowrap text-lg">
+                      Rs {item.price}
+                    </span>
+                  </div>
+
+                  <p className="text-gray-400 text-sm mb-3 line-clamp-2">
+                    {item.description}
+                  </p>
+
+                  <span className="inline-block mb-4 text-xs bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full border border-amber-500/30">
+                    {item.category}
+                  </span>
+
+                  {/* ACTIONS */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => openEdit(item)}
+                      className="flex-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 py-2 rounded-lg transition-colors border border-blue-500/30"
                     >
-                      <td className="px-6 py-4 font-medium text-green-400">
-                        #{order.billNo}
-                      </td>
+                      Edit
+                    </button>
 
-                      <td className="px-6 py-4 font-medium">
-                        {order.customerName}
-                      </td>
-
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2 text-gray-300">
-                          <Phone size={16} className="text-blue-400" />
-                          <a
-                            href={`tel:${order.phone}`}
-                            className="hover:text-blue-400 transition-colors"
-                          >
-                            {order.phone}
-                          </a>
-                        </div>
-                      </td>
-
-                      <td className="px-6 py-4 text-center">
-                        <div className="flex items-center justify-center gap-2 text-gray-300">
-                          <Table size={16} className="text-orange-400" />
-                          {order.number}
-                        </div>
-                      </td>
-
-                      <td className="px-6 py-4 text-center font-semibold text-green-400">
-                        Rs {order.total}
-                      </td>
-
-                      <td className="px-6 py-4 text-center">
-                        <span
-                          className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold border ${
-                            order.status === "approved"
-                              ? "bg-green-500/20 text-green-400 border-green-500/30"
-                              : order.status === "rejected"
-                                ? "bg-red-500/20 text-red-400 border-red-500/30"
-                                : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
-                          }`}
-                        >
-                          {order.status.charAt(0).toUpperCase() +
-                            order.status.slice(1)}
-                        </span>
-                      </td>
-
-                      <td className="px-6 py-4 text-center">
-                        <span
-                          className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold border ${
-                            order.paymentStatus === "paid"
-                              ? "bg-blue-500/20 text-blue-400 border-blue-500/30"
-                              : "bg-red-500/20 text-red-400 border-red-500/30"
-                          }`}
-                        >
-                          {order.paymentStatus.charAt(0).toUpperCase() +
-                            order.paymentStatus.slice(1)}
-                        </span>
-                      </td>
-
-                      <td className="px-6 py-4">
-                        <div className="flex gap-2 justify-center">
-                          <button
-                            onClick={() => approveOrder(order._id)}
-                            className="bg-green-500/20 hover:bg-green-500/30 text-green-400 p-2 rounded-lg transition-colors border border-green-500/30"
-                            title="Approve"
-                          >
-                            <CheckCircle size={18} />
-                          </button>
-
-                          <button
-                            onClick={() => rejectOrder(order._id)}
-                            className="bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 p-2 rounded-lg transition-colors border border-yellow-500/30"
-                            title="Reject"
-                          >
-                            <XCircle size={18} />
-                          </button>
-
-                          <button
-                            onClick={() => deleteOrder(order._id)}
-                            className="bg-red-500/20 hover:bg-red-500/30 text-red-400 p-2 rounded-lg transition-colors border border-red-500/30"
-                            title="Delete"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                    <button
+                      onClick={() => deleteMenu(item._id)}
+                      className="flex-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 py-2 rounded-lg transition-colors border border-red-500/30"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
           )}
         </div>
+
+        {/* MODAL */}
+        {showModal && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-gray-900 border border-gray-800 w-full max-w-xl p-6 rounded-2xl shadow-2xl">
+              <h2 className="text-2xl font-bold mb-6">
+                {editId ? "Update Menu Item" : "Add New Menu Item"}
+              </h2>
+
+              <div className="grid gap-4">
+                <input
+                  placeholder="Item Title"
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  className="p-3 rounded-lg bg-gray-800 border border-gray-700 focus:border-green-500 focus:outline-none transition-colors"
+                />
+
+                <input
+                  placeholder="Price (Rs)"
+                  type="number"
+                  value={form.price}
+                  onChange={(e) => setForm({ ...form, price: e.target.value })}
+                  className="p-3 rounded-lg bg-gray-800 border border-gray-700 focus:border-green-500 focus:outline-none transition-colors"
+                />
+
+                <input
+                  placeholder="Category"
+                  value={form.category}
+                  onChange={(e) =>
+                    setForm({ ...form, category: e.target.value })
+                  }
+                  className="p-3 rounded-lg bg-gray-800 border border-gray-700 focus:border-green-500 focus:outline-none transition-colors"
+                />
+
+                <input
+                  placeholder="Image URL"
+                  value={form.image}
+                  onChange={(e) => setForm({ ...form, image: e.target.value })}
+                  className="p-3 rounded-lg bg-gray-800 border border-gray-700 focus:border-green-500 focus:outline-none transition-colors"
+                />
+
+                <textarea
+                  placeholder="Description"
+                  value={form.description}
+                  onChange={(e) =>
+                    setForm({ ...form, description: e.target.value })
+                  }
+                  rows={3}
+                  className="p-3 rounded-lg bg-gray-800 border border-gray-700 focus:border-green-500 focus:outline-none transition-colors resize-none"
+                />
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={handleSave}
+                  disabled={loading}
+                  className={`flex-1 py-3 rounded-lg font-bold transition-all duration-200 ${
+                    loading
+                      ? "bg-gray-600 cursor-not-allowed"
+                      : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-lg shadow-green-500/30"
+                  }`}
+                >
+                  {loading ? "Saving..." : "Save Item"}
+                </button>
+
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="flex-1 bg-gray-700 hover:bg-gray-600 py-3 rounded-lg font-bold transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </>
   );

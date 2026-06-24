@@ -3,7 +3,7 @@ export default function Footer() {
   return (
     <footer className="border-t border-slate-800 shadow-sm bg-gray-800 text-white rounded-xl m-2">
       <div className="mx-auto grid max-w-6xl gap-10 px-6 py-12 sm:px-8 lg:grid-cols-3 text-white">
-        <div className="space-y-3 text-white">
+        <div className=" text-white flex flex-col justify-between items-start ">
            
             <h3 className="mb-4 text-lg font-semibold text-white underline underline-offset-4">
     Follow Us

@@ -98,7 +98,7 @@ export default function TodayAdmin() {
             {/* IMAGE */}
             <img
               src={item.image || "https://via.placeholder.com/300"}
-              className="h-44 w-full object-cover"
+              className="h-90 w-full object-cover"
             />
 
             {/* CONTENT */}

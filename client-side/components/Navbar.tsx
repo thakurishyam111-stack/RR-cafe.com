@@ -54,19 +54,19 @@ export default function Navbar() {
   return (
     <>
       <header className="sticky top-0 z-100 bg-amber-50 backdrop-blur-md border-b shadow-xl rounded-xl border-slate-200">
-        <div className="mx-auto flex items-center justify-between max-w-6xl px-4 py-3 ">
-          <div className="flex items-center gap-3 ">
-            <div className="flex items-center gap-3 pr-5">
+        <div className="mx-auto flex items-center justify-between  ">
+          <div className="flex justify-between items-start  ">
+            <div className=" p-5">
               <img
-                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQPxFu6LJIesS0epmaYAoG5xsfhzOkkucRxg&s"
+                src="/logo/cafelogo.png"
                 alt="Cafe logo"
-                className="h-12 w-12 rounded-full object-cover"
+                className="h-20 w-20 rounded-full object-cover"
               />
-              <i className="text-gray-700"> The Deurali Cafe</i>
+              <i className="text-gray-700 text-lg"> Deurali Cafe</i>
             </div>
           </div>
 
-          <nav className="hidden md:flex items-center gap-4">
+          <nav className="hidden md:flex items-center gap-7 text-xl">
             {navItems.map((it) => (
               <Link
                 key={it.href}
@@ -78,50 +78,49 @@ export default function Navbar() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-3 text-gray-800">
-            <form className="hidden md:flex items-center gap-2 rounded-full border border-gray-500 bg-gray-100 px-3 py-1">
-              <Search className="h-4 w-4 text-gray-500 " />
+          <div className="flex items-center gap-5 text-gray-800">
+            <form className="hidden md:flex items-center  rounded-full border border-gray-500 bg-gray-100 w-80">
+              <Search className="h-10 w-full text-gray-500 " />
               <input
                 aria-label="Search"
                 placeholder="Search ..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-40 bg-transparent text-sm outline-none placeholder:text-gray-700"
+                className="w-40 bg-transparent text-sm outline-none placeholder:text-gray-700 "
               />
             </form>
+              <Link
+                href="/Notification"
+                className="hidden sm:inline-flex items-center rounded-full gap-5 text-slate-700 hover:bg-slate-100 relative"
+              >
+                <Bell className="h-5 w-5" />
+                {notifCount > 0 && (
+                  <span className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] px-1.5 py-0.5 gap-5">
+                    {notifCount}
+                  </span>
+                )}
+              </Link>
+              <Link
+                href="/Map"
+                className="hidden sm:inline-flex items-center rounded-full p-2 text-slate-700 hover:bg-slate-100 relative"
+              >
+                <MapPin />
+              </Link>
 
-            <Link
-              href="/Notification"
-              className="hidden sm:inline-flex items-center rounded-full p-2 text-slate-700 hover:bg-slate-100 relative"
-            >
-              <Bell className="h-5 w-5" />
-              {notifCount > 0 && (
-                <span className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] px-1.5 py-0.5">
-                  {notifCount}
-                </span>
-              )}
-            </Link>
-            <Link href="/Map"
-            className="hidden sm:inline-flex items-center rounded-full p-2 text-slate-700 hover:bg-slate-100 relative"
-            >
-              <MapPin/>
-            </Link>
-
-            <Link
-              href="/Bill"
-              className="hidden sm:inline-flex items-center p-2 gap-3 text-slate-700 hover:bg-gray-200 rounded-full relative"
-            >
-              <img
-                src={
-                  "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/cash-logo-design-template-f2d7e3d4a6bfd90d4a18bfa2ec7db301_screen.jpg?ts=1735191066"
-                }
-                width={40}
-                height={40}
-                alt="cash"
-                className=" rounded-full  "
-              />
-            </Link>
-
+              <Link
+                href="/Bill"
+                className="hidden sm:inline-flex items-center p-2 gap-3 text-slate-700 hover:bg-gray-200 rounded-full relative"
+              >
+                <img
+                  src={
+                    "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/cash-logo-design-template-f2d7e3d4a6bfd90d4a18bfa2ec7db301_screen.jpg?ts=1735191066"
+                  }
+                  width={40}
+                  height={40}
+                  alt="cash"
+                  className=" rounded-full  "
+                />
+              </Link>
             <button
               type="button"
               onClick={() => setDrawerOpen(true)}

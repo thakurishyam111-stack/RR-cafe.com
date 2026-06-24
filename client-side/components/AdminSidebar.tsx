@@ -43,14 +43,14 @@ export default function AdminSidebar() {
     },
 
     {
-      label: "Revenue",
-      href: "/Admin/Revenue",
-      icon: Wallet,
-    },
-    {
       label: "Today-special",
       href: "/Admin/Today-special",
       icon: Flame,
+    },
+    {
+      label: "Revenue",
+      href: "/Admin/Revenue",
+      icon: Wallet,
     },
   ];
 

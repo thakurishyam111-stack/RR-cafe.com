@@ -17,9 +17,9 @@ export default function Page() {
           alt="Cafe background"
           className="absolute inset-0 h-full w-full object-cover opacity-70"
         />
-        <section className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-center rounded-[2rem] bg-gray-200 p-8 shadow-xl shadow-orange-100 backdrop-blur transition-colors duration-500">
-          <div>
-            <span className="inline-flex rounded-full bg-amber-100 px-4 py-1 text-sm font-semibold text-amber-700">
+        <section className="min-h-screen w-full  grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-center rounded-[2rem] bg-gray-200 p-8 shadow-lg shadow-orange-100 backdrop-blur transition-colors duration-500">
+          <div className="pb-40">
+            <span className="rounded-full bg-amber-100  py-1 text-sm font-semibold text-amber-700">
               Open daily · Fresh coffee
             </span>
             <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-slate-950 sm:text-5xl">
@@ -131,11 +131,11 @@ export default function Page() {
           </article>
         </section>
 
-        <section className="mt-12 rounded-[2rem] bg-slate-950 p-10 text-white shadow-2xl shadow-slate-800/30">
+        <section className="mt-12 rounded-[2rem] bg-slate-100 p-10 text-white shadow-2xl shadow-slate-800/30">
           <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] items-center">
             <div>
-              <h2 className="text-3xl font-bold">A real cafe experience.</h2>
-              <p className="mt-4 max-w-xl text-slate-200">
+              <h2 className="text-3xl font-bold text-black">A real cafe experience.</h2>
+              <p className="mt-4 max-w-xl text-slate-950">
                 From handcrafted coffee to seasonal brunch plates, Cafe Deurali
                 delivers a warm, polished cafe atmosphere with friendly service
                 and memorable flavors.
@@ -143,19 +143,19 @@ export default function Page() {
             </div>
             <div className="space-y-4 rounded-[1.5rem] border border-white/10 bg-white/10 p-6">
               <div className="rounded-3xl bg-orange-500/10 p-4">
-                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-orange-200">
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-black">
                   House roasted beans
                 </p>
-                <p className="mt-2 text-slate-100">
+                <p className="mt-2 text-slate-950">
                   Our coffee is roasted weekly to preserve its rich, aromatic
                   flavor.
                 </p>
               </div>
               <div className="rounded-3xl bg-slate-100/10 p-4">
-                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-200">
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-950">
                   Daily fresh food
                 </p>
-                <p className="mt-2 text-slate-100">
+                <p className="mt-2 text-slate-950">
                   A rotating menu of baked goods and brunch specials is prepared
                   fresh every day.
                 </p>
@@ -163,7 +163,9 @@ export default function Page() {
             </div>
           </div>
         </section>
+//today special 
         <Today />
+
         <section className="mt-12 rounded-[2rem] bg-white p-8 shadow-xl">
           <div className="text-center">
             <p className="text-sm uppercase tracking-[0.24em] text-amber-700">

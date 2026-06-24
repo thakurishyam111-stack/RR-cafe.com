@@ -14,6 +14,7 @@ export default function AdminMenuPage() {
 
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   const [loading, setLoading] = useState(false);
 
@@ -39,14 +40,40 @@ export default function AdminMenuPage() {
     fetchMenus();
   }, []);
 
-  // ================= FILTER =================
-  const filteredMenus = useMemo(() => {
-    return menus.filter((m) =>
-      (m.title || "").toLowerCase().includes(search.toLowerCase()),
-    );
-  }, [menus, search]);
-
   const total = menus.length;
+  const categories = useMemo(() => {
+    const uniqueCategories = [
+      ...new Set(menus.map((item) => item.category).filter(Boolean)),
+    ];
+
+    return ["All", ...uniqueCategories];
+  }, [menus]);
+
+  const filteredMenus = useMemo(() => {
+  return menus.filter((item) => {
+    const searchTerm = search.trim().toLowerCase();
+
+    const matchesCategory =
+      selectedCategory === "All" ||
+      item.category?.toLowerCase() === selectedCategory.toLowerCase();
+
+    const matchesSearch =
+      !searchTerm ||
+      item.title?.toLowerCase().includes(searchTerm) ||
+      item.category?.toLowerCase().includes(searchTerm) ||
+      item.description?.toLowerCase().includes(searchTerm);
+
+    return matchesCategory && matchesSearch;
+  });
+}, [menus, search, selectedCategory]);
+  // ================= FILTER =================
+  // const filteredMenus = useMemo(() => {
+  //   return menus.filter((m) =>
+  //     (m.title || "").toLowerCase().includes(search.toLowerCase()),
+  //   );
+  // }, [menus, search]);
+
+  // const total = menus.length;
 
   // ================= OPEN ADD =================
   const openAdd = () => {
@@ -100,8 +127,7 @@ export default function AdminMenuPage() {
 
       setShowModal(false);
       fetchMenus();
-    }
-     catch (err) {
+    } catch (err) {
       console.log("SAVE ERROR:", err.response?.data || err.message);
       alert(
         err.response?.data?.message ||
@@ -149,6 +175,21 @@ export default function AdminMenuPage() {
           </button>
         </div>
 
+        <div className="mb-10 flex flex-wrap gap-3">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
+                selectedCategory === cat
+                  ? "bg-amber-500 text-white shadow-lg"
+                  : "bg-white text-slate-700 border border-slate-200 hover:bg-amber-50 hover:border-amber-300"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
         {/* STATS CARDS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="bg-gradient-to-br from-orange-500/10 to-orange-600/10 border border-orange-500/20 p-6 rounded-xl hover:border-orange-500/40 transition-all duration-300">
@@ -170,16 +211,19 @@ export default function AdminMenuPage() {
         </div>
 
         {/* SEARCH */}
-        <div className="mb-8">
-          <div className="relative">
-            <Search className="absolute left-4 top-3 text-gray-400" size={20} />
-            <input
-              placeholder="Search menu items..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-800/50 border border-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:outline-none transition-colors"
-            />
-          </div>
+        <div className="relative mb-8">
+          <Search
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 "
+            size={20}
+          />
+
+          <input
+            type="text"
+            placeholder="Search..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded-2xl border border-slate-200 bg-white py-4 pl-12 pr-4 text-slate-900 shadow-sm outline-none transition focus:border-amber-500 focus:ring-4 focus:ring-amber-100"
+          />
         </div>
 
         {/* MENU GRID */}
@@ -194,7 +238,7 @@ export default function AdminMenuPage() {
                 key={item._id}
                 className="bg-gray-900/50 border border-gray-800 rounded-xl overflow-hidden hover:border-green-500/40 hover:shadow-lg hover:shadow-green-500/10 transition-all duration-300"
               >
-                <div className="h-48 w-full overflow-hidden bg-gray-800">
+                <div className="h-90 w-full overflow-hidden bg-gray-800">
                   <img
                     src={item.image}
                     className="h-full w-full object-cover hover:scale-110 transition-transform duration-300"
