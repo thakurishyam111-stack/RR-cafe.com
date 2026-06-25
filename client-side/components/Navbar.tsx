@@ -53,7 +53,7 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-100 bg-amber-50 backdrop-blur-md border-b shadow-xl rounded-xl border-slate-200">
+      <header className="sticky top-0 z-100 bg-amber-50 backdrop-blur-md border-b shadow-xl rounded-4xl border-slate-200">
         <div className="mx-auto flex items-center justify-between  ">
           <div className="flex justify-between items-start  ">
             <div className=" p-5">

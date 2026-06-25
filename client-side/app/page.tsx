@@ -9,15 +9,15 @@ import Map from "@/components/Map";
 import { Clock, Wifi } from "lucide-react";
 
 export default function Page() {
-  return (
-    <div className="min-h-screen  text-slate-900">
+  return (<>
+    <div className="  text-slate-900 bg-gray-100">
       <main className="mx-auto w-full max-w-6xl px-6 py-10 sm:px-8">
         <img
           src="https://pub-ba1a74be17d7442a9f2541946eb9510e.r2.dev/shops/1f9d454c-3294-4b26-9606-97ca603ce304/2.jpg"
           alt="Cafe background"
           className="absolute inset-0 h-full w-full object-cover opacity-70"
         />
-        <section className="min-h-screen w-full  grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-center rounded-[2rem] bg-gray-200 p-8 shadow-lg shadow-orange-100 backdrop-blur transition-colors duration-500">
+        <section className=" h-190 w-full  grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-center rounded-[2rem] bg-gray-200 p-8 shadow-lg shadow-orange-100 backdrop-blur transition-colors duration-500">
           <div className="pb-40">
             <span className="rounded-full bg-amber-100  py-1 text-sm font-semibold text-amber-700">
               Open daily · Fresh coffee
@@ -92,6 +92,15 @@ export default function Page() {
           </div>
         </section>
 
+        {/* banner section */}
+         <section  >
+          <div className="rounded-2xl m-5">
+            <img src="/logo/cafebanner.png" alt="cafe banner" 
+            className=" rounded-xl"
+            />
+          </div>
+        </section>
+
         <section className="mt-12 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
           <article className="rounded-[1.75rem] border border-slate-200 bg-white p-8 shadow-sm">
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-amber-700">
@@ -163,6 +172,8 @@ export default function Page() {
             </div>
           </div>
         </section>
+
+       
 //today special 
         <Today />
 
@@ -210,5 +221,6 @@ export default function Page() {
       </main>
       <Footer />
     </div>
+    </>
   );
 }
