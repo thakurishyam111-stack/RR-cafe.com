@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { Sparkles, Star, Clock3, Heart, ShoppingCart } from "lucide-react";
+import { Router } from "next/router";
+import Link from "next/link";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
@@ -39,7 +41,7 @@ export default function TodaySpecialPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 via-amber-50 to-white text-slate-900">
+    <div className="rounded-xl m-3 min-h-screen bg-gradient-to-b from-orange-50 via-amber-50 to-white text-slate-900">
 
       <main className="mx-auto max-w-7xl px-5 py-10">
 
@@ -113,7 +115,7 @@ export default function TodaySpecialPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <h3 className="text-2xl font-semibold">
-                        {item.name}
+                        {item.title}
                       </h3>
 
                       <p className="mt-2 text-sm text-slate-300">
@@ -141,10 +143,13 @@ export default function TodaySpecialPage() {
 
                   {/* ACTIONS */}
                   <div className="flex items-center justify-between">
-                    <button className="flex items-center gap-2 rounded-full bg-orange-400 px-5 py-3 text-sm font-semibold text-slate-950 hover:bg-orange-300">
+                    <Link href="/TodaySpecial">
+                    <button 
+                      className="flex items-center gap-2 rounded-full bg-orange-400 px-5 py-3 text-sm font-semibold text-slate-950 hover:bg-orange-300">
                       <ShoppingCart size={16} />
                       Order Now
                     </button>
+                    </Link>
 
                     <button className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-slate-900 hover:bg-slate-800">
                       <Heart size={18} />

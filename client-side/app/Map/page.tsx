@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Tooltip } from "react-leaflet";
-import { MapPin, Navigation, Coffee,  Phone } from "lucide-react";
+import { MapPin, Navigation, Coffee, Phone } from "lucide-react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-const cafeLocation = [27.7172, 85.324];
+const cafeLocation: [number, number] = [27.7172, 85.324];
 
 const cafeIcon = new L.Icon({
   iconUrl: "/cafe-logo.svg",
@@ -16,135 +16,150 @@ const cafeIcon = new L.Icon({
 });
 
 const userIcon = new L.Icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/149/149060.png",
+  iconUrl: "https://png.pngtree.com/template/20191203/ourmid/pngtree-coffee-logo-design-vector-image_337940.jpg",
   iconSize: [34, 34],
   iconAnchor: [17, 34],
   popupAnchor: [0, -28],
 });
 
 export default function CafeMap() {
-  const [userLocation, setUserLocation] = useState<[number, number] | null>(
-    null,
-  );
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
 
   useEffect(() => {
-    navigator.geolocation?.getCurrentPosition(
+    if (typeof window === "undefined" || !navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
       (position) => {
         setUserLocation([position.coords.latitude, position.coords.longitude]);
       },
-      () => {},
+      () => {}
     );
   }, []);
 
   return (
-    <section className="relative overflow-hidden rounded-[3rem] bg-slate-500 px-4 m-10 py-16 text-slate-100 shadow-[0_40px_120px_rgba(15,23,42,0.45)]">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(251,191,36,0.14),_transparent_28%),linear-gradient(180deg,_rgba(15,23,42,0.96),_rgba(15,23,42,0.86))]" />
+    /* 1. Replaced hard margins with padding and responsive container bounds */
+    <section className="relative overflow-hidden rounded-[2rem] sm:rounded-[3rem] bg-slate-900 px-4 py-12 sm:px-6 lg:px-8 lg:py-20 text-slate-100 shadow-2xl">
+      {/* Absolute Backdrop Gradient Layout */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(251,191,36,0.12),_transparent_40%)] pointer-events-none select-none" />
+      
       <div className="relative mx-auto max-w-7xl">
-        <div className="text-center mb-12">
-          <span className="inline-flex rounded-full bg-amber-400/10 px-4 py-1 text-sm font-semibold uppercase tracking-[0.3em] text-amber-300">
+        
+        {/* Header Branding Container */}
+        <div className="text-center mb-10 md:mb-16">
+          <span className="inline-flex rounded-full bg-amber-400/10 px-4 py-1 text-xs font-bold uppercase tracking-widest text-amber-300">
             Find us on the map
           </span>
-          <h2 className="mt-5 text-4xl font-bold tracking-tight sm:text-5xl">
+          <h2 className="mt-4 text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl">
             Visit Deurali Cafe
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-slate-300">
+          <p className="mx-auto mt-3 max-w-2xl text-sm sm:text-base text-slate-300 leading-relaxed">
             Explore our cafe location with a real map experience, custom marker,
             and easy directions to arrive fast.
           </p>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="rounded-[2rem] border border-slate-800/80 bg-slate-900/95 p-8 shadow-[0_30px_80px_rgba(15,23,42,0.35)]">
-            <div className="flex items-center gap-4">
-              <div className="grid h-16 w-16 place-items-center rounded-3xl bg-amber-400/15 text-amber-300 shadow-inner shadow-amber-400/10">
-                <Coffee size={28} />
-              </div>
-              <div>
-                <p className="text-sm uppercase tracking-[0.32em] text-slate-500">
-                  Cafe
-                </p>
-                <h3 className="mt-2 text-2xl font-semibold text-white">
-                  Deurali Cafe
-                </h3>
-              </div>
-            </div>
-
-            <div className="mt-8 space-y-4 text-slate-300">
-              <div className="flex gap-3 rounded-3xl bg-slate-950/70 p-4">
-                <MapPin className="mt-1 h-6 w-6 text-amber-300" />
-                <div>
-                  <p className="text-sm font-semibold text-white">Location</p>
-                  <p className="text-sm text-slate-400">Kathmandu, Nepal</p>
+        {/* Core Layout Grid System */}
+        <div className="grid gap-6 lg:grid-cols-12 lg:items-stretch">
+          
+          {/* Info Sidebar Section */}
+          <div className="flex flex-col justify-between rounded-2xl sm:rounded-[2rem] border border-slate-800/60 bg-slate-950/40 backdrop-blur-md p-6 sm:p-8 shadow-xl lg:col-span-4">
+            <div>
+              <div className="flex items-center gap-4">
+                <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-amber-400/10 text-amber-400 shadow-inner">
+                  <Coffee size={24} />
                 </div>
-              </div>
-              <div className="flex gap-3 rounded-3xl bg-slate-950/70 p-4">
-                <Navigation className="mt-1 h-6 w-6 text-amber-300" />
                 <div>
-                  <p className="text-sm font-semibold text-white">Navigation</p>
-                  <p className="text-sm text-slate-400">
-                    Tap the marker for cafe details.
+                  <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
+                    Cafe Location
                   </p>
+                  <h3 className="mt-1 text-xl font-bold text-white">
+                    Deurali Cafe
+                  </h3>
                 </div>
               </div>
-              <div className="flex gap-3 rounded-3xl bg-slate-950/70 p-4">
-                <Phone className="mt-1 h-6 w-6 text-amber-300" />
-                <div>
-                  <p className="text-sm font-semibold text-white">Contact</p>
-                  <p className="text-sm text-slate-400">+977 9845784548</p>
+
+              {/* Utility Contact Info Blocks */}
+              <div className="mt-8 space-y-3">
+                <div className="flex gap-4 rounded-2xl bg-slate-900/60 border border-slate-800/40 p-4 transition hover:border-slate-700/60">
+                  <MapPin className="mt-0.5 h-5 w-5 text-amber-400 shrink-0" />
+                  <div>
+                    <p className="text-xs font-bold text-white uppercase tracking-wider">Location</p>
+                    <p className="text-sm text-slate-300 mt-0.5">Kathmandu, Nepal</p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-4 rounded-2xl bg-slate-900/60 border border-slate-800/40 p-4 transition hover:border-slate-700/60">
+                  <Navigation className="mt-0.5 h-5 w-5 text-amber-400 shrink-0" />
+                  <div>
+                    <p className="text-xs font-bold text-white uppercase tracking-wider">Navigation</p>
+                    <p className="text-sm text-slate-300 mt-0.5">
+                      Tap the marker for details.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-4 rounded-2xl bg-slate-900/60 border border-slate-800/40 p-4 transition hover:border-slate-700/60">
+                  <Phone className="mt-0.5 h-5 w-5 text-amber-400 shrink-0" />
+                  <div>
+                    <p className="text-xs font-bold text-white uppercase tracking-wider">Contact</p>
+                    <p className="text-sm text-slate-300 mt-0.5">+977 9845784548</p>
+                  </div>
                 </div>
               </div>
             </div>
 
+            {/* External Navigation Button Anchor */}
             <a
               href={`https://www.google.com/maps?q=${cafeLocation[0]},${cafeLocation[1]}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-8 inline-flex w-full items-center justify-center rounded-3xl bg-amber-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-300"
+              className="mt-8 inline-flex h-12 w-full items-center justify-center rounded-xl bg-amber-500 text-sm font-semibold text-slate-950 transition-all hover:bg-amber-400 active:scale-[0.99]"
             >
               Open in Google Maps
             </a>
           </div>
 
-          <div className="lg:col-span-2 overflow-hidden rounded-[2rem] border border-slate-800/80 shadow-[0_30px_80px_rgba(15,23,42,0.35)]">
-            <MapContainer
-              center={cafeLocation}
-              zoom={15}
-              scrollWheelZoom={true}
-              style={{
-                height: "600px",
-                width: "100%",
-              }}
-            >
-              <TileLayer
-                attribution="&copy; OpenStreetMap contributors"
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
+          {/* Leaflet Map Interactive Dynamic Container */}
+          <div className="lg:col-span-8 overflow-hidden rounded-2xl sm:rounded-[2rem] border border-slate-800/60 shadow-xl min-h-[350px] sm:min-h-[450px] lg:min-h-[550px] flex">
+            <div className="w-full h-full min-h-[inherit] relative isolate">
+              <MapContainer
+                center={cafeLocation}
+                zoom={15}
+                scrollWheelZoom={true}
+                className="w-full h-full absolute inset-0"
+                style={{ height: "100%", width: "100%" }}
+              >
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
 
-              <Marker position={cafeLocation} icon={cafeIcon}>
-                <Popup>
-                  <div className="space-y-1 text-sm">
-                    <p className="font-semibold">RR Cafe ☕</p>
-                    <p>Kathmandu, Nepal</p>
-                    <p className="text-slate-500">Open 7:00 AM - 11:00 PM</p>
-                  </div>
-                </Popup>
-                <Tooltip direction="top" offset={[0, -25]} opacity={0.95}>
-                Deurali Cafe - Tap for details
-                </Tooltip>
-              </Marker>
-
-              {userLocation && (
-                <Marker position={userLocation} icon={userIcon}>
+                <Marker position={cafeLocation} icon={cafeIcon}>
                   <Popup>
-                    <div className="text-sm">
-                      <p className="font-semibold">Your Location</p>
-                      <p>Use this as a starting point for directions.</p>
+                    <div className="p-1 space-y-1 text-slate-900">
+                      <p className="font-bold text-sm">Deurali Cafe ☕</p>
+                      <p className="text-xs text-slate-600">Kathmandu, Nepal</p>
+                      <p className="text-xs font-medium text-amber-600 mt-1">Open 7:00 AM - 11:00 PM</p>
                     </div>
                   </Popup>
+                  <Tooltip direction="top" offset={[0, -25]} opacity={0.95}>
+                    Deurali Cafe - Click for details
+                  </Tooltip>
                 </Marker>
-              )}
-            </MapContainer>
+
+                {userLocation && (
+                  <Marker position={userLocation} icon={userIcon}>
+                    <Popup>
+                      <div className="p-1 text-slate-900">
+                        <p className="font-bold text-sm">Your Location</p>
+                        <p className="text-xs text-slate-600">Starting point for directions.</p>
+                      </div>
+                    </Popup>
+                  </Marker>
+                )}
+              </MapContainer>
+            </div>
           </div>
+
         </div>
       </div>
     </section>

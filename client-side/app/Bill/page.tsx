@@ -83,7 +83,7 @@ export default function BillPage() {
       {/* INPUT SECTION */}
       <div className="w-full max-w-md bg-gray-800 p-5 rounded-xl shadow">
         <h2 className="text-xl font-bold text-center text-blue-400">
-          <i> The Royel Cafe.com</i>
+          <i> Mero Deurali Cafe.com</i>
         </h2>
 
         <input

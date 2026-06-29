@@ -9,7 +9,7 @@ import menuRoutes from "./routes/menu.js";
 import orderRoutes from "./routes/order.js";
 import adminRoutes from "./routes/admin.js";
 import todayRoutes from "./routes/today.js";
-
+import staffRoutes from "./routes/staff.js";
 
 
 dotenv.config();
@@ -21,6 +21,10 @@ app.use(express.json());
 
 // Database Connect
 connectDB();
+app.use((req, res, next) => {
+    console.log(req.method, req.url);
+    next();
+});
 
 // Routes
 app.use("/api/users", userRoutes);
@@ -28,6 +32,7 @@ app.use("/api/menus", menuRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/today", todayRoutes);
+app.use("/api/staff",staffRoutes);
 
 app.get("/", (req, res) => {
   res.send("Server Running");

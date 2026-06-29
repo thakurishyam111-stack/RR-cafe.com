@@ -163,7 +163,7 @@ export default function OrderPage() {
         {/* Heading */}
         <div className="text-center mb-10">
           <h1 className="text-5xl font-bold text-black">
-            🍽 Cafe Order System
+            🍽 Mero Deurali cafe 
           </h1>
 
           <p className="text-black mt-3">Order your favorite delicious foods</p>
@@ -200,7 +200,7 @@ export default function OrderPage() {
                   <img
                     src={item.image || "/placeholder.png"}
                     alt={item.title}
-                    className="w-full h-56 object-cover"
+                    className="w-full h-56 object-cover transition duration-500 group-hover:scale-110"
                   />
 
                   {/* Content */}

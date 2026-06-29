@@ -13,6 +13,8 @@ import {
   Menu,
   X,
   Flame,
+  Warehouse,
+  User2,
 } from "lucide-react";
 
 export default function AdminSidebar() {
@@ -48,8 +50,30 @@ export default function AdminSidebar() {
       icon: Flame,
     },
     {
-      label: "Revenue",
-      href: "/Admin/Revenue",
+      label: "Staffs",
+      href: "/Admin/Staff",
+      icon: User2,
+    },
+   
+    {
+      label: "Stock",
+      href: "/Admin/Stock",
+      icon: Warehouse,
+    },
+    
+    {
+      label: "Purchase",
+      href: "/Admin/Purchase",
+      icon: Wallet,
+    },
+    {
+      label: "Recipe",
+      href: "/Admin/Recipe",
+      icon: Wallet,
+    },
+    {
+      label: "Report",
+      href: "/Admin/Report",
       icon: Wallet,
     },
   ];
