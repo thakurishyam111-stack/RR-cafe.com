@@ -10,10 +10,12 @@ import {
   Wallet,
   MapPin,
 } from "lucide-react";
+import BillWidget from "@/components/BillWidget"; // बिल विजेट इम्पोर्ट गरियो
 
 export default function Navbar() {
   const [search, setSearch] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [isBillOpen, setIsBillOpen] = useState(false); // १. बिल साइडबार खोल्ने स्टेट
   const pathname = usePathname();
 
   const navItems = [
@@ -25,7 +27,6 @@ export default function Navbar() {
     { label: "About", href: "/#about" },
   ];
 
-  // small UI state (Set default fallback values to avoid React state hydration mismatch)
   const [notifCount] = useState(3); 
 
   const isActive = (href: string) => {
@@ -38,15 +39,16 @@ export default function Navbar() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    document.body.style.overflow = drawerOpen ? "hidden" : "";
+    // यदि मोबाइल मेनु वा बिल साइडबार मध्ये कुनै एक खुला छ भने स्क्रोल बन्द गर्ने
+    document.body.style.overflow = (drawerOpen || isBillOpen) ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [drawerOpen]);
+  }, [drawerOpen, isBillOpen]);
 
   return (
     <>
-      {/* 1. Header Wrapper with glassmorphism, responsive safety paddings */}
+      {/* 1. Header Wrapper with glassmorphism */}
       <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 bg-amber-50/90 backdrop-blur-md shadow-sm transition-all duration-300">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-20 items-center justify-between gap-4">
@@ -63,7 +65,7 @@ export default function Navbar() {
               </span>
             </Link>
 
-            {/* Desktop Navigation Links (Responsive display toggling cleanly at lg breakpoint) */}
+            {/* Desktop Navigation Links */}
             <nav className="hidden lg:flex items-center gap-1">
               {navItems.map((it) => (
                 <Link
@@ -80,7 +82,7 @@ export default function Navbar() {
               ))}
             </nav>
 
-            {/* Search Input Box (Fluid width resizing, hides seamlessly on extra small devices) */}
+            {/* Search Input Box */}
             <form
               onSubmit={(e) => e.preventDefault()}
               className="hidden md:flex max-w-md flex-1 items-center gap-2 rounded-full border border-slate-200 bg-slate-50/50 px-3.5 h-11 focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-500/20 transition-all"
@@ -101,7 +103,7 @@ export default function Navbar() {
               </button>
             </form>
 
-            {/* Desktop Action Icons (Consolidated and streamlined alignments) */}
+            {/* Desktop Action Icons */}
             <div className="flex items-center gap-2 sm:gap-4">
               <Link
                 href="/Notification"
@@ -122,15 +124,17 @@ export default function Navbar() {
                 <MapPin className="h-5 w-5" />
               </Link>
 
-              <Link
-                href="/Bill"
-                className="hidden sm:inline-flex items-center gap-2 h-10 px-4 rounded-xl text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-amber-600 hover:text-white shadow-sm transition-all duration-200"
+              {/* २. अपडेटेड डेस्कटप बिल बटन: अब यो लिंक होइन, बटन हो जसले साइडबार खोल्छ */}
+              <button
+                type="button"
+                onClick={() => setIsBillOpen(true)}
+                className="hidden sm:inline-flex items-center gap-2 h-10 px-4 rounded-xl text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-amber-600 hover:text-white shadow-sm transition-all duration-200 cursor-pointer"
               >
                 <Wallet className="h-4 w-4" />
                 <span>Bill</span>
-              </Link>
+              </button>
 
-              {/* Mobile Drawer Trigger Button (Synced breakpoints to display at lg window sizes) */}
+              {/* Mobile Drawer Trigger Button */}
               <button
                 type="button"
                 onClick={() => setDrawerOpen(true)}
@@ -145,7 +149,7 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* 2. Mobile Backdrop overlay */}
+      {/* Mobile Backdrop overlay */}
       <div
         className={`fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300 ${
           drawerOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
@@ -154,7 +158,7 @@ export default function Navbar() {
         aria-hidden={!drawerOpen}
       />
 
-      {/* 3. Slide-out Mobile Sheet / Sidebar */}
+      {/* Slide-out Mobile Sheet / Sidebar */}
       <aside
         className={`fixed right-0 top-0 z-50 h-full w-full max-w-xs transform bg-white shadow-2xl transition-transform duration-300 ease-in-out ${
           drawerOpen ? "translate-x-0" : "translate-x-full"
@@ -227,17 +231,24 @@ export default function Navbar() {
               )}
             </Link>
             
-            <Link
-              href="/Bill"
-              onClick={() => setDrawerOpen(false)}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-600 text-white shadow-md hover:bg-amber-700 transition"
+            {/* ३. अपडेटेड मोबाइल बिल बटन: मोबाइल मेनु बन्द गरेर सिधै बिल साइडबार खोल्छ */}
+            <button
+              type="button"
+              onClick={() => {
+                setDrawerOpen(false); // पहिले मोबाइल मेनु बन्द गर्ने
+                setIsBillOpen(true);  // अनि बिल साइडबार खोल्ने
+              }}
+              className="flex w-full items-center gap-3 px-4 py-3 rounded-xl bg-amber-600 text-white shadow-md hover:bg-amber-700 transition text-left cursor-pointer"
             >
               <Wallet className="h-5 w-5" />
               <span className="text-sm font-semibold">View My Bill</span>
-            </Link>
+            </button>
           </div>
         </div>
       </aside>
+
+      {/* ४. बिल साइडबार विजेट (यो यहाँ रहन्छ र isOpen true हुँदा दायाँबाट बाहिर आउँछ) */}
+      <BillWidget isOpen={isBillOpen} onClose={() => setIsBillOpen(false)} />
     </>
   );
 }

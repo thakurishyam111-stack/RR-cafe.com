@@ -1,375 +1,251 @@
 "use client";
-import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Mail, Phone, RefreshCw, User } from 'lucide-react';
-import AdminSidebar from '@/components/AdminSidebar';
 
-interface StaffMember {
-  _id: string;
-  name: string;
-  email: string;
-  phone: string;
-  role: string;
-  salary: number;
-  image: string;
-  status: string;
-}
+import React, { useState } from "react";
+import axios from "axios";
 
-const StaffManagement = () => {
-  const [staffList, setStaffList] = useState<StaffMember[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
+export default function BillWidget() {
+  const [customerName, setCustomerName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [ordersList, setOrdersList] = useState([]); 
   const [loading, setLoading] = useState(false);
-  const [fetchLoading, setFetchLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [paying, setPaying] = useState(false); // सामूहिक भुक्तानीको लागि लोडइङ स्टेट
 
-  // Form States
-  const [formData, setFormData] = useState({
-    name: '', email: '', phone: '', role: 'Waiter', salary: '', image: '', status: 'Active'
-  });
-
-  const API_URL = "http://localhost:8080/api/staff";
-
-  const fetchStaff = async () => {
-    setFetchLoading(true);
-    try {
-      const res = await fetch(API_URL, { cache: 'no-store' });
-      if (!res.ok) throw new Error("Backend server error");
-      const result = await res.json();
-      
-      if (result.success && Array.isArray(result.data)) {
-        setStaffList(result.data);
-      } else {
-        setStaffList([]);
-      }
-    } catch (err) {
-      console.error("Error fetching staff:", err);
-      setStaffList([]); 
-    } finally {
-      setFetchLoading(false);
+  // ======================
+  // FETCH ALL BILLS FOR CUSTOMER
+  // ======================
+  const fetchBill = async () => {
+    if (!customerName || !phone) {
+      setMessage("Please enter both Name and Phone Number");
+      return;
     }
-  };
-
-  useEffect(() => {
-    fetchStaff();
-  }, []);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    
-    const url = editingStaff ? `${API_URL}/update/${editingStaff._id}` : `${API_URL}/add`;
-    const method = editingStaff ? 'PUT' : 'POST';
 
     try {
-      const res = await fetch(url, {
-        method: method,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        mode: 'cors',
-        body: JSON.stringify(formData)
+      setLoading(true);
+      setMessage("");
+      setOrdersList([]);
+
+      const res = await axios.get("http://localhost:8080/api/orders");
+      const allOrders = res.data.orders || [];
+
+      const inputName = customerName.trim().toLowerCase();
+      const inputPhone = phone.trim();
+
+      const matchedOrders = allOrders.filter((ord) => {
+        const dbName = ord.customerName ? ord.customerName.trim().toLowerCase() : "";
+        const dbPhone = ord.phone ? ord.phone.toString().trim() : "";
+        return dbName === inputName && dbPhone === inputPhone;
       });
 
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || "Action failed");
-      }
-
-      const data = await res.json();
-
-      if (data.success) {
-        await fetchStaff(); 
-        closeModal();
+      if (matchedOrders.length > 0) {
+        setOrdersList(matchedOrders);
       } else {
-        alert(data.message);
+        setMessage("No bills found for this name and phone number");
       }
-    } catch (err: any) {
-      console.error("❌ Form Submission Error:", err);
-      alert(`Error: ${err.message || "Cannot connect to server!"}`);
+    } catch (error) {
+      setMessage("Error connecting to server");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm("you want to delete this staff ?")) {
+  // Unpaid र Approved भएका बिलहरू मात्र फिल्टर गर्ने (भुक्तानी गर्न योग्य बिलहरू)
+  const unpaidBills = ordersList.filter(
+    (ord) => ord.paymentStatus !== "paid" && ord.status === "approved"
+  );
+
+  // सबै Unpaid बिलहरूको कुल जम्मा रकम (Grand Total)
+  const grandTotal = unpaidBills.reduce((sum, ord) => sum + ord.total, 0);
+
+  // ======================
+  // PAY ALL UNPAID BILLS AT ONCE (Senior Bulk Request Approach)
+  // ======================
+  const handleBulkPayment = async (method) => {
+    if (unpaidBills.length === 0) return;
+
+    if (method === "Cash") {
       try {
-        const res = await fetch(`${API_URL}/delete/${id}`, { method: 'DELETE' });
-        if (!res.ok) throw new Error("Delete failed");
-        const data = await res.json();
-        if (data.success) {
-          fetchStaff();
-        }
-      } catch (err: any) {
-        console.error("Error deleting staff:", err);
-        alert(err.message);
+        setPaying(true);
+        
+        // Promise.all ले सबै Unpaid बिलहरूको API Request एकै पटक ब्याकइन्डमा पठाउँछ
+        const paymentPromises = unpaidBills.map((ord) =>
+          axios.put(`http://localhost:8080/api/orders/payment/${ord._id}`, { method })
+        );
+
+        const responses = await Promise.all(paymentPromises);
+        
+        // ब्याकइन्डबाट आएका नयाँ अपडेटेड अर्डरहरू अपडेट गर्ने
+        const updatedOrders = responses.map((res) => res.data.order);
+
+        setOrdersList((prevList) =>
+          prevList.map((ord) => {
+            const foundUpdated = updatedOrders.find((u) => u._id === ord._id);
+            return foundUpdated ? foundUpdated : ord;
+          })
+        );
+
+        alert(`All ${unpaidBills.length} bills paid successfully via Cash!`);
+      } catch (error) {
+        alert("Bulk payment failed. Please try again.");
+      } finally {
+        setPaying(false);
       }
+      return;
     }
-  };
 
-  const openModal = (staff: StaffMember | null = null) => {
-    if (staff) {
-      setEditingStaff(staff);
-      setFormData({
-        name: staff.name, email: staff.email, phone: staff.phone,
-        role: staff.role, salary: String(staff.salary), image: staff.image, status: staff.status
-      });
+    // eSewa / Khalti Simulation
+    const appUrls = {
+      eSewa: "https://esewa.com.np/#/home",
+      Khalti: "https://web.khalti.com/",
+    };
+
+    const appUrl = appUrls[method];
+    if (appUrl) {
+      window.open(appUrl, "_blank");
     } else {
-      setEditingStaff(null);
-      setFormData({ name: '', email: '', phone: '', role: 'Waiter', salary: '', image: '', status: 'Active' });
+      alert("Payment method not supported.");
     }
-    setIsModalOpen(true);
   };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setEditingStaff(null);
-  };
+  return (
+    <div className="w-full max-w-md mx-auto bg-gray-900 text-white p-4 sm:p-6 rounded-2xl shadow-2xl border border-gray-800 transition-all duration-300">
+      
+      {/* INPUT SECTION */}
+      <div className="bg-gray-800/60 p-4 rounded-xl backdrop-blur-sm">
+        <h2 className="text-lg font-bold text-center text-blue-400 tracking-wide">
+          <i>Mero Deurali Cafe</i>
+        </h2>
+        <p className="text-xs text-center text-gray-400 mb-4">View & Pay All Bills</p>
 
-  return (<>
-    <AdminSidebar/>
-    <div className="min-h-screen bg-gradient-to-br from-gray-700 via-gray-400 to-black text-white p-4 md:p-8 md:pt-6 md:ml-72 ">
-   
-      {/* Dashboard Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-center sm:items-center gap-4 mb-6">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-100 text-center">Staff Management</h1>
-          <p className="text-xs sm:text-sm text-gray-100">Manage your cafe staff members, roles and details</p>
+        <div className="space-y-3">
+          <input
+            type="text"
+            placeholder="Customer Name"
+            value={customerName}
+            onChange={(e) => setCustomerName(e.target.value)}
+            className="w-full p-2.5 rounded-lg bg-gray-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+
+          <input
+            type="text"
+            placeholder="Phone Number"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            className="w-full p-2.5 rounded-lg bg-gray-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
         </div>
-        <div className="flex gap-2 w-full sm:w-auto">
-          <button 
-            onClick={fetchStaff}
-            className="p-2.5 bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition shadow-sm"
-            title="Refresh Data"
-          >
-            <RefreshCw size={18} className={fetchLoading ? "animate-spin" : ""} />
-          </button>
-          <button 
-            onClick={() => openModal(null)}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2.5 rounded-lg font-medium transition duration-200 shadow-md text-sm"
-          >
-            <Plus size={18} /> Add New Staff
-          </button>
-        </div>
+
+        <button
+          onClick={fetchBill}
+          disabled={loading}
+          className="w-full mt-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 font-semibold p-2.5 rounded-lg text-sm transition-all shadow-md"
+        >
+          {loading ? "Searching..." : "Search Bills"}
+        </button>
+
+        {message && (
+          <p className="text-red-400 text-xs mt-2.5 text-center bg-red-500/10 p-2 rounded-md border border-red-500/20">
+            {message}
+          </p>
+        )}
       </div>
 
-      {/* Loading state indicator */}
-      {fetchLoading && staffList.length === 0 && (
-        <div className="text-center py-10 text-gray-500 font-medium text-sm">Loading staff directory...</div>
-      )}
+      {/* INDIVIDUAL BILL CARDS */}
+      {ordersList.length > 0 && (
+        <div className="mt-4 space-y-4 max-h-[380px] overflow-y-auto pr-1">
+          {ordersList.map((order) => {
+            const isUnpaidAndNotApproved = order.status !== "approved" && order.paymentStatus !== "paid";
 
-      {/* No Data State */}
-      {!fetchLoading && staffList.length === 0 && (
-        <div className="text-center py-12 bg-white rounded-xl border border-dashed border-gray-300 p-6">
-          <p className="text-gray-500 text-sm">No staff members found. Add some staff to get started!</p>
+            return (
+              <div key={order._id} className="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-md">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-xs font-bold text-gray-200">Table: {order.number}</h3>
+                    <p className="text-gray-400 text-[10px]">Bill No: {order.billNo}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className={`px-2 py-0.5 rounded-full text-[8px] uppercase font-bold ${
+                      order.status === "approved" ? "bg-green-600/30 text-green-400 border border-green-500/30" : "bg-yellow-600/30 text-yellow-400 border border-yellow-500/30"
+                    }`}>
+                      {order.status}
+                    </span>
+                    <span className={`px-2 py-0.5 rounded-full text-[8px] uppercase font-bold ${
+                      order.paymentStatus === "paid" ? "bg-blue-600/30 text-blue-400 border border-blue-500/30" : "bg-red-600/30 text-red-400 border border-red-500/30"
+                    }`}>
+                      {order.paymentStatus}
+                    </span>
+                  </div>
+                </div>
+
+                <hr className="my-2 border-gray-700" />
+
+                {isUnpaidAndNotApproved ? (
+                  <p className="text-center text-xs text-yellow-400 py-1">
+                    ⏳ Awaiting approval
+                  </p>
+                ) : (
+                  <>
+                    <div className="space-y-1">
+                      {order.items.map((item, i) => (
+                        <div key={i} className="flex justify-between text-xs text-gray-300">
+                          <span>{item.title} <span className="text-gray-500">× {item.quantity}</span></span>
+                          <span className="font-semibold text-blue-400">Rs. {item.price * item.quantity}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <hr className="my-2 border-gray-700" />
+                    <div className="flex justify-between font-bold text-xs text-green-400">
+                      <span>Amount</span>
+                      <span>Rs. {order.total}</span>
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 
-      {/* Senior Dev Upgrade: Staff Details Tabular Grid Interface */}
-      {staffList.length > 0 && (
-        <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
-          <div className="w-full overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-            <table className="w-full min-w-[800px] table-auto border-collapse text-left">
-              <thead>
-                <tr className="border-b border-gray-100 bg-gray-50/70 select-none">
-                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-gray-500">Staff Info</th>
-                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-gray-500">Role</th>
-                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-gray-500">Contact Details</th>
-                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-gray-500">Financial Base</th>
-                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-gray-500 text-center">Status</th>
-                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-gray-500 text-center">Control Operations</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {staffList.map((staff) => (
-                  <tr key={staff._id} className="hover:bg-gray-50/50 transition-colors duration-200">
-                    {/* Avatar & Ident Data Cell */}
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-3.5">
-                        <img 
-                          src={staff.image || "https://via.placeholder.com/150"} 
-                          alt={staff.name} 
-                          className="w-11 h-11 rounded-full object-cover border border-gray-100 flex-shrink-0 bg-slate-50"
-                          onError={(e: any) => { e.target.src = "https://via.placeholder.com/150"; }}
-                        />
-                        <div className="max-w-[160px]">
-                          <p className="font-semibold text-sm text-gray-800 truncate">{staff.name}</p>
-                          <p className="text-[11px] text-gray-400 font-mono mt-0.5 truncate">ID: {staff._id.slice(-6)}</p>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Operational Role Badge Cell */}
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center text-xs px-2.5 py-1 rounded-md font-semibold ${
-                        staff.role === 'Admin' || staff.role === 'Manager' 
-                          ? 'bg-purple-50 text-purple-700 border border-purple-100' 
-                          : 'bg-blue-50 text-blue-700 border border-blue-100'
-                      }`}>
-                        {staff.role}
-                      </span>
-                    </td>
-
-                    {/* Communication Nodes Cell */}
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="space-y-1 text-xs text-gray-600 font-medium">
-                        <div className="flex items-center gap-2 max-w-[200px]">
-                          <Mail size={13} className="text-gray-400 shrink-0" /> 
-                          <span className="truncate hover:text-orange-500 transition-colors cursor-pointer">{staff.email}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Phone size={13} className="text-gray-400 shrink-0" /> 
-                          <a href={`tel:${staff.phone}`} className="hover:text-blue-500 transition-colors font-mono">{staff.phone}</a>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Financial Matrix Settlement Cell */}
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-700 font-mono">
-                      Rs. {Number(staff.salary).toLocaleString('en-IN')}
-                    </td>
-
-                    {/* Availability Metrics Cell */}
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <span className={`inline-flex items-center text-[11px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                        staff.status === 'Active' 
-                          ? 'bg-green-50 text-green-700 border border-green-100' 
-                          : staff.status === 'On Leave'
-                          ? 'bg-amber-50 text-amber-700 border border-amber-100'
-                          : 'bg-rose-50 text-rose-700 border border-rose-100'
-                      }`}>{staff.status}</span>
-                    </td>
-
-                    {/* Pipeline Mutator Controllers Cell */}
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <div className="flex justify-center items-center gap-2">
-                        <button 
-                          onClick={() => openModal(staff)}
-                          className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg border border-gray-200 shadow-sm hover:border-orange-200 transition-all duration-200"
-                          title="Edit Operational Metrics"
-                        >
-                          <Edit2 size={14} />
-                        </button>
-                        <button 
-                          onClick={() => handleDelete(staff._id)}
-                          className="p-1.5 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg border border-gray-200 shadow-sm hover:border-rose-200 transition-all duration-200"
-                          title="Purge Record"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {/* BULK PAYMENT BOTTOM BAR (देखिनेछ जब Unpaid बिलहरू हुन्छन्) */}
+      {unpaidBills.length > 0 && (
+        <div className="mt-4 p-4 bg-gray-800 rounded-xl border border-blue-500/30 animate-fadeIn">
+          <div className="flex justify-between items-center mb-3">
+            <div>
+              <p className="text-xs text-gray-400">Total Unpaid Bills ({unpaidBills.length})</p>
+              <h3 className="text-sm font-bold text-gray-200">Grand Total</h3>
+            </div>
+            <span className="text-lg font-extrabold text-green-400">Rs. {grandTotal}</span>
           </div>
-        </div>
-      )}
 
-      {/* --- ADD / EDIT MODAL --- */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-md w-full p-5 sm:p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-            <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 pb-2 border-b border-gray-100">
-              {editingStaff ? "Update Staff Details" : "Add New Staff Member"}
-            </h2>
-            
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Full Name</label>
-                <input 
-                  type="text" required value={formData.name} 
-                  onChange={(e) => setFormData({...formData, name: e.target.value})} 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-black font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500" 
-                />
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Email</label>
-                  <input 
-                    type="email" required value={formData.email} 
-                    onChange={(e) => setFormData({...formData, email: e.target.value})} 
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-black font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500" 
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Phone</label>
-                  <input 
-                    type="text" required value={formData.phone} 
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})} 
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-black font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500" 
-                  />
-                </div>
-              </div>
+          <p className="text-[10px] text-center mb-2.5 text-gray-400 uppercase tracking-wider font-semibold">
+            Pay All {unpaidBills.length} Bills Securely via
+          </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Role</label>
-                  <select 
-                    value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value})} 
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-black font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 bg-white"
-                  >
-                    <option value="Waiter">Waiter</option>
-                    <option value="Chef">Chef</option>
-                    <option value="Cashier">Cashier</option>
-                    <option value="Manager">Manager</option>
-                    <option value="Admin">Admin</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Salary (Rs.)</label>
-                  <input 
-                    type="number" required value={formData.salary} 
-                    onChange={(e) => setFormData({...formData, salary: e.target.value})} 
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-black font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500" 
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Image URL</label>
-                <input 
-                  type="url" required placeholder="https://example.com/photo.jpg" value={formData.image} 
-                  onChange={(e) => setFormData({...formData, image: e.target.value})} 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-black font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500" 
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Status</label>
-                <select 
-                  value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})} 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-black font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 bg-white"
-                >
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                  <option value="On Leave">On Leave</option>
-                </select>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 mt-6">
-                <button 
-                  type="button" onClick={closeModal} 
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 active:scale-95 transition"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit" disabled={loading} 
-                  className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium disabled:bg-orange-300 active:scale-95 transition shadow-sm"
-                >
-                  {loading ? "Saving..." : "Save Staff"}
-                </button>
-              </div>
-            </form>
+          <div className="flex justify-center gap-4">
+            <button 
+              onClick={() => handleBulkPayment("Cash")} 
+              disabled={paying}
+              className="flex-1 text-xs font-bold text-gray-200 bg-gray-700 hover:bg-gray-600 py-2 px-3 rounded-lg transition-all disabled:opacity-50"
+            >
+              {paying ? "Paying..." : "💵 Cash All"}
+            </button>
+            <button 
+              onClick={() => handleBulkPayment("eSewa")} 
+              disabled={paying}
+              className="flex-1 text-xs font-bold text-green-400 bg-green-950/40 border border-green-900/50 hover:bg-green-900/30 py-2 px-3 rounded-lg transition-all disabled:opacity-50"
+            >
+              💚 eSewa All
+            </button>
+            <button 
+              onClick={() => handleBulkPayment("Khalti")} 
+              disabled={paying}
+              className="flex-1 text-xs font-bold text-purple-400 bg-purple-950/40 border border-purple-900/50 hover:bg-purple-900/30 py-2 px-3 rounded-lg transition-all disabled:opacity-50"
+            >
+              💜 Khalti All
+            </button>
           </div>
         </div>
       )}
     </div>
-    </>
   );
-};
-
-export default StaffManagement;
+}
