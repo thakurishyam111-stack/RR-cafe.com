@@ -37,9 +37,10 @@ export default function Footer() {
               >
                 <img
                   src="https://upload.wikimedia.org/wikipedia/commons/e/ee/Logo_de_Facebook.png"
-                  height={30}
-                  width={30}
+                  height={35}
+                  width={35}
                   alt="facebook"
+                  className="rounded-full"
                 />
               </a>
 
@@ -51,9 +52,11 @@ export default function Footer() {
                 aria-label="Instagram"
               >
                 <img src="  https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSAfDHLEBApWX-CTjkTIzClXtIv-pFgjTbgHaKrqL-d-vjsHrqh78EW6r1w&s=10"
-                height={30}
-                width={30}
-                alt="instagram" />
+                height={35}
+                width={35}
+                alt="instagram" 
+                className="rounded-full"
+                />
               </a>
 
               <a
@@ -147,7 +150,7 @@ export default function Footer() {
       </div>
 
       {/* Subfooter Copyright Strip */}
-      <div className="border-t border-slate-800/60 bg-slate-950/40 px-6 py-6 text-center text-xs text-slate-500">
+      <div className="border-t border-slate-800/60 bg-slate-950/40 px-6 py-6 text-center text-xs text-slate-200">
         <p>© {currentYear} The Deurali Cafe. All rights reserved.</p>
       </div>
     </footer>
