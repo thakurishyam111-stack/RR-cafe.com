@@ -235,7 +235,6 @@ export default function BillWidget({ isOpen, onClose }) {
           )}
         </div>
 
-        {/* एकमुष्ट पैसा तिर्ने बटम बार */}
         {unpaidBills.length > 0 && (
           <div className="p-4 bg-slate-950 border-t border-slate-800 rounded-t-2xl shadow-inner">
             <div className="flex justify-between items-center mb-3.5 px-1">

@@ -10,6 +10,7 @@ import orderRoutes from "./routes/order.js";
 import adminRoutes from "./routes/admin.js";
 import todayRoutes from "./routes/today.js";
 import staffRoutes from "./routes/staff.js";
+import stockRoutes from "./routes/stock.js";
 
 
 dotenv.config();
@@ -33,6 +34,7 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/today", todayRoutes);
 app.use("/api/staff",staffRoutes);
+app.use("/api/stocks", stockRoutes);
 
 app.get("/", (req, res) => {
   res.send("Server Running");

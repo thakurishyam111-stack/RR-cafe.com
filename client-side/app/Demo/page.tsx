@@ -1,251 +1,541 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import axios from "axios";
+import React, { useState, useEffect } from 'react';
+import { Search, Plus, Edit2, Trash2, Download, Filter, ChevronLeft, ChevronRight, AlertTriangle, X } from 'lucide-react';
+import { IStock, StockSummary } from '@/app/Admin/Stock/stock';
+import AdminSidebar from '@/components/AdminSidebar';
 
-export default function BillWidget() {
-  const [customerName, setCustomerName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [ordersList, setOrdersList] = useState([]); 
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [paying, setPaying] = useState(false); // सामूहिक भुक्तानीको लागि लोडइङ स्टेट
+// Form Data को लागि Initial State
+const initialFormState = {
+  name: '',
+  sku: '',
+  category: '',
+  currentStock: 0,
+  minimumStock: 0,
+  costPerUnit: 0,
+  sellingPrice: 0,
+  unit: 'pcs',
+  status: 'active',
+  description: ''
+};
 
-  // ======================
-  // FETCH ALL BILLS FOR CUSTOMER
-  // ======================
-  const fetchBill = async () => {
-    if (!customerName || !phone) {
-      setMessage("Please enter both Name and Phone Number");
-      return;
-    }
+export default function StockInventoryPage() {
+  const [stocks, setStocks] = useState<IStock[]>([]);
+  const [summary, setSummary] = useState<StockSummary>({
+    totalItems: 0,
+    lowStockCount: 0,
+    totalValue: 0,
+    uniqueCategories: 0,
+  });
+  
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
+  // Search & Filter States
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
+
+  // Add / Edit Modal States
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<IStock | null>(null);
+  const [formData, setFormData] = useState(initialFormState);
+  const [formSubmitLoading, setFormSubmitLoading] = useState(false);
+
+  // 1. Fetch Stocks from API
+  const fetchStocks = async () => {
     try {
       setLoading(true);
-      setMessage("");
-      setOrdersList([]);
-
-      const res = await axios.get("http://localhost:8080/api/orders");
-      const allOrders = res.data.orders || [];
-
-      const inputName = customerName.trim().toLowerCase();
-      const inputPhone = phone.trim();
-
-      const matchedOrders = allOrders.filter((ord) => {
-        const dbName = ord.customerName ? ord.customerName.trim().toLowerCase() : "";
-        const dbPhone = ord.phone ? ord.phone.toString().trim() : "";
-        return dbName === inputName && dbPhone === inputPhone;
-      });
-
-      if (matchedOrders.length > 0) {
-        setOrdersList(matchedOrders);
-      } else {
-        setMessage("No bills found for this name and phone number");
-      }
-    } catch (error) {
-      setMessage("Error connecting to server");
+      setError(null);
+      const response = await fetch('http://localhost:8080/api/stocks');
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      
+      const data = await response.json();
+      const cleanData: IStock[] = Array.isArray(data) ? data : (data.stocks || data.data || []);
+      setStocks(cleanData);
+      updateSummaryCards(cleanData);
+    } catch (err) {
+      console.error("Backend fetch error:", err);
+      setError("Unable to connect to database server. Please check cross-origin (CORS) headers.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Unpaid र Approved भएका बिलहरू मात्र फिल्टर गर्ने (भुक्तानी गर्न योग्य बिलहरू)
-  const unpaidBills = ordersList.filter(
-    (ord) => ord.paymentStatus !== "paid" && ord.status === "approved"
-  );
+  useEffect(() => {
+    fetchStocks();
+  }, []);
 
-  // सबै Unpaid बिलहरूको कुल जम्मा रकम (Grand Total)
-  const grandTotal = unpaidBills.reduce((sum, ord) => sum + ord.total, 0);
+  // Summary Update गर्ने common function
+  const updateSummaryCards = (data: IStock[]) => {
+    const lowStockItems = data.filter(item => item.currentStock <= item.minimumStock);
+    const totalStockValue = data.reduce((acc, item) => acc + (item.currentStock * item.costPerUnit), 0);
+    const uniqueCats = new Set(data.map(item => item.category)).size;
 
-  // ======================
-  // PAY ALL UNPAID BILLS AT ONCE (Senior Bulk Request Approach)
-  // ======================
-  const handleBulkPayment = async (method) => {
-    if (unpaidBills.length === 0) return;
+    setSummary({
+      totalItems: data.length,
+      lowStockCount: lowStockItems.length,
+      totalValue: totalStockValue,
+      uniqueCategories: uniqueCats
+    });
+  };
 
-    if (method === "Cash") {
-      try {
-        setPaying(true);
-        
-        // Promise.all ले सबै Unpaid बिलहरूको API Request एकै पटक ब्याकइन्डमा पठाउँछ
-        const paymentPromises = unpaidBills.map((ord) =>
-          axios.put(`http://localhost:8080/api/orders/payment/${ord._id}`, { method })
-        );
+  // 2. Add / Edit Form Handling
+  const openAddModal = () => {
+    setEditingItem(null);
+    setFormData(initialFormState);
+    setIsModalOpen(true);
+  };
 
-        const responses = await Promise.all(paymentPromises);
-        
-        // ब्याकइन्डबाट आएका नयाँ अपडेटेड अर्डरहरू अपडेट गर्ने
-        const updatedOrders = responses.map((res) => res.data.order);
+  const openEditModal = (item: IStock) => {
+    setEditingItem(item);
+    setFormData({
+      name: item.name,
+      sku: item.sku,
+      category: item.category,
+      currentStock: item.currentStock,
+      minimumStock: item.minimumStock,
+      costPerUnit: item.costPerUnit,
+      sellingPrice: item.sellingPrice,
+      unit: item.unit || 'pcs' ,
+      status: item.status,
+      description: item.description || ''
+    });
+    setIsModalOpen(true);
+  };
 
-        setOrdersList((prevList) =>
-          prevList.map((ord) => {
-            const foundUpdated = updatedOrders.find((u) => u._id === ord._id);
-            return foundUpdated ? foundUpdated : ord;
-          })
-        );
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    const isNumber = ['currentStock', 'minimumStock', 'costPerUnit', 'sellingPrice'].includes(name);
+    setFormData(prev => ({
+      ...prev,
+      [name]: isNumber ? Number(value) : value
+    }));
+  };
 
-        alert(`All ${unpaidBills.length} bills paid successfully via Cash!`);
-      } catch (error) {
-        alert("Bulk payment failed. Please try again.");
-      } finally {
-        setPaying(false);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormSubmitLoading(true);
+    
+    try {
+      const url = editingItem 
+        ? `http://localhost:8080/api/stocks/${editingItem._id}` 
+        : 'http://localhost:8080/api/stocks';
+      
+      const method = editingItem ? 'PUT' : 'POST';
+
+      // ⚠️ Senior Tip: पठाउनु अघि डेटा Format मिलेको छ कि छैन पक्का गर्ने
+      const payload = {
+        ...formData,
+        currentStock: Number(formData.currentStock),
+        minimumStock: Number(formData.minimumStock),
+        costPerUnit: Number(formData.costPerUnit),
+        sellingPrice: Number(formData.sellingPrice),
+      };
+
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      // यदि Backend ले ४०० वा ५०० एरर पठायो भने त्यसको विवरण निकाल्ने
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.error || `Server responded with status ${response.status}`);
       }
-      return;
+
+      // सफलता पूर्वक सेभ भएपछि
+      await fetchStocks();
+      setIsModalOpen(false);
+      setFormData(initialFormState); // Form Reset गर्ने
+      
+    } catch (err: any) {
+      console.error("❌ Form Submission Error Details:", err);
+      // उपभोक्तालाई स्पष्ट एरर मेसेज देखाउने
+      alert(`Error: ${err.message || "Failed to save stock. Please check console for details."}`);
+    } finally {
+      setFormSubmitLoading(false);
     }
-
-    // eSewa / Khalti Simulation
-    const appUrls = {
-      eSewa: "https://esewa.com.np/#/home",
-      Khalti: "https://web.khalti.com/",
-    };
-
-    const appUrl = appUrls[method];
-    if (appUrl) {
-      window.open(appUrl, "_blank");
-    } else {
-      alert("Payment method not supported.");
+  };
+  // 3. Delete Handling
+  const handleDelete = async (id: string, name: string) => {
+    if (window.confirm(`Are you sure you want to delete "${name}"?`)) {
+      try {
+        const response = await fetch(`http://localhost:8080/api/stocks/${id}`, {
+          method: 'DELETE',
+        });
+        if (!response.ok) throw new Error("Failed to delete stock");
+        
+        // State update safely
+        const updatedStocks = stocks.filter(stock => stock._id !== id);
+        setStocks(updatedStocks);
+        updateSummaryCards(updatedStocks);
+      } catch (err) {
+        alert("Could not delete item. Check console logs.");
+      }
     }
   };
 
+  // Client-side Search and Filter
+  const filteredStocks = stocks.filter(item => {
+    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          item.sku.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = categoryFilter === 'All' || item.category === categoryFilter;
+    const matchesStatus = statusFilter === 'All' || item.status === statusFilter;
+    
+    return matchesSearch && matchesCategory && matchesStatus;
+  });
+
+  const uniqueCategoriesList = Array.from(new Set(stocks.map(item => item.category)));
+
   return (
-    <div className="w-full max-w-md mx-auto bg-gray-900 text-white p-4 sm:p-6 rounded-2xl shadow-2xl border border-gray-800 transition-all duration-300">
-      
-      {/* INPUT SECTION */}
-      <div className="bg-gray-800/60 p-4 rounded-xl backdrop-blur-sm">
-        <h2 className="text-lg font-bold text-center text-blue-400 tracking-wide">
-          <i>Mero Deurali Cafe</i>
-        </h2>
-        <p className="text-xs text-center text-gray-400 mb-4">View & Pay All Bills</p>
-
-        <div className="space-y-3">
-          <input
-            type="text"
-            placeholder="Customer Name"
-            value={customerName}
-            onChange={(e) => setCustomerName(e.target.value)}
-            className="w-full p-2.5 rounded-lg bg-gray-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-
-          <input
-            type="text"
-            placeholder="Phone Number"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            className="w-full p-2.5 rounded-lg bg-gray-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+    <>
+      <AdminSidebar />
+      <div className="min-h-screen bg-slate-900 text-slate-100 p-4 md:p-8 md:pt-6 md:ml-72 transition-all">
+   
+        {/* HEADER SECTION */}
+        <div className="flex flex-col gap-4 bg-slate-800 p-5 rounded-xl shadow-md border border-slate-700 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-white">Stock Inventory</h1>
+            <p className="text-sm text-slate-400 mt-1">Manage physical products and tracking thresholds</p>
+          </div>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+            <div className="relative flex-1 sm:w-64">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <input 
+                type="text" 
+                placeholder="Search SKU or Product..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 border border-slate-600 bg-slate-950 text-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition placeholder-slate-500"
+              />
+            </div>
+            <button 
+              onClick={openAddModal}
+              className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-semibold transition shadow-sm active:scale-95"
+            >
+              <Plus className="h-4 w-4" /> Add Stock
+            </button>
+          </div>
         </div>
 
-        <button
-          onClick={fetchBill}
-          disabled={loading}
-          className="w-full mt-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 font-semibold p-2.5 rounded-lg text-sm transition-all shadow-md"
-        >
-          {loading ? "Searching..." : "Search Bills"}
-        </button>
-
-        {message && (
-          <p className="text-red-400 text-xs mt-2.5 text-center bg-red-500/10 p-2 rounded-md border border-red-500/20">
-            {message}
-          </p>
+        {error && (
+          <div className="mt-4 p-4 bg-rose-950/50 border border-rose-800 text-rose-300 rounded-xl text-sm flex items-center gap-2 animate-pulse">
+            <AlertTriangle className="h-4 w-4 flex-shrink-0 text-rose-400" />
+            {error}
+          </div>
         )}
+
+        {/* SUMMARY CARDS */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 my-6">
+          {[
+            { label: 'Total Items', value: summary.totalItems, color: 'text-white' },
+            { label: 'Low Stock Alert', value: summary.lowStockCount, color: summary.lowStockCount > 0 ? 'text-amber-400' : 'text-slate-400' },
+            { label: 'Stock Value', value: `Rs. ${summary.totalValue.toLocaleString()}`, color: 'text-emerald-400' },
+            { label: 'Categories', value: summary.uniqueCategories, color: 'text-indigo-400' }
+          ].map((card, idx) => (
+            <div key={idx} className="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-sm">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">{card.label}</span>
+              <p className={`text-xl md:text-2xl font-bold mt-2 ${card.color}`}>{card.value}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* FILTERS AND CONTROLS */}
+        <div className="flex flex-col gap-4 my-6 bg-slate-800 p-4 rounded-xl border border-slate-700 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col sm:flex-row gap-3 text-sm">
+            <div className="flex items-center gap-2 border border-slate-700 rounded-lg px-3 py-1.5 bg-slate-900">
+              <span className="text-slate-400">Category:</span>
+              <select 
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="bg-transparent focus:outline-none font-semibold text-white cursor-pointer"
+              >
+                <option value="All" className="bg-slate-800">All Categories</option>
+                {uniqueCategoriesList.map(cat => (
+                  <option key={cat} value={cat} className="bg-slate-800">{cat}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2 border border-slate-700 rounded-lg px-3 py-1.5 bg-slate-900">
+              <span className="text-slate-400">Status:</span>
+              <select 
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="bg-transparent focus:outline-none font-semibold text-white cursor-pointer"
+              >
+                <option value="All" className="bg-slate-800">All Status</option>
+                <option value="active" className="bg-slate-800">Active</option>
+                <option value="inactive" className="bg-slate-800">Inactive</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-end md:self-auto">
+            <button className="flex items-center gap-2 border border-slate-700 hover:bg-slate-700 px-3 py-1.5 rounded-lg text-sm text-slate-300 transition">
+              <Filter className="h-4 w-4" /> Sort
+            </button>
+            <button className="flex items-center gap-2 border border-slate-700 hover:bg-slate-700 px-3 py-1.5 rounded-lg text-sm text-slate-300 transition">
+              <Download className="h-4 w-4" /> Export
+            </button>
+          </div>
+        </div>
+
+        {/* PRODUCTS TABLE */}
+        <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden shadow-lg">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-900 border-b border-slate-700 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <th className="py-4 px-6">Product Details</th>
+                  <th className="py-4 px-6">SKU</th>
+                  <th className="py-4 px-6">Category</th>
+                  <th className="py-4 px-6">Stock Level</th>
+                  <th className="py-4 px-6">Cost / Unit</th>
+                  <th className="py-4 px-6">Selling Price</th>
+                  <th className="py-4 px-6">Status</th>
+                  <th className="py-4 px-6 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-700 text-sm text-slate-300">
+                {loading ? (
+                  <tr>
+                    <td colSpan={8} className="py-12 text-center text-slate-400">
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                        Processing Database Records...
+                      </div>
+                    </td>
+                  </tr>
+                ) : filteredStocks.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="py-12 text-center text-slate-400 font-medium">
+                      No matching stocks found.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredStocks.map((item) => {
+                    const isLowStock = item.currentStock <= item.minimumStock;
+                    
+                    return (
+                      <tr key={item._id} className="hover:bg-slate-700/40 transition">
+                        <td className="py-4 px-6">
+                          <div className="flex flex-col">
+                            <span className="font-semibold text-white">{item.name}</span>
+                            <span className="text-xs text-slate-400 line-clamp-1">{item.description || 'No description'}</span>
+                          </div>
+                        </td>
+                        <td className="py-4 px-6 font-mono text-xs text-slate-400 tracking-wider">{item.sku}</td>
+                        <td className="py-4 px-6 text-slate-300 font-medium">{item.category}</td>
+                        <td className="py-4 px-6">
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-1.5">
+                              <span className={`font-bold text-base ${isLowStock ? 'text-amber-400 animate-pulse' : 'text-white'}`}>
+                                {item.currentStock}
+                              </span>
+                              <span className="text-xs text-slate-500 font-medium uppercase">{item.unit}</span>
+                            </div>
+                            <span className="text-[10px] text-slate-400">Min threshold: {item.minimumStock}</span>
+                          </div>
+                        </td>
+                        <td className="py-4 px-6 font-medium text-slate-300">Rs. {item.costPerUnit.toLocaleString()}</td>
+                        <td className="py-4 px-6 font-semibold text-emerald-400">Rs. {item.sellingPrice.toLocaleString()}</td>
+                        <td className="py-4 px-6">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize ${
+                            item.status === 'active' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-slate-900 text-slate-400 border border-slate-700'
+                          }`}>
+                            {item.status}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <button 
+                              onClick={() => openEditModal(item)}
+                              className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-md transition"
+                              title="Edit Stock"
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </button>
+                            <button 
+                              onClick={() => handleDelete(item._id, item.name)}
+                              className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-950/40 rounded-md transition"
+                              title="Delete Stock"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* PAGINATION LAYOUT */}
+          <div className="flex items-center justify-between border-t border-slate-700 px-6 py-4 bg-slate-900 text-sm">
+            <button className="flex items-center gap-1 font-medium text-slate-500 cursor-not-allowed" disabled>
+              <ChevronLeft className="h-4 w-4" /> Previous
+            </button>
+            <div className="flex items-center gap-1">
+              <span className="px-3 py-1 rounded-md bg-emerald-600 text-white font-medium">1</span>
+            </div>
+            <button className="flex items-center gap-1 font-medium text-slate-500 cursor-not-allowed" disabled>
+              Next <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* INDIVIDUAL BILL CARDS */}
-      {ordersList.length > 0 && (
-        <div className="mt-4 space-y-4 max-h-[380px] overflow-y-auto pr-1">
-          {ordersList.map((order) => {
-            const isUnpaidAndNotApproved = order.status !== "approved" && order.paymentStatus !== "paid";
+      {/* ================= ADD / EDIT MODAL (RESPONSIVE OVERLAY) ================= */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-slate-800 border border-slate-700 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            
+            {/* Modal Header */}
+            <div className="flex justify-between items-center p-5 border-b border-slate-700 bg-slate-900">
+              <h2 className="text-xl font-bold text-white">
+                {editingItem ? '✏️ Edit Stock Record' : '📦 Add New Stock Item'}
+              </h2>
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="text-slate-400 hover:text-white transition p-1 hover:bg-slate-800 rounded-lg"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
 
-            return (
-              <div key={order._id} className="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-md">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-xs font-bold text-gray-200">Table: {order.number}</h3>
-                    <p className="text-gray-400 text-[10px]">Bill No: {order.billNo}</p>
-                  </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <span className={`px-2 py-0.5 rounded-full text-[8px] uppercase font-bold ${
-                      order.status === "approved" ? "bg-green-600/30 text-green-400 border border-green-500/30" : "bg-yellow-600/30 text-yellow-400 border border-yellow-500/30"
-                    }`}>
-                      {order.status}
-                    </span>
-                    <span className={`px-2 py-0.5 rounded-full text-[8px] uppercase font-bold ${
-                      order.paymentStatus === "paid" ? "bg-blue-600/30 text-blue-400 border border-blue-500/30" : "bg-red-600/30 text-red-400 border border-red-500/30"
-                    }`}>
-                      {order.paymentStatus}
-                    </span>
+            {/* Modal Form */}
+            <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4 text-sm text-slate-200">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Product Name *</label>
+                  <input 
+                    type="text" required name="name" value={formData.name} onChange={handleInputChange}
+                    className="w-full bg-slate-950 border border-slate-600 rounded-lg p-2.5 text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">SKU Code *</label>
+                  <input 
+                    type="text" required name="sku" value={formData.sku} onChange={handleInputChange}
+                    className="w-full bg-slate-950 border border-slate-600 rounded-lg p-2.5 text-white focus:ring-2 focus:ring-emerald-500 outline-none font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Category *</label>
+                  <input 
+                    type="text" required name="category" value={formData.category} onChange={handleInputChange}
+                    placeholder="e.g. Electronics, Food"
+                    className="w-full bg-slate-950 border border-slate-600 rounded-lg p-2.5 text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Unit Typology</label>
+                  <select 
+                    name="unit" value={formData.unit} onChange={handleInputChange}
+                    className="w-full bg-slate-950 border border-slate-600 rounded-lg p-2.5 text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                  >
+                    <option value="pcs">Pieces (pcs)</option>
+                    <option value="grm">gram (gra)</option>
+                    <option value="kg">Kilograms (kg)</option>
+                    <option value="ltr">Liters (ltr)</option>
+                    <option value="box">Boxes</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Current Stock Qty *</label>
+                  <input 
+                    type="number" required min="0" name="currentStock" value={formData.currentStock} onChange={handleInputChange}
+                    className="w-full bg-slate-950 border border-slate-600 rounded-lg p-2.5 text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Minimum Alert Qty *</label>
+                  <input 
+                    type="number" required min="0" name="minimumStock" value={formData.minimumStock} onChange={handleInputChange}
+                    className="w-full bg-slate-950 border border-slate-600 rounded-lg p-2.5 text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Cost Price (per unit) *</label>
+                  <input 
+                    type="number" required min="0" name="costPerUnit" value={formData.costPerUnit} onChange={handleInputChange}
+                    className="w-full bg-slate-950 border border-slate-600 rounded-lg p-2.5 text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Selling Price *</label>
+                  <input 
+                    type="number" required min="0" name="sellingPrice" value={formData.sellingPrice} onChange={handleInputChange}
+                    className="w-full bg-slate-950 border border-slate-600 rounded-lg p-2.5 text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">System Status</label>
+                  <div className="flex gap-4 mt-1">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input 
+                        type="radio" name="status" value="active" checked={formData.status === 'active'} onChange={handleInputChange}
+                        className="accent-emerald-500 w-4 h-4" 
+                      />
+                      <span>Active</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input 
+                        type="radio" name="status" value="inactive" checked={formData.status === 'inactive'} onChange={handleInputChange}
+                        className="accent-emerald-500 w-4 h-4" 
+                      />
+                      <span>Inactive</span>
+                    </label>
                   </div>
                 </div>
 
-                <hr className="my-2 border-gray-700" />
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Description</label>
+                  <textarea 
+                    name="description" rows={2} value={formData.description} onChange={handleInputChange}
+                    className="w-full bg-slate-950 border border-slate-600 rounded-lg p-2.5 text-white focus:ring-2 focus:ring-emerald-500 outline-none resize-none"
+                  />
+                </div>
 
-                {isUnpaidAndNotApproved ? (
-                  <p className="text-center text-xs text-yellow-400 py-1">
-                    ⏳ Awaiting approval
-                  </p>
-                ) : (
-                  <>
-                    <div className="space-y-1">
-                      {order.items.map((item, i) => (
-                        <div key={i} className="flex justify-between text-xs text-gray-300">
-                          <span>{item.title} <span className="text-gray-500">× {item.quantity}</span></span>
-                          <span className="font-semibold text-blue-400">Rs. {item.price * item.quantity}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <hr className="my-2 border-gray-700" />
-                    <div className="flex justify-between font-bold text-xs text-green-400">
-                      <span>Amount</span>
-                      <span>Rs. {order.total}</span>
-                    </div>
-                  </>
-                )}
               </div>
-            );
-          })}
-        </div>
-      )}
 
-      {/* BULK PAYMENT BOTTOM BAR (देखिनेछ जब Unpaid बिलहरू हुन्छन्) */}
-      {unpaidBills.length > 0 && (
-        <div className="mt-4 p-4 bg-gray-800 rounded-xl border border-blue-500/30 animate-fadeIn">
-          <div className="flex justify-between items-center mb-3">
-            <div>
-              <p className="text-xs text-gray-400">Total Unpaid Bills ({unpaidBills.length})</p>
-              <h3 className="text-sm font-bold text-gray-200">Grand Total</h3>
-            </div>
-            <span className="text-lg font-extrabold text-green-400">Rs. {grandTotal}</span>
-          </div>
+              {/* Form Actions */}
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-700 mt-6">
+                <button 
+                  type="button" onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 border border-slate-600 text-slate-300 rounded-lg hover:bg-slate-700 transition font-medium"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" disabled={formSubmitLoading}
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 text-white rounded-lg transition font-semibold shadow-md flex items-center gap-2"
+                >
+                  {formSubmitLoading ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : null}
+                  {editingItem ? 'Save Changes' : 'Submit Stock'}
+                </button>
+              </div>
 
-          <p className="text-[10px] text-center mb-2.5 text-gray-400 uppercase tracking-wider font-semibold">
-            Pay All {unpaidBills.length} Bills Securely via
-          </p>
-
-          <div className="flex justify-center gap-4">
-            <button 
-              onClick={() => handleBulkPayment("Cash")} 
-              disabled={paying}
-              className="flex-1 text-xs font-bold text-gray-200 bg-gray-700 hover:bg-gray-600 py-2 px-3 rounded-lg transition-all disabled:opacity-50"
-            >
-              {paying ? "Paying..." : "💵 Cash All"}
-            </button>
-            <button 
-              onClick={() => handleBulkPayment("eSewa")} 
-              disabled={paying}
-              className="flex-1 text-xs font-bold text-green-400 bg-green-950/40 border border-green-900/50 hover:bg-green-900/30 py-2 px-3 rounded-lg transition-all disabled:opacity-50"
-            >
-              💚 eSewa All
-            </button>
-            <button 
-              onClick={() => handleBulkPayment("Khalti")} 
-              disabled={paying}
-              className="flex-1 text-xs font-bold text-purple-400 bg-purple-950/40 border border-purple-900/50 hover:bg-purple-900/30 py-2 px-3 rounded-lg transition-all disabled:opacity-50"
-            >
-              💜 Khalti All
-            </button>
+            </form>
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

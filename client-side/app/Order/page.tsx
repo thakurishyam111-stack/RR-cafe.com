@@ -481,7 +481,6 @@ export default function OrderPage() {
                 <span className="font-bold text-green-600">{number}</span>
               </div>
               
-              <span className="text-black p-5  text-l text-center text-bold text-green-950 m-4">remember this bill no for Billing process</span>
               <div className="flex justify-between">
                
                 
