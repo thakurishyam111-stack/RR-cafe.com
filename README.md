@@ -148,6 +148,339 @@ cafe-management-system/
 ```
 
 ---
+# ☕ RR Cafe Management System V2.0.0
+
+A modern, full-stack Cafe Management System built with **Next.js**, **Node.js**, **Express.js**, **MongoDB**, and **Tailwind CSS**.
+
+This project is designed to manage every aspect of a café including billing, inventory, purchases, recipes, staff, customers, reports, and business analytics.
+
+---
+
+# 🚀 Tech Stack
+
+### Frontend
+
+* Next.js
+* React.js
+* TypeScript
+* Tailwind CSS
+* Shadcn UI
+
+### Backend
+
+* Node.js
+* Express.js
+* REST API
+
+### Database
+
+* MongoDB
+* Mongoose
+
+### Authentication
+
+* JWT
+* Role Based Access Control
+
+---
+
+# 📦 Version Roadmap
+
+---
+
+# Version 2.0.0 – Inventory & Business Management
+
+## 🎯 Goal
+
+Transform the café POS into a complete Inventory Management System.
+
+## ✨ New Features
+
+### 📦 Inventory Management
+
+* Add Stock
+* Edit Stock
+* Delete Stock
+* Stock Categories
+* Unit Management
+* Minimum Stock Alert
+* Expiry Date Support
+* Barcode Support
+* Batch Number
+* Stock History
+* Current Stock
+* Damaged Stock Tracking
+
+---
+
+### 🛒 Purchase Management
+
+* Supplier Management
+* Purchase Orders
+* Purchase Invoice
+* Purchase History
+* Pending Purchases
+* Completed Purchases
+* Purchase Return
+* Purchase Reports
+
+---
+
+### 🏪 Supplier Module
+
+* Add Supplier
+* Edit Supplier
+* Delete Supplier
+* Supplier Contact Information
+* Supplier Payment History
+* Supplier Due Balance
+
+---
+
+### 🧾 Sales Management
+
+* Sales History
+* Daily Sales
+* Monthly Sales
+* Cancel Sale
+* Return Item
+* Discount Management
+* VAT Support
+* Multiple Payment Methods
+
+---
+
+### 📊 Reports
+
+* Sales Report
+* Purchase Report
+* Stock Report
+* Profit Report
+* Expense Report
+
+---
+
+### 👨‍💼 Employee Management
+
+* Employee Profile
+* Salary Information
+* Attendance
+* Role Management
+* Permission Management
+
+---
+
+### 💰 Expense Management
+
+* Daily Expenses
+* Monthly Expenses
+* Expense Categories
+* Expense Reports
+
+---
+
+### 🔔 Notifications
+
+* Low Stock Alert
+* Out of Stock Alert
+* New Purchase Notification
+* Sales Notification
+
+---
+
+### ⚙️ System Improvements
+
+* Better Dashboard
+* Faster APIs
+* Better UI
+* Mobile Responsive
+* Dark Mode
+
+---
+
+# Version 2.5.0 – Smart Restaurant ERP
+
+## 🎯 Goal
+
+Upgrade the café system into a professional Restaurant ERP solution.
+
+## 🍔 Recipe Management
+
+* Create Recipe
+* Edit Recipe
+* Delete Recipe
+* Recipe Cost Calculation
+* Ingredients List
+* Portion Size
+* Auto Ingredient Deduction
+
+---
+
+## 🍽️ Menu Management
+
+* Menu Categories
+* Combo Meals
+* Seasonal Menu
+* Available / Unavailable Status
+* Menu Images
+
+---
+
+## 🧮 Production Management
+
+* Kitchen Production
+* Daily Production
+* Batch Cooking
+* Production Cost
+
+---
+
+## 🗑 Waste Management
+
+* Food Waste
+* Ingredient Waste
+* Damage Tracking
+* Waste Reports
+
+---
+
+## 📈 Business Analytics
+
+* Revenue Analytics
+* Expense Analytics
+* Profit Analytics
+* Customer Analytics
+* Best Selling Items
+* Worst Selling Items
+* Sales Trends
+
+---
+
+## 👥 Customer Management
+
+* Customer Profiles
+* Loyalty Points
+* Membership
+* Customer Purchase History
+* Birthday Rewards
+
+---
+
+## 🎁 Promotions
+
+* Coupon System
+* Discount Campaign
+* Happy Hour Pricing
+* Combo Discounts
+
+---
+
+## 📅 Reservation Management
+
+* Table Reservation
+* Booking Calendar
+* Reservation Status
+* Customer Notifications
+
+---
+
+## 📦 Advanced Inventory
+
+* Multi-Warehouse Support
+* Warehouse Transfer
+* Inventory Adjustment
+* Inventory Audit
+
+---
+
+## 📲 QR Ordering
+
+* QR Menu
+* Customer Self Ordering
+* Digital Bill
+* Online Payment
+
+---
+
+## 💳 Finance
+
+* Cash Flow
+* Daily Closing
+* Tax Reports
+* Profit & Loss
+* Balance Summary
+
+---
+
+## 🔐 Security
+
+* Two Factor Authentication
+* Login History
+* Activity Logs
+* Device Management
+
+---
+
+## ☁ Backup
+
+* Automatic Backup
+* Restore Backup
+* Export Data
+* Import Data
+
+---
+
+## 📡 Future Integrations
+
+* eSewa
+* Khalti
+* Fonepay
+* SMS Gateway
+* Email Notification
+* WhatsApp Notification
+* Printer Integration
+* Barcode Scanner
+* QR Scanner
+
+---
+
+# 🎯 Long-Term Vision
+
+Build RR Cafe Management System into a complete Restaurant ERP platform capable of managing:
+
+* POS Billing
+* Inventory
+* Purchase
+* Sales
+* Recipes
+* Kitchen
+* Waste
+* Employees
+* Customers
+* Finance
+* Reports
+* Analytics
+* Reservations
+* Loyalty Program
+* Multi-Branch Operations
+* Online Ordering
+* Delivery Management
+
+---
+
+# 📌 Current Status
+
+| Version | Status                         |
+| ------- | ------------------------------ |
+| 1.x     | ✅ Basic POS                    |
+| 2.0.0   | 🚧 Inventory & Purchase System |
+| 2.5.0   | 🚧 Smart Restaurant ERP        |
+| 3.0.0   | 🔜 Multi Branch & Cloud ERP    |
+
+---
+
+Developed with ❤️ by **Shyam Thakuri**
+
 
 # 📦 Installation
 
