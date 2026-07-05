@@ -407,7 +407,7 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
             <p className="text-center text-gray-700 font-medium">
               Have an account?{" "}
               <Link
-                href="/Login"
+                href="/Casher/Login"
                 className="text-blue-600 hover:text-blue-800 font-bold transition"
               >
                 Sign In

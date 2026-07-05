@@ -91,7 +91,7 @@ const Page = () => {
     <div
       className="min-h-screen w-full flex items-center justify-center bg-cover bg-center relative"
       style={{
-        backgroundImage: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        backgroundImage: "linear-gradient(135deg, #c5c9d9 0%, #764ba2 100%)",
       }}
     >
       <div className="absolute inset-0 bg-black opacity-30"></div>
@@ -101,9 +101,9 @@ const Page = () => {
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-8 text-white">
             <h1 className="text-3xl font-bold text-center mb-2">
-              RR-cafe Login
+              Mero Deurali cafe 
             </h1>
-            <p className="text-center text-blue-100">Welcome Back</p>
+            <p className="text-center text-blue-100">Casher login</p>
           </div>
 
           <div className="px-6 py-8">
@@ -214,7 +214,7 @@ const Page = () => {
             <p className="text-center text-gray-700">
               Don't have an account?{" "}
               <Link
-                href="/Register"
+                href="../Casher/Register"
                 className="text-blue-600 hover:text-blue-800 font-semibold"
               >
                 Sign Up

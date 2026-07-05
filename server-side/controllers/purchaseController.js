@@ -51,20 +51,15 @@ export const addPurchase = async (req, res) => {
 
         // Stock Increase
         for (const item of purchase.items) {
-    console.log("Stock ID:", item.stock);
 
     const stock = await Stock.findById(item.stock);
 
-    console.log("Stock Data:", stock);
 
-    if (!stock) {
-        return res.status(404).json({
-            success: false,
-            message: "Stock not found"
-        });
-    }
+  if (!stock) {
+    throw new Error(`Stock not found: ${item.stock}`);
+}
 
-    stock.currentStock += item.quantity;
+    stock.currentStock += Number(item.quantity);
     await stock.save();
 }
 
