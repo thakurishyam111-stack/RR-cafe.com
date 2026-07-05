@@ -1,541 +1,372 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit2, Trash2, Download, Filter, ChevronLeft, ChevronRight, AlertTriangle, X } from 'lucide-react';
-import { IStock, StockSummary } from '@/app/Admin/Stock/stock';
-import AdminSidebar from '@/components/AdminSidebar';
+import { useState, useEffect } from 'react';
 
-// Form Data को लागि Initial State
-const initialFormState = {
-  name: '',
-  sku: '',
-  category: '',
-  currentStock: 0,
-  minimumStock: 0,
-  costPerUnit: 0,
-  sellingPrice: 0,
-  unit: 'pcs',
-  status: 'active',
-  description: ''
-};
+export default function WasteManagementDashboard() {
+  // --- STATE MANAGEMENT ---
+  const [wasteData, setWasteData] = useState([]);
+  const [activeTab, setActiveTab] = useState('view'); // 'view' or 'form'
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-export default function StockInventoryPage() {
-  const [stocks, setStocks] = useState<IStock[]>([]);
-  const [summary, setSummary] = useState<StockSummary>({
-    totalItems: 0,
-    lowStockCount: 0,
-    totalValue: 0,
-    uniqueCategories: 0,
+  // Reusable Form State (Matches MongoDB Schema Exactly)
+  const [formData, setFormData] = useState({
+    stock: '', // Assuming stock ID string
+    wasteName: '',
+    unit: '',
+    quantity: '',
+    reason: '',
+    cost: '',
+    note: ''
   });
   
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [activeRecordId, setActiveRecordId] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-  // Search & Filter States
-  const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('All');
-  const [statusFilter, setStatusFilter] = useState('All');
+  const API_BASE_URL = 'http://localhost:8080/api/waste';
 
-  // Add / Edit Modal States
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<IStock | null>(null);
-  const [formData, setFormData] = useState(initialFormState);
-  const [formSubmitLoading, setFormSubmitLoading] = useState(false);
+  // --- API CALLS (GET, POST, PUT, DELETE) ---
 
-  // 1. Fetch Stocks from API
-  const fetchStocks = async () => {
+  // 1. GET ALL WASTE
+  const fetchWastes = async () => {
+    setIsLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
-      const response = await fetch('http://localhost:8080/api/stocks');
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      
+      const response = await fetch(API_BASE_URL);
+      if (!response.ok) throw new Error('Database server integration failed.');
       const data = await response.json();
-      const cleanData: IStock[] = Array.isArray(data) ? data : (data.stocks || data.data || []);
-      setStocks(cleanData);
-      updateSummaryCards(cleanData);
+      
+      // Backend mapping: response returns { success: true, waste: [...] }
+      if (data.success && data.waste) {
+        setWasteData(data.waste);
+      }
     } catch (err) {
-      console.error("Backend fetch error:", err);
-      setError("Unable to connect to database server. Please check cross-origin (CORS) headers.");
+      setError('Backend standard pipeline offline. Please check your Node.js port.');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchStocks();
+    fetchWastes();
   }, []);
 
-  // Summary Update गर्ने common function
-  const updateSummaryCards = (data: IStock[]) => {
-    const lowStockItems = data.filter(item => item.currentStock <= item.minimumStock);
-    const totalStockValue = data.reduce((acc, item) => acc + (item.currentStock * item.costPerUnit), 0);
-    const uniqueCats = new Set(data.map(item => item.category)).size;
-
-    setSummary({
-      totalItems: data.length,
-      lowStockCount: lowStockItems.length,
-      totalValue: totalStockValue,
-      uniqueCategories: uniqueCats
-    });
-  };
-
-  // 2. Add / Edit Form Handling
-  const openAddModal = () => {
-    setEditingItem(null);
-    setFormData(initialFormState);
-    setIsModalOpen(true);
-  };
-
-  const openEditModal = (item: IStock) => {
-    setEditingItem(item);
-    setFormData({
-      name: item.name,
-      sku: item.sku,
-      category: item.category,
-      currentStock: item.currentStock,
-      minimumStock: item.minimumStock,
-      costPerUnit: item.costPerUnit,
-      sellingPrice: item.sellingPrice,
-      unit: item.unit || 'pcs' ,
-      status: item.status,
-      description: item.description || ''
-    });
-    setIsModalOpen(true);
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  // Handle Form Change Helper
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    const isNumber = ['currentStock', 'minimumStock', 'costPerUnit', 'sellingPrice'].includes(name);
-    setFormData(prev => ({
-      ...prev,
-      [name]: isNumber ? Number(value) : value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // 2. POST (ADD) & PUT (EDIT) HANDLER
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
-    setFormSubmitLoading(true);
-    
     try {
-      const url = editingItem 
-        ? `http://localhost:8080/api/stocks/${editingItem._id}` 
-        : 'http://localhost:8080/api/stocks';
-      
-      const method = editingItem ? 'PUT' : 'POST';
-
-      // ⚠️ Senior Tip: पठाउनु अघि डेटा Format मिलेको छ कि छैन पक्का गर्ने
-      const payload = {
-        ...formData,
-        currentStock: Number(formData.currentStock),
-        minimumStock: Number(formData.minimumStock),
-        costPerUnit: Number(formData.costPerUnit),
-        sellingPrice: Number(formData.sellingPrice),
-      };
+      const url = isEditMode ? `${API_BASE_URL}/${activeRecordId}` : `${API_BASE_URL}/add`;
+      const method = isEditMode ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
-        method,
+        method: method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          ...formData,
+          cost: Number(formData.cost) // Ensure number mapping
+        }),
       });
 
-      // यदि Backend ले ४०० वा ५०० एरर पठायो भने त्यसको विवरण निकाल्ने
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || errorData.error || `Server responded with status ${response.status}`);
-      }
+      const data = await response.json();
+      if (!data.success) throw new Error(data.message || 'Operation failed');
 
-      // सफलता पूर्वक सेभ भएपछि
-      await fetchStocks();
-      setIsModalOpen(false);
-      setFormData(initialFormState); // Form Reset गर्ने
+      // Success Reset
+      resetForm();
+      await fetchWastes();
+      setActiveTab('view');
+    } catch (err) {
+      alert(`Error: ${err.message}`);
+    }
+  };
+
+  // 3. DELETE HANDLER
+  const handleDeleteConfirm = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/${activeRecordId}`, { method: 'DELETE' });
+      const data = await response.json();
       
-    } catch (err: any) {
-      console.error("❌ Form Submission Error Details:", err);
-      // उपभोक्तालाई स्पष्ट एरर मेसेज देखाउने
-      alert(`Error: ${err.message || "Failed to save stock. Please check console for details."}`);
-    } finally {
-      setFormSubmitLoading(false);
-    }
-  };
-  // 3. Delete Handling
-  const handleDelete = async (id: string, name: string) => {
-    if (window.confirm(`Are you sure you want to delete "${name}"?`)) {
-      try {
-        const response = await fetch(`http://localhost:8080/api/stocks/${id}`, {
-          method: 'DELETE',
-        });
-        if (!response.ok) throw new Error("Failed to delete stock");
-        
-        // State update safely
-        const updatedStocks = stocks.filter(stock => stock._id !== id);
-        setStocks(updatedStocks);
-        updateSummaryCards(updatedStocks);
-      } catch (err) {
-        alert("Could not delete item. Check console logs.");
-      }
+      if (!data.success) throw new Error(data.message);
+      
+      setWasteData(prev => prev.filter(item => item._id !== activeRecordId));
+      setIsDeleteModalOpen(false);
+      setActiveRecordId(null);
+    } catch (err) {
+      alert(`Delete Error: ${err.message}`);
     }
   };
 
-  // Client-side Search and Filter
-  const filteredStocks = stocks.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          item.sku.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = categoryFilter === 'All' || item.category === categoryFilter;
-    const matchesStatus = statusFilter === 'All' || item.status === statusFilter;
-    
-    return matchesSearch && matchesCategory && matchesStatus;
-  });
+  // --- ACTION CONTROLS ---
+  const triggerEdit = (item) => {
+    setIsEditMode(true);
+    setActiveRecordId(item._id);
+    setFormData({
+      stock: item.stock || '',
+      wasteName: item.wasteName,
+      unit: item.unit,
+      quantity: item.quantity,
+      reason: item.reason,
+      cost: item.cost,
+      note: item.note || ''
+    });
+    setActiveTab('form');
+  };
 
-  const uniqueCategoriesList = Array.from(new Set(stocks.map(item => item.category)));
+  const triggerDelete = (id) => {
+    setActiveRecordId(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const resetForm = () => {
+    setIsEditMode(false);
+    setActiveRecordId(null);
+    setFormData({ stock: '', wasteName: '', unit: '', quantity: '', reason: '', cost: '', note: '' });
+  };
+
+  // --- FILTER ENGINE (SEARCH BY NAME OR REASON) ---
+  const filteredData = wasteData.filter(item => 
+    item.wasteName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.reason?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Visual UI Pill logic for Reasons
+  const getReasonBadgeColor = (reason) => {
+    const maps = {
+      Expired: 'bg-red-50 text-red-700 border-red-200',
+      Damaged: 'bg-amber-50 text-amber-700 border-amber-200',
+      spolide: 'bg-orange-50 text-orange-700 border-orange-200',
+      Burnt: 'bg-stone-100 text-stone-800 border-stone-300',
+      'Customer Return': 'bg-blue-50 text-blue-700 border-blue-200',
+      'preparation Mistake': 'bg-purple-50 text-purple-700 border-purple-200',
+      others: 'bg-gray-100 text-gray-600 border-gray-200'
+    };
+    return maps[reason] || 'bg-gray-50 text-gray-700 border-gray-200';
+  };
 
   return (
-    <>
-      <AdminSidebar />
-      <div className="min-h-screen bg-slate-900 text-slate-100 p-4 md:p-8 md:pt-6 md:ml-72 transition-all">
-   
-        {/* HEADER SECTION */}
-        <div className="flex flex-col gap-4 bg-slate-800 p-5 rounded-xl shadow-md border border-slate-700 sm:flex-row sm:items-center sm:justify-between">
+    <div className="min-h-screen bg-slate-50 text-slate-800 antialiased font-sans">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        
+        {/* DASHBOARD HEADER */}
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-5 mb-6 border-b border-slate-200 gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-white">Stock Inventory</h1>
-            <p className="text-sm text-slate-400 mt-1">Manage physical products and tracking thresholds</p>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+              <span className="p-2 bg-emerald-500 text-white rounded-lg shadow-sm">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+              </span>
+              Waste Inventory Management
+            </h1>
+            <p className="text-xs text-slate-400 mt-1">Track system loss, damages, expired items and custom financial metrics.</p>
           </div>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
-            <div className="relative flex-1 sm:w-64">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-              <input 
-                type="text" 
-                placeholder="Search SKU or Product..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 border border-slate-600 bg-slate-950 text-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition placeholder-slate-500"
-              />
-            </div>
-            <button 
-              onClick={openAddModal}
-              className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-semibold transition shadow-sm active:scale-95"
-            >
-              <Plus className="h-4 w-4" /> Add Stock
-            </button>
+          <div className="flex items-center gap-2 self-end sm:self-center">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span className="text-xs font-semibold bg-slate-900 text-white px-3 py-1 rounded-full">Live Core Cluster</span>
           </div>
-        </div>
+        </header>
 
-        {error && (
-          <div className="mt-4 p-4 bg-rose-950/50 border border-rose-800 text-rose-300 rounded-xl text-sm flex items-center gap-2 animate-pulse">
-            <AlertTriangle className="h-4 w-4 flex-shrink-0 text-rose-400" />
-            {error}
-          </div>
-        )}
+        {/* TABS NAVIGATION */}
+        <nav className="flex space-x-2 border-b border-slate-200 mb-6">
+          <button 
+            className={`px-4 py-2.5 text-sm font-medium transition-all border-b-2 relative top-[2px] ${activeTab === 'view' ? 'border-emerald-600 text-emerald-600 font-semibold' : 'border-transparent text-slate-500 hover:text-slate-900'}`}
+            onClick={() => { setActiveTab('view'); resetForm(); fetchWastes(); }}
+          >
+            All Logs Inventory
+          </button>
+          <button 
+            className={`px-4 py-2.5 text-sm font-medium transition-all border-b-2 relative top-[2px] ${activeTab === 'form' ? 'border-emerald-600 text-emerald-600 font-semibold' : 'border-transparent text-slate-500 hover:text-slate-900'}`}
+            onClick={() => setActiveTab('form')}
+          >
+            {isEditMode ? 'Edit Waste Node' : 'Record New Waste'}
+          </button>
+        </nav>
 
-        {/* SUMMARY CARDS */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 my-6">
-          {[
-            { label: 'Total Items', value: summary.totalItems, color: 'text-white' },
-            { label: 'Low Stock Alert', value: summary.lowStockCount, color: summary.lowStockCount > 0 ? 'text-amber-400' : 'text-slate-400' },
-            { label: 'Stock Value', value: `Rs. ${summary.totalValue.toLocaleString()}`, color: 'text-emerald-400' },
-            { label: 'Categories', value: summary.uniqueCategories, color: 'text-indigo-400' }
-          ].map((card, idx) => (
-            <div key={idx} className="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-sm">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">{card.label}</span>
-              <p className={`text-xl md:text-2xl font-bold mt-2 ${card.color}`}>{card.value}</p>
-            </div>
-          ))}
-        </div>
+        {/* MAIN RENDERING ROUTER */}
+        <main>
+          {activeTab === 'view' ? (
+            <div className="space-y-4">
+              {/* FILTER / ACTION CONTROL BAR */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="relative w-full sm:max-w-md">
+                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                  </span>
+                  <input 
+                    type="text" 
+                    placeholder="Search by Waste Name or Reason..." 
+                    className="w-full pl-9 pr-4 py-2 text-sm bg-white border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                <div className="text-xs font-semibold text-slate-500 bg-white px-3 py-2 rounded-lg border border-slate-200 shadow-sm self-stretch sm:self-auto text-center">
+                  Matched Records: <span className="text-slate-900 font-bold ml-1">{filteredData.length}</span>
+                </div>
+              </div>
 
-        {/* FILTERS AND CONTROLS */}
-        <div className="flex flex-col gap-4 my-6 bg-slate-800 p-4 rounded-xl border border-slate-700 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-col sm:flex-row gap-3 text-sm">
-            <div className="flex items-center gap-2 border border-slate-700 rounded-lg px-3 py-1.5 bg-slate-900">
-              <span className="text-slate-400">Category:</span>
-              <select 
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="bg-transparent focus:outline-none font-semibold text-white cursor-pointer"
-              >
-                <option value="All" className="bg-slate-800">All Categories</option>
-                {uniqueCategoriesList.map(cat => (
-                  <option key={cat} value={cat} className="bg-slate-800">{cat}</option>
-                ))}
-              </select>
-            </div>
+              {/* DATA FEEDBACK LAYERS */}
+              {isLoading && <div className="text-center p-16 bg-white border rounded-xl shadow-sm text-slate-400"><div className="animate-spin inline-block w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full mb-3"></div><p className="text-xs font-medium">Syncing database entries...</p></div>}
+              {error && <div className="p-4 text-center text-sm font-medium text-red-800 bg-red-50 border border-red-100 rounded-xl">{error}</div>}
 
-            <div className="flex items-center gap-2 border border-slate-700 rounded-lg px-3 py-1.5 bg-slate-900">
-              <span className="text-slate-400">Status:</span>
-              <select 
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-transparent focus:outline-none font-semibold text-white cursor-pointer"
-              >
-                <option value="All" className="bg-slate-800">All Status</option>
-                <option value="active" className="bg-slate-800">Active</option>
-                <option value="inactive" className="bg-slate-800">Inactive</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 self-end md:self-auto">
-            <button className="flex items-center gap-2 border border-slate-700 hover:bg-slate-700 px-3 py-1.5 rounded-lg text-sm text-slate-300 transition">
-              <Filter className="h-4 w-4" /> Sort
-            </button>
-            <button className="flex items-center gap-2 border border-slate-700 hover:bg-slate-700 px-3 py-1.5 rounded-lg text-sm text-slate-300 transition">
-              <Download className="h-4 w-4" /> Export
-            </button>
-          </div>
-        </div>
-
-        {/* PRODUCTS TABLE */}
-        <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden shadow-lg">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-900 border-b border-slate-700 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  <th className="py-4 px-6">Product Details</th>
-                  <th className="py-4 px-6">SKU</th>
-                  <th className="py-4 px-6">Category</th>
-                  <th className="py-4 px-6">Stock Level</th>
-                  <th className="py-4 px-6">Cost / Unit</th>
-                  <th className="py-4 px-6">Selling Price</th>
-                  <th className="py-4 px-6">Status</th>
-                  <th className="py-4 px-6 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-700 text-sm text-slate-300">
-                {loading ? (
-                  <tr>
-                    <td colSpan={8} className="py-12 text-center text-slate-400">
-                      <div className="flex items-center justify-center gap-2">
-                        <div className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-                        Processing Database Records...
-                      </div>
-                    </td>
-                  </tr>
-                ) : filteredStocks.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="py-12 text-center text-slate-400 font-medium">
-                      No matching stocks found.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredStocks.map((item) => {
-                    const isLowStock = item.currentStock <= item.minimumStock;
-                    
-                    return (
-                      <tr key={item._id} className="hover:bg-slate-700/40 transition">
-                        <td className="py-4 px-6">
-                          <div className="flex flex-col">
-                            <span className="font-semibold text-white">{item.name}</span>
-                            <span className="text-xs text-slate-400 line-clamp-1">{item.description || 'No description'}</span>
-                          </div>
-                        </td>
-                        <td className="py-4 px-6 font-mono text-xs text-slate-400 tracking-wider">{item.sku}</td>
-                        <td className="py-4 px-6 text-slate-300 font-medium">{item.category}</td>
-                        <td className="py-4 px-6">
-                          <div className="flex flex-col">
-                            <div className="flex items-center gap-1.5">
-                              <span className={`font-bold text-base ${isLowStock ? 'text-amber-400 animate-pulse' : 'text-white'}`}>
-                                {item.currentStock}
+              {/* RESPONSIVE SENIOR UI TABLE STRUCTURE */}
+              {!isLoading && !error && (
+                <div className="w-full bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-sm">
+                      <thead>
+                        <tr className="bg-slate-50 text-slate-500 font-semibold text-[11px] uppercase tracking-wider border-b border-slate-200">
+                          <th className="p-4">Waste Identity</th>
+                          <th className="p-4">Reason Trigger</th>
+                          <th className="p-4">Quantity Metric</th>
+                          <th className="p-4">Total Cost Loss</th>
+                          <th className="p-4 text-center">Operations</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {filteredData.map((item) => (
+                          <tr key={item._id} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="p-4">
+                              <div className="font-semibold text-slate-900">{item.wasteName}</div>
+                              <div className="text-[11px] text-slate-400 font-mono mt-0.5">Stock Ref: {String(item.stock).slice(-6)}...</div>
+                            </td>
+                            <td className="p-4">
+                              <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full border ${getReasonBadgeColor(item.reason)}`}>
+                                {item.reason}
                               </span>
-                              <span className="text-xs text-slate-500 font-medium uppercase">{item.unit}</span>
-                            </div>
-                            <span className="text-[10px] text-slate-400">Min threshold: {item.minimumStock}</span>
-                          </div>
-                        </td>
-                        <td className="py-4 px-6 font-medium text-slate-300">Rs. {item.costPerUnit.toLocaleString()}</td>
-                        <td className="py-4 px-6 font-semibold text-emerald-400">Rs. {item.sellingPrice.toLocaleString()}</td>
-                        <td className="py-4 px-6">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize ${
-                            item.status === 'active' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-slate-900 text-slate-400 border border-slate-700'
-                          }`}>
-                            {item.status}
-                          </span>
-                        </td>
-                        <td className="py-4 px-6 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <button 
-                              onClick={() => openEditModal(item)}
-                              className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-md transition"
-                              title="Edit Stock"
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </button>
-                            <button 
-                              onClick={() => handleDelete(item._id, item.name)}
-                              className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-950/40 rounded-md transition"
-                              title="Delete Stock"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* PAGINATION LAYOUT */}
-          <div className="flex items-center justify-between border-t border-slate-700 px-6 py-4 bg-slate-900 text-sm">
-            <button className="flex items-center gap-1 font-medium text-slate-500 cursor-not-allowed" disabled>
-              <ChevronLeft className="h-4 w-4" /> Previous
-            </button>
-            <div className="flex items-center gap-1">
-              <span className="px-3 py-1 rounded-md bg-emerald-600 text-white font-medium">1</span>
+                            </td>
+                            <td className="p-4 font-mono text-slate-700 font-medium">
+                              {item.quantity} <span className="text-xs text-slate-400 lowercase font-sans">{item.unit}</span>
+                            </td>
+                            <td className="p-4 font-semibold text-rose-600">
+                              Rs. {Number(item.cost).toLocaleString()}
+                            </td>
+                            <td className="p-4 text-center space-x-1">
+                              <button 
+                                onClick={() => triggerEdit(item)}
+                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md transition-colors" title="Modify Record"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                              </button>
+                              <button 
+                                onClick={() => triggerDelete(item._id)}
+                                className="p-1.5 text-red-600 hover:bg-red-50 rounded-md transition-colors" title="Purge Record"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  {/* EMPTY STATE DATA MAPPING */}
+                  {filteredData.length === 0 && (
+                    <div className="text-center p-12 text-slate-400 bg-white">
+                      <svg className="w-10 h-10 mx-auto stroke-1 stroke-slate-300 mb-2" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m16.5 0a2.25 2.25 0 00-2.25-2.25H6A2.25 2.25 0 003.75 7.5m16.5 0V4.5A2.25 2.25 0 0018 2.25H6A2.25 2.25 0 003.75 4.5V7.5m16.5 0V9M3.75 7.5V9m16.5 5.25h-16.5" /></svg>
+                      <p className="text-xs font-medium">No system metrics located under search conditions.</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-            <button className="flex items-center gap-1 font-medium text-slate-500 cursor-not-allowed" disabled>
-              Next <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      </div>
+          ) : (
+            /* CRU DATA INPUT FORMS */
+            <div className="max-w-2xl mx-auto bg-white p-6 sm:p-8 rounded-xl shadow-sm border border-slate-200">
+              <div className="mb-6">
+                <h2 className="text-lg font-bold text-slate-950 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  {isEditMode ? 'Modify Waste Entry Parameters' : 'Log Waste Parameters'}
+                </h2>
+                <p className="text-xs text-slate-400 mt-0.5">All configuration nodes execute direct verification constraints inside MongoDB.</p>
+              </div>
 
-      {/* ================= ADD / EDIT MODAL (RESPONSIVE OVERLAY) ================= */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-slate-800 border border-slate-700 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            
-            {/* Modal Header */}
-            <div className="flex justify-between items-center p-5 border-b border-slate-700 bg-slate-900">
-              <h2 className="text-xl font-bold text-white">
-                {editingItem ? '✏️ Edit Stock Record' : '📦 Add New Stock Item'}
-              </h2>
-              <button 
-                onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-white transition p-1 hover:bg-slate-800 rounded-lg"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Modal Form */}
-            <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4 text-sm text-slate-200">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Product Name *</label>
-                  <input 
-                    type="text" required name="name" value={formData.name} onChange={handleInputChange}
-                    className="w-full bg-slate-950 border border-slate-600 rounded-lg p-2.5 text-white focus:ring-2 focus:ring-emerald-500 outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">SKU Code *</label>
-                  <input 
-                    type="text" required name="sku" value={formData.sku} onChange={handleInputChange}
-                    className="w-full bg-slate-950 border border-slate-600 rounded-lg p-2.5 text-white focus:ring-2 focus:ring-emerald-500 outline-none font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Category *</label>
-                  <input 
-                    type="text" required name="category" value={formData.category} onChange={handleInputChange}
-                    placeholder="e.g. Electronics, Food"
-                    className="w-full bg-slate-950 border border-slate-600 rounded-lg p-2.5 text-white focus:ring-2 focus:ring-emerald-500 outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Unit Typology</label>
-                  <select 
-                    name="unit" value={formData.unit} onChange={handleInputChange}
-                    className="w-full bg-slate-950 border border-slate-600 rounded-lg p-2.5 text-white focus:ring-2 focus:ring-emerald-500 outline-none"
-                  >
-                    <option value="pcs">Pieces (pcs)</option>
-                    <option value="grm">gram (gra)</option>
-                    <option value="kg">Kilograms (kg)</option>
-                    <option value="ltr">Liters (ltr)</option>
-                    <option value="box">Boxes</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Current Stock Qty *</label>
-                  <input 
-                    type="number" required min="0" name="currentStock" value={formData.currentStock} onChange={handleInputChange}
-                    className="w-full bg-slate-950 border border-slate-600 rounded-lg p-2.5 text-white focus:ring-2 focus:ring-emerald-500 outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Minimum Alert Qty *</label>
-                  <input 
-                    type="number" required min="0" name="minimumStock" value={formData.minimumStock} onChange={handleInputChange}
-                    className="w-full bg-slate-950 border border-slate-600 rounded-lg p-2.5 text-white focus:ring-2 focus:ring-emerald-500 outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Cost Price (per unit) *</label>
-                  <input 
-                    type="number" required min="0" name="costPerUnit" value={formData.costPerUnit} onChange={handleInputChange}
-                    className="w-full bg-slate-950 border border-slate-600 rounded-lg p-2.5 text-white focus:ring-2 focus:ring-emerald-500 outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Selling Price *</label>
-                  <input 
-                    type="number" required min="0" name="sellingPrice" value={formData.sellingPrice} onChange={handleInputChange}
-                    className="w-full bg-slate-950 border border-slate-600 rounded-lg p-2.5 text-white focus:ring-2 focus:ring-emerald-500 outline-none"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">System Status</label>
-                  <div className="flex gap-4 mt-1">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input 
-                        type="radio" name="status" value="active" checked={formData.status === 'active'} onChange={handleInputChange}
-                        className="accent-emerald-500 w-4 h-4" 
-                      />
-                      <span>Active</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input 
-                        type="radio" name="status" value="inactive" checked={formData.status === 'inactive'} onChange={handleInputChange}
-                        className="accent-emerald-500 w-4 h-4" 
-                      />
-                      <span>Inactive</span>
-                    </label>
+              <form onSubmit={handleFormSubmit} className="space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-slate-700">Stock Object ID Reference <span className="text-red-500">*</span></label>
+                    <input type="text" name="stock" value={formData.stock} onChange={handleInputChange} placeholder="Ex: 64f123456789abc..." className="p-2.5 text-sm border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all bg-slate-50" required />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-slate-700">Waste Item Name <span className="text-red-500">*</span></label>
+                    <input type="text" name="wasteName" value={formData.wasteName} onChange={handleInputChange} placeholder="Ex: Expired Organic Milk" className="p-2.5 text-sm border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" required />
                   </div>
                 </div>
 
-                <div className="md:col-span-2">
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Description</label>
-                  <textarea 
-                    name="description" rows={2} value={formData.description} onChange={handleInputChange}
-                    className="w-full bg-slate-950 border border-slate-600 rounded-lg p-2.5 text-white focus:ring-2 focus:ring-emerald-500 outline-none resize-none"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-slate-700">Unit Type <span className="text-red-500">*</span></label>
+                    <input type="text" name="unit" value={formData.unit} onChange={handleInputChange} placeholder="Ex: kg, liters, pcs" className="p-2.5 text-sm border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" required />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-slate-700">Quantity Logged <span className="text-red-500">*</span></label>
+                    <input type="text" name="quantity" value={formData.quantity} onChange={handleInputChange} placeholder="Min: 1" className="p-2.5 text-sm border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" required />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-slate-700">Financial Cost (Loss) <span className="text-red-500">*</span></label>
+                    <input type="number" name="cost" value={formData.cost} onChange={handleInputChange} placeholder="Value in Rs." className="p-2.5 text-sm border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" required />
+                  </div>
                 </div>
 
-              </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-slate-700">Reason Classification Schema <span className="text-red-500">*</span></label>
+                  <select name="reason" value={formData.reason} onChange={handleInputChange} className="p-2.5 text-sm bg-white border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" required>
+                    <option value="" disabled>Select valid reason enum...</option>
+                    <option value="Expired">Expired</option>
+                    <option value="Damaged">Damaged</option>
+                    <option value="spolide">spolide</option>
+                    <option value="Burnt">Burnt</option>
+                    <option value="Customer Return">Customer Return</option>
+                    <option value="preparation Mistake">preparation Mistake</option>
+                    <option value="others">others</option>
+                  </select>
+                </div>
 
-              {/* Form Actions */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-700 mt-6">
-                <button 
-                  type="button" onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border border-slate-600 text-slate-300 rounded-lg hover:bg-slate-700 transition font-medium"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit" disabled={formSubmitLoading}
-                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 text-white rounded-lg transition font-semibold shadow-md flex items-center gap-2"
-                >
-                  {formSubmitLoading ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  ) : null}
-                  {editingItem ? 'Save Changes' : 'Submit Stock'}
-                </button>
-              </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-slate-700">Supplementary Notes (Optional)</label>
+                  <textarea name="note" rows="3" value={formData.note} onChange={handleInputChange} placeholder="Add detailed remarks regarding processing error..." className="p-2.5 text-sm border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all resize-none"></textarea>
+                </div>
 
-            </form>
+                <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                  <button type="button" onClick={() => { resetForm(); setActiveTab('view'); }} className="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors">Cancel</button>
+                  <button type="submit" className="px-5 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm transition-colors">Commit Transaction</button>
+                </div>
+              </form>
+            </div>
+          )}
+        </main>
+
+        {/* --- DYNAMIC OVERLAY DIALOGS (MODALS) --- */}
+
+        {/* DELETION CONFIRMATION LAYER */}
+        {isDeleteModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden border border-slate-100">
+              <div className="px-6 py-4 border-b border-slate-100 bg-rose-50/50 flex justify-between items-center">
+                <h3 className="text-sm font-bold text-rose-800 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                  Confirm Drop Sequence
+                </h3>
+                <button onClick={() => setIsDeleteModalOpen(false)} className="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
+              </div>
+              <div className="p-6">
+                <p className="text-xs text-slate-600 leading-relaxed">Are you completely certain you want to erase this database entry index <span className="font-mono bg-slate-100 px-1 py-0.5 rounded text-slate-900 text-[11px]">#{String(activeRecordId).slice(-8)}</span>? This action overrides active system references.</p>
+                <div className="flex justify-end gap-3 mt-6 pt-3 border-t border-slate-100">
+                  <button type="button" onClick={() => setIsDeleteModalOpen(false)} className="px-4 py-2 text-sm font-medium text-slate-500 hover:bg-slate-100 rounded-lg transition-colors">Abort</button>
+                  <button type="button" onClick={handleDeleteConfirm} className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors">Wipe from MongoDB</button>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
-    </>
+        )}
+
+      </div>
+    </div>
   );
 }
