@@ -1,141 +1,31 @@
 'use client';
 
-import AdminSidebar from '@/components/AdminSidebar';
-import { useState, useEffect } from 'react';
+import AdminSidebar from "@/components/AdminSidebar";
+import useWaste from "../Waste/waste";
 
 export default function WasteManagementDashboard() {
-  // --- STATE MANAGEMENT ---
-  const [wasteData, setWasteData] = useState([]);
-  const [activeTab, setActiveTab] = useState('view'); // 'view' or 'form'
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const {
+    wasteData,
+    activeTab,
+    searchQuery,
+    formData,
+    filteredData,
+    isLoading,
+    error,
+    isEditMode,
+    isDeleteModalOpen,
 
-  // Reusable Form State (Matches MongoDB Schema Exactly)
-  const [formData, setFormData] = useState({
-    stock: '', // Assuming stock ID string
-    wasteName: '',
-    unit: '',
-    quantity: '',
-    reason: '',
-    cost: '',
-    note: ''
-  });
-  
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [activeRecordId, setActiveRecordId] = useState(null);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    setSearchQuery,
+    setActiveTab,
 
-  const API_BASE_URL = 'http://localhost:8080/api/waste';
-
-  // --- API CALLS (GET, POST, PUT, DELETE) ---
-
-  // 1. GET ALL WASTE
-  const fetchWastes = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(API_BASE_URL);
-      if (!response.ok) throw new Error('Database server integration failed.');
-      const data = await response.json();
-      
-      // Backend mapping: response returns { success: true, waste: [...] }
-      if (data.success && data.waste) {
-        setWasteData(data.waste);
-      }
-    } catch (err) {
-      setError('Backend standard pipeline offline. Please check your Node.js port.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchWastes();
-  }, []);
-
-  // Handle Form Change Helper
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  // 2. POST (ADD) & PUT (EDIT) HANDLER
-  const handleFormSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const url = isEditMode ? `${API_BASE_URL}/${activeRecordId}` : `${API_BASE_URL}/add`;
-      const method = isEditMode ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method: method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          cost: Number(formData.cost) // Ensure number mapping
-        }),
-      });
-
-      const data = await response.json();
-      if (!data.success) throw new Error(data.message || 'Operation failed');
-
-      // Success Reset
-      resetForm();
-      await fetchWastes();
-      setActiveTab('view');
-    } catch (err) {
-      alert(`Error: ${err.message}`);
-    }
-  };
-
-  // 3. DELETE HANDLER
-  const handleDeleteConfirm = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/${activeRecordId}`, { method: 'DELETE' });
-      const data = await response.json();
-      
-      if (!data.success) throw new Error(data.message);
-      
-      setWasteData(prev => prev.filter(item => item._id !== activeRecordId));
-      setIsDeleteModalOpen(false);
-      setActiveRecordId(null);
-    } catch (err) {
-      alert(`Delete Error: ${err.message}`);
-    }
-  };
-
-  // --- ACTION CONTROLS ---
-  const triggerEdit = (item) => {
-    setIsEditMode(true);
-    setActiveRecordId(item._id);
-    setFormData({
-      stock: item.stock || '',
-      wasteName: item.wasteName,
-      unit: item.unit,
-      quantity: item.quantity,
-      reason: item.reason,
-      cost: item.cost,
-      note: item.note || ''
-    });
-    setActiveTab('form');
-  };
-
-  const triggerDelete = (id) => {
-    setActiveRecordId(id);
-    setIsDeleteModalOpen(true);
-  };
-
-  const resetForm = () => {
-    setIsEditMode(false);
-    setActiveRecordId(null);
-    setFormData({ stock: '', wasteName: '', unit: '', quantity: '', reason: '', cost: '', note: '' });
-  };
-
-  // --- FILTER ENGINE (SEARCH BY NAME OR REASON) ---
-  const filteredData = wasteData.filter(item => 
-    item.wasteName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.reason?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+    handleInputChange,
+    handleFormSubmit,
+    handleDeleteConfirm,
+    triggerEdit,
+    triggerDelete,
+    resetForm,
+} = useWaste();
+ 
 
   // Visual UI Pill logic for Reasons
   const getReasonBadgeColor = (reason) => {
@@ -151,9 +41,8 @@ export default function WasteManagementDashboard() {
     return maps[reason] || 'bg-gray-50 text-gray-700 border-gray-200';
   };
 
-  return (
-    <>
-    <AdminSidebar/>
+  return (<>
+  <AdminSidebar/>
     <div className="min-h-screen bg-slate-50 text-slate-800 antialiased font-sans">
       <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
         
@@ -166,7 +55,7 @@ export default function WasteManagementDashboard() {
               </span>
               Waste Inventory Management
             </h1>
-            <p className="text-lg text-center text-slate-600 mt-1">Track system loss, damages, expired items and custom financial metrics.</p>
+            <p className="text-xs text-slate-400 mt-1">Track system loss, damages, expired items and custom financial metrics.</p>
           </div>
           <div className="flex items-center gap-2 self-end sm:self-center">
             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
