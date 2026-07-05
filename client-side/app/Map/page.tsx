@@ -9,7 +9,7 @@ import "leaflet/dist/leaflet.css";
 const cafeLocation: [number, number] = [27.7172, 85.324];
 
 const cafeIcon = new L.Icon({
-  iconUrl: "/cafe-logo.svg",
+  iconUrl: "https://png.pngtree.com/template/20191203/ourmid/pngtree-coffee-logo-design-vector-image_337940.jpg",
   iconSize: [48, 48],
   iconAnchor: [24, 48],
   popupAnchor: [0, -40],

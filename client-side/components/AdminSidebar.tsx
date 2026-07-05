@@ -15,6 +15,8 @@ import {
   Flame,
   Warehouse,
   User2,
+  ChefHat,
+  Trash,
 } from "lucide-react";
 
 export default function AdminSidebar() {
@@ -64,12 +66,17 @@ export default function AdminSidebar() {
     {
       label: "Purchase",
       href: "/Admin/Purchase",
-      icon: Wallet,
+      icon: ShoppingCart,
     },
     {
       label: "Recipe",
       href: "/Admin/Recipe",
-      icon: Wallet,
+      icon: ChefHat,
+    },
+    {
+      label: "Wasteg",
+      href: "/Admin/Waste",
+      icon: Trash,
     },
     {
       label: "Report",
@@ -140,7 +147,7 @@ export default function AdminSidebar() {
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-red-500/10 hover:text-red-400 transition-all duration-200"
         >
-          <LogOut size={20} />
+          <LogOut size={20} className="text-red-500" />
           <span className="font-medium">Logout</span>
         </button>
       </aside>
