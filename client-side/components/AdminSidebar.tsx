@@ -62,6 +62,11 @@ export default function AdminSidebar() {
       href: "/Admin/Stock",
       icon: Warehouse,
     },
+    {
+      label: "Suppliers",
+      href: "/Admin/Suppliers",
+      icon: Warehouse,
+    },
     
     {
       label: "Purchase",
