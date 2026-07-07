@@ -1,9 +1,17 @@
 import express from "express";
-import { login, register } from "../controllers/auth.js";
+import userController from "../controllers/userController.js";
+import auth from "../middleware/auth.js";
 
+const { signup, login, getUserProfile, getAllUsers } = userController;
 const router = express.Router();
 
-router.post("/register", register);
-router.post("/Login", login);
+// registration and authentication endpoints
+router.post("/register", signup);
+router.post("/login", login);
+
+// profile and admin user list
+router.get("/profile", auth, getUserProfile);
+// admin only in production, but auth middleware protects for now
+router.get("/", auth, getAllUsers);
 
 export default router;

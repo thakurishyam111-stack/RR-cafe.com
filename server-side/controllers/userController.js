@@ -1,6 +1,6 @@
-const User = require("../models/user.js");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
+import User from "../models/user.js";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 // Generate JWT Token
 const generateToken = (userId) => {
@@ -179,7 +179,7 @@ const getAllUsers = async (req, res) => {
   }
 };
 
-module.exports = {
+export default {
   signup,
   login,
   getUserProfile,

@@ -1,7 +1,9 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 const Page = () => {
   const router = useRouter();
@@ -14,14 +16,9 @@ const Page = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Email validation
-  const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+  const validateEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
-  // Form submission
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setSuccess("");
@@ -44,7 +41,7 @@ const Page = () => {
     try {
       setLoading(true);
 
-      const response = await fetch("http://localhost:8080/users/login", {
+      const response = await fetch(`${API_BASE_URL}/api/users/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -57,9 +54,9 @@ const Page = () => {
         return;
       }
 
-      // Login success
       setSuccess("✅ Login successful! Redirecting...");
-      localStorage.setItem("token", data.token); // Save JWT token
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("casherUser", JSON.stringify(data.user || { fullName: email, email, phone: "" }));
 
       if (rememberMe) {
         localStorage.setItem("rememberedEmail", email);
@@ -68,8 +65,8 @@ const Page = () => {
       }
 
       setTimeout(() => {
-        router.push("/Home"); // Redirect after success
-      }, 1500);
+        router.push("/Casher");
+      }, 1200);
     } catch (err) {
       console.error(err);
       setError("❌ Server error. Please try again.");
@@ -78,7 +75,6 @@ const Page = () => {
     }
   };
 
-  // Load remembered email on mount
   useEffect(() => {
     const savedEmail = localStorage.getItem("rememberedEmail");
     if (savedEmail) {
@@ -94,16 +90,13 @@ const Page = () => {
         backgroundImage: "linear-gradient(135deg, #c5c9d9 0%, #764ba2 100%)",
       }}
     >
-      <div className="absolute inset-0 bg-black opacity-30"></div>
+      <div className="absolute inset-0 bg-black/30"></div>
 
       <div className="relative z-10 w-full max-w-md px-6 py-8">
         <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
-          {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-8 text-white">
-            <h1 className="text-3xl font-bold text-center mb-2">
-              Mero Deurali cafe 
-            </h1>
-            <p className="text-center text-blue-100">Casher login</p>
+            <h1 className="text-3xl font-bold text-center mb-2">Mero Deurali Cafe</h1>
+            <p className="text-center text-blue-100">Cashier login</p>
           </div>
 
           <div className="px-6 py-8">
@@ -114,18 +107,13 @@ const Page = () => {
             )}
             {success && (
               <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-500 rounded-lg">
-                <p className="text-green-700 text-sm font-semibold">
-                  {success}
-                </p>
+                <p className="text-green-700 text-sm font-semibold">{success}</p>
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-semibold text-gray-700 mb-2"
-                >
+                <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
                   Email Address
                 </label>
                 <input
@@ -140,10 +128,7 @@ const Page = () => {
               </div>
 
               <div>
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-semibold text-gray-700 mb-2"
-                >
+                <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
                   Password
                 </label>
                 <div className="relative">
@@ -177,17 +162,11 @@ const Page = () => {
                     disabled={loading}
                     className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer disabled:opacity-50"
                   />
-                  <label
-                    htmlFor="rememberMe"
-                    className="ml-2 text-gray-700 cursor-pointer"
-                  >
+                  <label htmlFor="rememberMe" className="ml-2 text-gray-700 cursor-pointer">
                     Remember Me
                   </label>
                 </div>
-                <Link
-                  href="/forgot-password"
-                  className="text-blue-600 hover:text-blue-800 font-semibold"
-                >
+                <Link href="/forgot-password" className="text-blue-600 hover:text-blue-800 font-semibold">
                   Forgot Password?
                 </Link>
               </div>
@@ -212,11 +191,8 @@ const Page = () => {
             </div>
 
             <p className="text-center text-gray-700">
-              Don't have an account?{" "}
-              <Link
-                href="../Casher/Register"
-                className="text-blue-600 hover:text-blue-800 font-semibold"
-              >
+              Don&apos;t have an account? {" "}
+              <Link href="/Casher/Register" className="text-blue-600 hover:text-blue-800 font-semibold">
                 Sign Up
               </Link>
             </p>

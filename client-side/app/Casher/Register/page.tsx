@@ -3,6 +3,8 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+
 const RegisterPage = () => {
   const router = useRouter();
 
@@ -19,55 +21,47 @@ const RegisterPage = () => {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Email validation
-  const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+  const validateEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  const validatePhone = (value: string) => /^[0-9]{10,}$/.test(value.replace(/\D/g, ""));
 
-  // Phone validation
-  const validatePhone = (phone) => {
-    const phoneRegex = /^[0-9]{10,}$/;
-    return phoneRegex.test(phone.replace(/\D/g, ""));
-  };
-
-  // Password strength checker
-  const checkPasswordStrength = (password) => {
+  const checkPasswordStrength = (value: string) => {
     let strength = 0;
-    if (password.length >= 8) strength++;
-    if (password.length >= 12) strength++;
-    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
-    if (/[0-9]/.test(password)) strength++;
-    if (/[^a-zA-Z0-9]/.test(password)) strength++;
+    if (value.length >= 8) strength++;
+    if (value.length >= 12) strength++;
+    if (/[a-z]/.test(value) && /[A-Z]/.test(value)) strength++;
+    if (/[0-9]/.test(value)) strength++;
+    if (/[^a-zA-Z0-9]/.test(value)) strength++;
     return strength;
   };
+
   const getPasswordStrengthLabel = () => {
-  if (passwordStrength < 2) return "Weak";
-  if (passwordStrength < 3) return "Medium";
-  return "Strong";
-};
-const getPasswordStrengthColor = () => {
-  if (passwordStrength < 2) return "bg-red-500";
-  if (passwordStrength < 3) return "bg-yellow-500";
-  return "bg-green-500";
-};
+    if (passwordStrength < 2) return "Weak";
+    if (passwordStrength < 3) return "Medium";
+    return "Strong";
+  };
 
-  // Handle input change
-  const handleChange = (e) => {
-  const { name, value, type, checked } = e.target;
-  setFormData({
-    ...formData,
-    [name]: type === "checkbox" ? checked : value,
-  });
+  const getPasswordStrengthColor = () => {
+    if (passwordStrength < 2) return "bg-red-500";
+    if (passwordStrength < 3) return "bg-yellow-500";
+    return "bg-green-500";
+  };
 
-  if (name === "password") {
-    setPasswordStrength(checkPasswordStrength(value));
-  }
-};
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
 
-  // Form submit
-  const handleSubmit = async (e) => {
+    if (name === "password") {
+      setPasswordStrength(checkPasswordStrength(value));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setSuccess("");
@@ -105,7 +99,7 @@ const getPasswordStrengthColor = () => {
     try {
       setLoading(true);
 
-      const res = await fetch("http://localhost:8080/users/register", {
+      const res = await fetch(`${API_BASE_URL}/api/users/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -123,15 +117,12 @@ const getPasswordStrengthColor = () => {
 
       if (res.ok) {
         setSuccess("Registration successful! Redirecting to login...");
-
         setTimeout(() => {
-          router.push("/Tourism");
-        }, 2000);
-
+          router.push("/Casher");
+        }, 1500);
       } else {
         setError(data.message || "Registration failed");
       }
-
     } catch (err) {
       console.error(err);
       setError("Server error. Please try again.");
@@ -139,58 +130,39 @@ const getPasswordStrengthColor = () => {
       setLoading(false);
     }
   };
-  const [showPassword, setShowPassword] = useState(false);
-const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   return (
-  <div
+    <div
       className="min-h-screen w-full flex items-center justify-center bg-cover bg-center bg-no-repeat relative py-8"
       style={{
         backgroundImage: "linear-gradient(135deg, #353f68 0%, #71883b 100%)",
       }}
     >
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-black opacity-40"></div>
+      <div className="absolute inset-0 bg-black/40"></div>
 
-      {/* Register Container */}
       <div className="relative z-10 w-full max-w-md px-6 py-8">
         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-          {/* Header Section */}
           <div className="bg-gradient-to-r from-blue-600 to-blue-600 px-6 py-10 text-white">
-            <h1 className="text-3xl font-bold text-center mb-2">
-              {" "}
-              Create Account
-            </h1>
-            <p className="text-center text-black text-lg">
-             cafe
-            </p>
+            <h1 className="text-3xl font-bold text-center mb-2">Create Account</h1>
+            <p className="text-center text-blue-100 text-lg">Mero Deurali Cafe</p>
           </div>
 
-          {/* Form Section */}
           <div className="px-6 py-8">
-            {/* Error Message */}
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg animate-slideIn">
+              <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
                 <p className="text-red-700 text-sm font-semibold">{error}</p>
               </div>
             )}
 
-            {/* Success Message */}
             {success && (
-              <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-500 rounded-lg animate-slideIn">
-                <p className="text-green-700 text-sm font-semibold">
-                  {success}
-                </p>
+              <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-500 rounded-lg">
+                <p className="text-green-700 text-sm font-semibold">{success}</p>
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Name Field */}
               <div>
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-semibold text-gray-700 mb-2"
-                >
+                <label htmlFor="fullName" className="block text-sm font-semibold text-gray-700 mb-2">
                   👤 Full Name
                 </label>
                 <input
@@ -205,12 +177,8 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
                 />
               </div>
 
-              {/* Email Field */}
               <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-semibold text-gray-700 mb-2"
-                >
+                <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
                   📧 Email Address
                 </label>
                 <input
@@ -225,12 +193,8 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
                 />
               </div>
 
-              {/* Phone Field */}
               <div>
-                <label
-                  htmlFor="phone"
-                  className="block text-sm font-semibold text-gray-700 mb-2"
-                >
+                <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">
                   📱 Phone Number
                 </label>
                 <input
@@ -245,23 +209,15 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
                 />
               </div>
 
-              {/* Password Field */}
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <label
-                    htmlFor="password"
-                    className="block text-sm font-semibold text-gray-700"
-                  >
+                  <label htmlFor="password" className="block text-sm font-semibold text-gray-700">
                     🔒 Password
                   </label>
                   {formData.password && (
                     <span
                       className={`text-xs font-bold ${
-                        passwordStrength < 2
-                          ? "text-red-600"
-                          : passwordStrength < 3
-                            ? "text-yellow-600"
-                            : "text-green-600"
+                        passwordStrength < 2 ? "text-red-600" : passwordStrength < 3 ? "text-yellow-600" : "text-green-600"
                       }`}
                     >
                       {getPasswordStrengthLabel()}
@@ -298,12 +254,8 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
                 )}
               </div>
 
-              {/* Confirm Password Field */}
               <div>
-                <label
-                  htmlFor="confirmPassword"
-                  className="block text-sm font-semibold text-gray-700 mb-2"
-                >
+                <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">
                   🔒 Confirm Password
                 </label>
                 <div className="relative">
@@ -327,21 +279,12 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
                   </button>
                 </div>
                 {formData.password && formData.confirmPassword && (
-                  <p
-                    className={`text-xs mt-2 font-semibold ${
-                      formData.password === formData.confirmPassword
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    {formData.password === formData.confirmPassword
-                      ? "✓ Passwords match"
-                      : "✗ Passwords do not match"}
+                  <p className={`text-xs mt-2 font-semibold ${formData.password === formData.confirmPassword ? "text-green-600" : "text-red-600"}`}>
+                    {formData.password === formData.confirmPassword ? "✓ Passwords match" : "✗ Passwords do not match"}
                   </p>
                 )}
               </div>
 
-              {/* Terms and Conditions */}
               <div className="flex items-start">
                 <input
                   id="terms"
@@ -352,28 +295,18 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
                   disabled={loading}
                   className="w-5 h-5 text-green-600 rounded focus:ring-2 focus:ring-green-500 cursor-pointer disabled:opacity-50 mt-0.5"
                 />
-                <label
-                  htmlFor="terms"
-                  className="ml-3 text-sm text-gray-700 cursor-pointer hover:text-gray-900"
-                >
+                <label htmlFor="terms" className="ml-3 text-sm text-gray-700 cursor-pointer hover:text-gray-900">
                   I agree to the{" "}
-                  <Link
-                    href="/terms"
-                    className="text-green-600 hover:text-green-800 font-semibold"
-                  >
+                  <Link href="/terms" className="text-green-600 hover:text-green-800 font-semibold">
                     Terms and Conditions
                   </Link>{" "}
                   and{" "}
-                  <Link
-                    href="/privacy"
-                    className="text-green-600 hover:text-green-800 font-semibold"
-                  >
+                  <Link href="/privacy" className="text-green-600 hover:text-green-800 font-semibold">
                     Privacy Policy
                   </Link>
                 </label>
               </div>
 
-              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={loading}
@@ -389,43 +322,32 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
                     Creating Account...
                   </span>
                 ) : (
-                  " Create Account"
+                  "Create Account"
                 )}
               </button>
             </form>
 
-            {/* Divider */}
             <div className="flex items-center my-6">
               <div className="flex-1 border-t-2 border-gray-300"></div>
-              <span className="px-4 text-gray-500 text-sm font-medium">
-                already registered?
-              </span>
+              <span className="px-4 text-gray-500 text-sm font-medium">already registered?</span>
               <div className="flex-1 border-t-2 border-gray-300"></div>
             </div>
 
-            {/* Login Link */}
             <p className="text-center text-gray-700 font-medium">
-              Have an account?{" "}
-              <Link
-                href="/Casher/Login"
-                className="text-blue-600 hover:text-blue-800 font-bold transition"
-              >
+              Have an account? {" "}
+              <Link href="/Casher/Login" className="text-blue-600 hover:text-blue-800 font-bold transition">
                 Sign In
               </Link>
             </p>
           </div>
 
-          {/* Footer */}
           <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
-            <p className="text-center text-gray-600 text-xs">
-              © 2026 Nepal Tourism Management. All rights reserved.
-            </p>
+            <p className="text-center text-gray-600 text-xs">© 2026 Mero Deurali Cafe. All rights reserved.</p>
           </div>
         </div>
       </div>
     </div>
   );
 };
-
 
 export default RegisterPage;
