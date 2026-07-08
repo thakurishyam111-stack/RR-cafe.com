@@ -16,7 +16,7 @@ const cafeIcon = new L.Icon({
 });
 
 const userIcon = new L.Icon({
-  iconUrl: "https://png.pngtree.com/template/20191203/ourmid/pngtree-coffee-logo-design-vector-image_337940.jpg",
+  iconUrl: "/L",
   iconSize: [34, 34],
   iconAnchor: [17, 34],
   popupAnchor: [0, -28],
