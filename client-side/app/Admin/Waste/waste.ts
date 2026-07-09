@@ -26,6 +26,7 @@ const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
  
  
  const API_BASE_URL = 'http://localhost:8080/api/waste';
+ const STOCK_API_BASE_URL = 'http://localhost:8080/api/stocks';
 
  const fetchWastes = async () => {
     setIsLoading(true);
@@ -60,6 +61,57 @@ fetchWastes();
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     try {
+      const stockName = (formData.stock || '').trim();
+      const wasteQuantity = Number(formData.quantity);
+      const wasteCost = Number(formData.cost);
+
+      if (!stockName) throw new Error('Please enter a stock item name before submitting waste.');
+      if (!Number.isFinite(wasteQuantity) || wasteQuantity <= 0) {
+        throw new Error('Waste quantity must be a valid number greater than zero.');
+      }
+      if (!Number.isFinite(wasteCost) || wasteCost < 0) {
+        throw new Error('Waste cost must be a valid number.');
+      }
+
+      const stockListResponse = await fetch(STOCK_API_BASE_URL);
+      const stockListData = await stockListResponse.json();
+
+      if (!stockListResponse.ok || !stockListData?.success) {
+        throw new Error(stockListData?.message || 'Could not load stock items.');
+      }
+
+      const stockItem = (stockListData?.data || []).find((item: any) => {
+        const existingName = String(item?.name || '').toLowerCase();
+        const searchName = stockName.toLowerCase();
+        return existingName === searchName || existingName.includes(searchName);
+      });
+
+      if (!stockItem) {
+        throw new Error(`No stock item matched "${stockName}".`);
+      }
+
+      const stockId = stockItem?._id;
+      const currentStock = Number(stockItem?.currentStock ?? 0);
+
+      if (currentStock < wasteQuantity) {
+        throw new Error(`Waste quantity exceeds available stock. Current stock is ${currentStock}.`);
+      }
+
+      const updatedStock = currentStock - wasteQuantity;
+      const stockUpdateResponse = await fetch(`${STOCK_API_BASE_URL}/${stockId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentStock: updatedStock,
+          status: updatedStock <= 0 ? 'inactive' : 'active',
+        }),
+      });
+
+      const updatedStockData = await stockUpdateResponse.json();
+      if (!stockUpdateResponse.ok || !updatedStockData?.success) {
+        throw new Error(updatedStockData?.message || 'Stock update failed.');
+      }
+
       const url = isEditMode ? `${API_BASE_URL}/${activeRecordId}` : `${API_BASE_URL}/add`;
       const method = isEditMode ? 'PUT' : 'POST';
 
@@ -68,12 +120,14 @@ fetchWastes();
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          cost: Number(formData.cost) // Ensure number mapping
+          stock: stockId,
+          quantity: String(wasteQuantity),
+          cost: wasteCost,
         }),
       });
 
       const data = await response.json();
-      if (!data.success) throw new Error(data.message || 'Operation failed');
+      if (!response.ok || !data.success) throw new Error(data.message || 'Operation failed');
 
       // Success Reset
       resetForm();

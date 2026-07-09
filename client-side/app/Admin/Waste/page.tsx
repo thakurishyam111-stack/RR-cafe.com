@@ -182,8 +182,8 @@ export default function WasteManagementDashboard() {
               <form onSubmit={handleFormSubmit} className="space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-700">Stock Object ID Reference <span className="text-red-500">*</span></label>
-                    <input type="text" name="stock" value={formData.stock} onChange={handleInputChange} placeholder="Ex: 64f123456789abc..." className="p-2.5 text-sm border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all bg-slate-50" required />
+                    <label className="text-xs font-semibold text-slate-700">Stock Item Name <span className="text-red-500">*</span></label>
+                    <input type="text" name="stock" value={formData.stock} onChange={handleInputChange} placeholder="Ex: Tea Leaves" className="p-2.5 text-sm border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all bg-slate-50" required />
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-semibold text-slate-700">Waste Item Name <span className="text-red-500">*</span></label>

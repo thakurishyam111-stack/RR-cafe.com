@@ -1,16 +1,65 @@
 import express from "express";
+import mongoose from "mongoose";
 import Order from "../models/Order.js";
+import Recipe from "../models/recipe.js";
+import Stock from "../models/Stock.js";
 
 const router = express.Router();
 
-//bill generator
 const generateBillNo = () => {
   const date = new Date();
   const random = Math.floor(1000 + Math.random() * 9000);
-
   return `CAF-${date.getFullYear()}${date.getMonth() + 1}${date.getDate()}-${random}`;
 };
-// CREATE ORDER
+
+const escapeRegex = (value) => String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const normalizePaymentMethod = (value) => {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (["cash", "cash payment", "cashpayment"].includes(normalized)) return "Cash";
+  if (["esewa", "e-sewa", "e sewa"].includes(normalized)) return "eSewa";
+  if (["khalti", "khalti payment"].includes(normalized)) return "Khalti";
+  if (["online", "online payment", "qr", "bank transfer"].includes(normalized)) return "Online";
+  return "Unknown";
+};
+
+const reduceStockForApprovedOrder = async (order) => {
+  if (!order?.items?.length) return;
+
+  for (const item of order.items) {
+    const orderQty = Number(item.quantity || 1);
+    if (orderQty <= 0) continue;
+
+    let recipe = null;
+    if (item.menuId) {
+      recipe = await Recipe.findOne({ menuId: item.menuId });
+    }
+
+    if (!recipe && item.title) {
+      recipe = await Recipe.findOne({
+        menuTitle: { $regex: new RegExp(`^${escapeRegex(item.title)}$`, "i") },
+      });
+    }
+
+    if (!recipe?.ingredients?.length) continue;
+
+    for (const ingredient of recipe.ingredients) {
+      const ingredientQty = Number(ingredient.quantity || 0) * orderQty;
+      if (!ingredient.name || ingredientQty <= 0) continue;
+
+      const stockItem = await Stock.findOne({
+        name: { $regex: new RegExp(`^${escapeRegex(ingredient.name)}$`, "i") },
+      });
+
+      if (!stockItem) continue;
+
+      stockItem.currentStock = Math.max(0, Number(stockItem.currentStock || 0) - ingredientQty);
+      stockItem.status = stockItem.currentStock > 0 ? "active" : "inactive";
+      await stockItem.save();
+    }
+  }
+};
+
 router.post("/create", async (req, res) => {
   try {
     const { customerName, phone, tableNumber, items, total } = req.body;
@@ -31,6 +80,7 @@ router.post("/create", async (req, res) => {
       total,
       status: "pending",
       paymentStatus: "unpaid",
+      paymentMethod: "Unknown",
     });
 
     res.status(201).json({
@@ -46,18 +96,33 @@ router.post("/create", async (req, res) => {
     });
   }
 });
-// APPROVE ORDER
+
 router.put("/approve/:id", async (req, res) => {
   try {
+    const existingOrder = await Order.findById(req.params.id);
+
+    if (!existingOrder) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    if (existingOrder.status === "approved") {
+      return res.status(200).json({
+        success: true,
+        message: "Order already approved",
+        order: existingOrder,
+      });
+    }
+
     const updatedOrder = await Order.findByIdAndUpdate(
       req.params.id,
-      {
-        status: "approved",
-      },
-      {
-        new: true,
-      },
+      { status: "approved" },
+      { new: true }
     );
+
+    await reduceStockForApprovedOrder(updatedOrder);
 
     res.status(200).json({
       success: true,
@@ -66,7 +131,6 @@ router.put("/approve/:id", async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-
     res.status(500).json({
       success: false,
       message: "Server Error",
@@ -74,12 +138,9 @@ router.put("/approve/:id", async (req, res) => {
   }
 });
 
-// GET ALL ORDERS
 router.get("/", async (req, res) => {
   try {
-    const orders = await Order.find().sort({
-      createdAt: -1,
-    });
+    const orders = await Order.find().sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
@@ -88,22 +149,19 @@ router.get("/", async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-
     res.status(500).json({
       success: false,
       message: "Server Error",
     });
   }
 });
-// REJECT ORDER
+
 router.put("/reject/:id", async (req, res) => {
   try {
     const updatedOrder = await Order.findByIdAndUpdate(
       req.params.id,
-      {
-        status: "rejected",
-      },
-      { new: true },
+      { status: "rejected" },
+      { new: true }
     );
 
     if (!updatedOrder) {
@@ -127,18 +185,18 @@ router.put("/reject/:id", async (req, res) => {
   }
 });
 
-// PAYMENT STATUS UPDATE
 router.put("/payment/:id", async (req, res) => {
   try {
     const { method } = req.body;
+    const paymentMethod = normalizePaymentMethod(method);
 
     const updatedOrder = await Order.findByIdAndUpdate(
       req.params.id,
       {
         paymentStatus: "paid",
-        paymentMethod: method || "unknown", // optional add
+        paymentMethod,
       },
-      { new: true },
+      { new: true }
     );
 
     if (!updatedOrder) {
@@ -150,7 +208,7 @@ router.put("/payment/:id", async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: `Payment marked as paid via ${method || "unknown"}`,
+      message: `Payment marked as paid via ${paymentMethod}`,
       order: updatedOrder,
     });
   } catch (error) {
@@ -162,7 +220,6 @@ router.put("/payment/:id", async (req, res) => {
   }
 });
 
-// DELETE ORDER
 router.delete("/:id", async (req, res) => {
   try {
     await Order.findByIdAndDelete(req.params.id);
@@ -173,19 +230,16 @@ router.delete("/:id", async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-
     res.status(500).json({
       success: false,
       message: "Server Error",
     });
   }
 });
-//bill fetch
+
 router.get("/billNo/:billNo", async (req, res) => {
   try {
-    const order = await Order.findOne({
-      billNo: req.params.billNo,
-    });
+    const order = await Order.findOne({ billNo: req.params.billNo });
 
     if (!order) {
       return res.status(404).json({
@@ -194,13 +248,13 @@ router.get("/billNo/:billNo", async (req, res) => {
       });
     }
 
-    // ❗ IMPORTANT: only approved order can be shown
     if (order.status !== "approved") {
       return res.status(403).json({
         success: false,
         message: "Order not approved yet",
       });
     }
+
     res.status(200).json({
       success: true,
       order,

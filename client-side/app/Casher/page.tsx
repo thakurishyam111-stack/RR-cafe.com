@@ -2,18 +2,23 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { BadgeDollarSign, CircleDollarSign, Receipt, Smartphone, Sparkles, UserRound, Search, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { BadgeDollarSign, CircleDollarSign, Receipt, Smartphone, Sparkles, UserRound, Search, Loader2, LogOut } from "lucide-react";
 import { CasherUser, OrderData, fetchUnpaidOrders, submitOrderPayment } from "./casher";
 
 const formatCurrency = (value: number) => `Rs. ${value.toLocaleString()}`;
 
 const Page = () => {
+  const router = useRouter();
+
   // Cashier Details State
   const [casher, setCasher] = useState<CasherUser>({
     fullName: "Cashier",
     email: "No email available",
     phone: "No phone available",
   });
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
 
   // Search Inputs
   const [customerName, setCustomerName] = useState("");
@@ -33,20 +38,32 @@ const Page = () => {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    const token = window.localStorage.getItem("token");
     const storedUser = window.localStorage.getItem("casherUser");
-    if (storedUser) {
-      try {
-        const parsed = JSON.parse(storedUser) as CasherUser;
-        setCasher({
-          id: parsed.id,
-          fullName: parsed.fullName || "Cashier",
-          email: parsed.email || "No email available",
-        });
-      } catch {
-        // Fallback
-      }
+
+    if (!token || !storedUser) {
+      router.replace("/Casher/Login");
+      setAuthChecked(true);
+      return;
     }
-  }, []);
+
+    try {
+      const parsed = JSON.parse(storedUser) as CasherUser;
+      setCasher({
+        id: parsed.id,
+        fullName: parsed.fullName || parsed.name || "Cashier",
+        email: parsed.email || "No email available",
+        phone: parsed.phone || "No phone available",
+      });
+      setIsAuthenticated(true);
+    } catch {
+      window.localStorage.removeItem("casherUser");
+      window.localStorage.removeItem("token");
+      router.replace("/Casher/Login");
+    } finally {
+      setAuthChecked(true);
+    }
+  }, [router]);
 
   // २. अर्डरहरू खोज्ने ह्यान्डलर
   const handleFindOrder = async () => {
@@ -147,6 +164,27 @@ const Page = () => {
     setDiscountPercent("0");
   };
 
+  const handleLogout = () => {
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem("token");
+      window.localStorage.removeItem("casherUser");
+      window.localStorage.removeItem("rememberedEmail");
+    }
+    setIsAuthenticated(false);
+    router.replace("/Casher/Login");
+  };
+
+  if (!authChecked || !isAuthenticated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm">
+          <p className="text-lg font-semibold text-slate-800">Redirecting to cashier login...</p>
+          <p className="mt-2 text-sm text-slate-500">Please sign in to access the cashier dashboard.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.12),_transparent_32%),linear-gradient(135deg,_#f8fafc_0%,_#eef2ff_100%)] p-4 md:p-6 lg:p-8">
       <div className="mx-auto max-w-7xl">
@@ -171,11 +209,19 @@ const Page = () => {
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-300">
                   <UserRound className="h-6 w-6" />
                 </div>
-                <div>
+                <div className="flex-1">
                   <p className="font-semibold">{casher.fullName}</p>
                   <p className="text-sm text-slate-300">{casher.email}</p>
+                  <p className="text-sm text-slate-300">{casher.phone}</p>
                 </div>
               </div>
+              <button
+                onClick={handleLogout}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-sm font-medium text-white transition hover:bg-white/20"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </button>
             </div>
           </div>
         </header>
