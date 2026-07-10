@@ -1,633 +1,603 @@
-# ☕ Cafe Management System
+# ☕ Deurali Cafe Management System
 
-A modern Cafe Management System built with the MERN Stack to manage menu items, customer orders, billing, tables, and admin operations efficiently.
+![Version](https://img.shields.io/badge/version-2.0.1-blue)
+![Node.js](https://img.shields.io/badge/Node.js-Express-green)
+![MongoDB](https://img.shields.io/badge/Database-MongoDB-success)
+![Next.js](https://img.shields.io/badge/Frontend-Next.js-black)
+![License](https://img.shields.io/badge/license-MIT-orange)
 
----
-
-## 🚀 Features
-
-### 👨‍💼 Admin Panel
-
-* Admin Login Authentication
-* Dashboard Overview
-* Manage Menu Items
-
-  * Add Menu Item
-  * Update Menu Item
-  * Delete Menu Item
-  * View Menu Item
-* Manage Categories
-* Manage Tables
-* View Customer Orders
-* Order Status Management
-* Billing Management
-* Sales Reports
-
-### 🍽️ Customer Features
-
-* Browse Menu
-* Search Food Items
-* View Food Details
-* Add Items to Cart
-* Place Order
-* View Order Summary
-* Generate Bill
-* Online Payment Support (Optional)
-
-### 🧾 Billing System
-
-* Auto Bill Number Generation
-* Customer Name Validation
-* Phone Number Validation
-* Table Number Validation
-* Order Amount Calculation
-* Tax Calculation
-* Grand Total Calculation
-* Print Bill
+A complete **Cafe Management System** built with **Next.js, Express.js, MongoDB, and Mongoose**. The system is designed for real-world cafe operations including menu management, inventory, recipes, orders, billing, purchases, suppliers, customers, stock management, waste management, and reporting.
 
 ---
 
-# 🛠️ Tech Stack
+# 📌 Project Overview
+
+The system provides three different user roles:
+
+- 👑 Admin
+- 💰 Cashier
+- 🙋 Customer
+
+Each role has different permissions and responsibilities.
+
+---
+
+# 🚀 Technology Stack
 
 ## Frontend
 
-* Next.js
-* React.js
-* Tailwind CSS
-* Axios
-* React Icons
+- Next.js
+- React.js
+- Tailwind CSS
+- Axios
+- React Icons
+- React Hook Form
+- SweetAlert2
+- Framer Motion
+
+---
 
 ## Backend
 
-* Node.js
-* Express.js
+- Node.js
+- Express.js
+- MongoDB
+- Mongoose
+- JWT Authentication
+- Bcrypt
+- Multer
+- Cloudinary (Optional)
+- Nodemailer
+- Cookie Parser
+- Dotenv
+- Morgan
+
+---
 
 ## Database
 
-* MongoDB
-* Mongoose
+- MongoDB
+- Mongoose ODM
 
----
+Collections include:
 
-# 📁 Project Structure
-
-```bash
-cafe-management-system/
-│
-├── app/
-│   ├── admin/
-│   │   ├── dashboard/
-│   │   ├── menu/
-│   │   ├── orders/
-│   │   ├── billing/
-│   │   └── reports/
-│   │   └── revenue/
-│   │   └── customer/
-│   │   └── today special/
-│   │
-│   ├── customer/
-│   │   ├── menu/
-│   │   ├── cart/
-│   │   ├── checkout/
-│   │   └── order/
-│   │   └── home/
-│   │   └── map/
-│   │   └── service/
-│   │   └── today special/
-│   │
-│   ├── login/
-│   ├── register/
-│   └── page.jsx
-│
-├── components/
-│   ├── Navbar.jsx
-│   ├── Footer.jsx
-│   ├── Sidebar.jsx
-│   ├── MenuCard.jsx
-│   ├── Cart.jsx
-│   ├── BillCard.jsx
-│   ├── OrderTable.jsx
-│   └── Loader.jsx
-│
-├── models/
-│   ├── User.js
-│   ├── Menu.js
-│   ├── Order.js
-│   ├── Bill.js
-│   └── Table.js
-│
-├── routes/
-│   ├── authRoutes.js
-│   ├── menuRoutes.js
-│   ├── orderRoutes.js
-│   ├── billRoutes.js
-│   └── tableRoutes.js
-│
-├── controllers/
-│   ├── authController.js
-│   ├── menuController.js
-│   ├── orderController.js
-│   ├── billController.js
-│   └── tableController.js
-│
-├── middleware/
-│   ├── authMiddleware.js
-│   └── errorMiddleware.js
-│
-├── public/
-│   ├── images/
-│   └── logo.png
-│
-├── utils/
-│   └── generateBillNo.js
-│
-├── server.js
-├── package.json
-├── .env
-└── README.md
+```
+Users
+Customers
+Menus
+Categories
+Recipes
+Ingredients
+Suppliers
+Purchases
+PurchaseItems
+Stocks
+StockMovements
+Orders
+OrderItems
+Bills
+Payments
+Expenses
+Waste
+Tables
+Notifications
+Settings
+Roles
+Permissions
+Logs
 ```
 
 ---
-# ☕ RR Cafe Management System V2.0.0
 
-A modern, full-stack Cafe Management System built with **Next.js**, **Node.js**, **Express.js**, **MongoDB**, and **Tailwind CSS**.
+# 📂 Project Folder Structure
 
-This project is designed to manage every aspect of a café including billing, inventory, purchases, recipes, staff, customers, reports, and business analytics.
+```
+# 📂 Project Folder Structure
+
+```
+Deurali-Cafe/
+│
+├── client/
+│   │
+│   ├── app/
+│   │   ├── admin/
+│   │   │   ├── dashboard/
+│   │   │   ├── menu/
+│   │   │   ├── category/
+│   │   │   ├── recipe/
+│   │   │   ├── purchase/
+│   │   │   ├── supplier/
+│   │   │   ├── stock/
+│   │   │   ├── waste/
+│   │   │   ├── reports/
+│   │   │   ├── customer/
+│   │   │   ├── employee/
+│   │   │   └── settings/
+│   │   │
+│   │   ├── cashier/
+│   │   │   ├── dashboard/
+│   │   │   ├── order/
+│   │   │   ├── billing/
+│   │   │   ├── customer/
+│   │   │   └── history/
+│   │   │
+│   │   ├── user/
+│   │   │   ├── home/
+│   │   │   ├── menu/
+│   │   │   ├── cart/
+│   │   │   ├── order/
+│   │   │   ├── profile/
+│   │   │   └── about/
+│   │   │
+│   │   ├── login/
+│   │   ├── register/
+│   │   ├── layout.js
+│   │   ├── page.js
+│   │   └── globals.css
+│   │
+│   ├── components/
+│   │   ├── Navbar/
+│   │   ├── Sidebar/
+│   │   ├── Footer/
+│   │   ├── Cards/
+│   │   ├── Forms/
+│   │   ├── Tables/
+│   │   ├── Charts/
+│   │   ├── Buttons/
+│   │   ├── Modals/
+│   │   ├── Loading/
+│   │   └── Shared/
+│   │
+│   ├── hooks/
+│   ├── context/
+│   ├── services/
+│   ├── utils/
+│   ├── lib/
+│   ├── public/
+│   ├── styles/
+│   ├── middleware/
+│   ├── package.json
+│   └── next.config.js
+│
+├── server/
+│   │
+│   ├── controllers/
+│   │   ├── auth.controller.js
+│   │   ├── menu.controller.js
+│   │   ├── recipe.controller.js
+│   │   ├── purchase.controller.js
+│   │   ├── supplier.controller.js
+│   │   ├── stock.controller.js
+│   │   ├── order.controller.js
+│   │   ├── bill.controller.js
+│   │   ├── customer.controller.js
+│   │   ├── report.controller.js
+│   │   └── waste.controller.js
+│   │
+│   ├── models/
+│   │   ├── User.js
+│   │   ├── Customer.js
+│   │   ├── Menu.js
+│   │   ├── Category.js
+│   │   ├── Recipe.js
+│   │   ├── Ingredient.js
+│   │   ├── Purchase.js
+│   │   ├── Supplier.js
+│   │   ├── Stock.js
+│   │   ├── Order.js
+│   │   ├── Bill.js
+│   │   ├── Payment.js
+│   │   ├── Waste.js
+│   │   └── Notification.js
+│   │
+│   ├── routes/
+│   │   ├── auth.routes.js
+│   │   ├── menu.routes.js
+│   │   ├── recipe.routes.js
+│   │   ├── purchase.routes.js
+│   │   ├── supplier.routes.js
+│   │   ├── stock.routes.js
+│   │   ├── order.routes.js
+│   │   ├── bill.routes.js
+│   │   ├── customer.routes.js
+│   │   ├── report.routes.js
+│   │   └── waste.routes.js
+│   │
+│   ├── middleware/
+│   ├── config/
+│   ├── services/
+│   ├── utils/
+│   ├── uploads/
+│   ├── .env
+│   ├── package.json
+│   └── server.js
+│
+├── README.md
+└── .gitignore
+```
+---
+
+# 👑 Admin Features
+
+Admin has complete access to the system.
+
+### Dashboard
+
+- View sales
+- View revenue
+- View profit
+- View stock status
+- View notifications
+
+### User Management
+
+- Add Users
+- Edit Users
+- Delete Users
+- Assign Roles
+
+### Menu Management
+
+- Add Menu
+- Update Menu
+- Delete Menu
+- Upload Images
+
+### Category Management
+
+- Create Categories
+- Update Categories
+- Delete Categories
+
+### Inventory
+
+- View Stock
+- Stock Adjustment
+- Low Stock Alert
+
+### Purchase Management
+
+- Create Purchase
+- Update Purchase
+- Supplier Purchase History
+
+### Supplier Management
+
+- Add Supplier
+- Edit Supplier
+- Delete Supplier
+
+### Recipe Management
+
+- Create Recipe
+- Update Recipe
+- Ingredient Calculation
+
+### Waste Management
+
+- Record Waste
+- Waste Report
+
+### Customer Management
+
+- View Customers
+- Customer Purchase History
+
+### Reports
+
+- Daily Report
+- Monthly Report
+- Yearly Report
+- Sales Report
+- Purchase Report
+- Profit Report
+
+### Settings
+
+- Cafe Information
+- Tax
+- Discount
+- Roles
+- Permissions
 
 ---
 
-# 🚀 Tech Stack
+# 💰 Cashier Features
 
-### Frontend
+Cashier only handles customer sales.
 
-* Next.js
-* React.js
-* TypeScript
-* Tailwind CSS
-* Shadcn UI
+- Login
+- Create Order
+- Search Customer
+- Add Customer
+- Generate Bill
+- Apply Discount
+- Receive Payment
+- Print Invoice
+- Update Order Status
+- View Today's Orders
 
-### Backend
+Cashier cannot
 
-* Node.js
-* Express.js
-* REST API
-
-### Database
-
-* MongoDB
-* Mongoose
-
-### Authentication
-
-* JWT
-* Role Based Access Control
+- Delete Users
+- Delete Purchases
+- Modify Recipes
+- Change Settings
 
 ---
 
-# 📦 Version Roadmap
+# 🙋 Customer Features
+
+Customer can
+
+- Register
+- Login
+- View Menu
+- Search Food
+- Place Order
+- Track Order
+- View Order History
+- Update Profile
+- View Today's Special
 
 ---
 
-# Version 2.0.0 – Inventory & Business Management
+# 🌐 Frontend Features
 
-## 🎯 Goal
-
-Transform the café POS into a complete Inventory Management System.
-
-## ✨ New Features
-
-### 📦 Inventory Management
-
-* Add Stock
-* Edit Stock
-* Delete Stock
-* Stock Categories
-* Unit Management
-* Minimum Stock Alert
-* Expiry Date Support
-* Barcode Support
-* Batch Number
-* Stock History
-* Current Stock
-* Damaged Stock Tracking
+- Authentication
+- Responsive Design
+- Dashboard
+- Customer Pages
+- Menu Pages
+- Today Special
+- Category Filtering
+- Search
+- Cart
+- Billing
+- Reports
+- Admin Panel
+- Cashier Panel
+- Customer Panel
+- Protected Routes
+- Toast Notifications
+- Loading UI
+- Dark Mode (Future)
 
 ---
 
-### 🛒 Purchase Management
+# ⚙ Backend Features
 
-* Supplier Management
-* Purchase Orders
-* Purchase Invoice
-* Purchase History
-* Pending Purchases
-* Completed Purchases
-* Purchase Return
-* Purchase Reports
-
----
-
-### 🏪 Supplier Module
-
-* Add Supplier
-* Edit Supplier
-* Delete Supplier
-* Supplier Contact Information
-* Supplier Payment History
-* Supplier Due Balance
+- REST API
+- JWT Authentication
+- Authorization
+- CRUD APIs
+- MongoDB Transactions
+- Services Layer
+- Error Handling
+- Validation
+- Image Upload
+- Logging
+- Inventory Management
+- Recipe Calculation
+- Purchase System
+- Stock Movement
+- Billing System
 
 ---
 
-### 🧾 Sales Management
+# 🍃 MongoDB Features
 
-* Sales History
-* Daily Sales
-* Monthly Sales
-* Cancel Sale
-* Return Item
-* Discount Management
-* VAT Support
-* Multiple Payment Methods
+Collections
 
----
+```
+Users
+Customers
+Menus
+Categories
+Recipes
+Ingredients
+Purchases
+Suppliers
+Stocks
+Orders
+Bills
+Payments
+Expenses
+Waste
+Tables
+Settings
+Notifications
+Logs
+```
 
-### 📊 Reports
+Relationships
 
-* Sales Report
-* Purchase Report
-* Stock Report
-* Profit Report
-* Expense Report
-
----
-
-### 👨‍💼 Employee Management
-
-* Employee Profile
-* Salary Information
-* Attendance
-* Role Management
-* Permission Management
-
----
-
-### 💰 Expense Management
-
-* Daily Expenses
-* Monthly Expenses
-* Expense Categories
-* Expense Reports
-
----
-
-### 🔔 Notifications
-
-* Low Stock Alert
-* Out of Stock Alert
-* New Purchase Notification
-* Sales Notification
+```
+Supplier
+     │
+Purchase
+     │
+Purchase Item
+     │
+Stock
+     │
+Recipe
+     │
+Menu
+     │
+Order
+     │
+Bill
+```
 
 ---
 
-### ⚙️ System Improvements
+# 🔒 Authentication
 
-* Better Dashboard
-* Faster APIs
-* Better UI
-* Mobile Responsive
-* Dark Mode
-
----
-
-# Version 2.5.0 – Smart Restaurant ERP
-
-## 🎯 Goal
-
-Upgrade the café system into a professional Restaurant ERP solution.
-
-## 🍔 Recipe Management
-
-* Create Recipe
-* Edit Recipe
-* Delete Recipe
-* Recipe Cost Calculation
-* Ingredients List
-* Portion Size
-* Auto Ingredient Deduction
+- JWT Access Token
+- Password Hashing
+- Protected Routes
+- Role Based Access Control
+- Secure API
 
 ---
-
-## 🍽️ Menu Management
-
-* Menu Categories
-* Combo Meals
-* Seasonal Menu
-* Available / Unavailable Status
-* Menu Images
-
----
-
-## 🧮 Production Management
-
-* Kitchen Production
-* Daily Production
-* Batch Cooking
-* Production Cost
-
----
-
-## 🗑 Waste Management
-
-* Food Waste
-* Ingredient Waste
-* Damage Tracking
-* Waste Reports
-
----
-
-## 📈 Business Analytics
-
-* Revenue Analytics
-* Expense Analytics
-* Profit Analytics
-* Customer Analytics
-* Best Selling Items
-* Worst Selling Items
-* Sales Trends
-
----
-
-## 👥 Customer Management
-
-* Customer Profiles
-* Loyalty Points
-* Membership
-* Customer Purchase History
-* Birthday Rewards
-
----
-
-## 🎁 Promotions
-
-* Coupon System
-* Discount Campaign
-* Happy Hour Pricing
-* Combo Discounts
-
----
-
-## 📅 Reservation Management
-
-* Table Reservation
-* Booking Calendar
-* Reservation Status
-* Customer Notifications
-
----
-
-## 📦 Advanced Inventory
-
-* Multi-Warehouse Support
-* Warehouse Transfer
-* Inventory Adjustment
-* Inventory Audit
-
----
-
-## 📲 QR Ordering
-
-* QR Menu
-* Customer Self Ordering
-* Digital Bill
-* Online Payment
-
----
-
-## 💳 Finance
-
-* Cash Flow
-* Daily Closing
-* Tax Reports
-* Profit & Loss
-* Balance Summary
-
----
-
-## 🔐 Security
-
-* Two Factor Authentication
-* Login History
-* Activity Logs
-* Device Management
-
----
-
-## ☁ Backup
-
-* Automatic Backup
-* Restore Backup
-* Export Data
-* Import Data
-
----
-
-## 📡 Future Integrations
-
-* eSewa
-* Khalti
-* Fonepay
-* SMS Gateway
-* Email Notification
-* WhatsApp Notification
-* Printer Integration
-* Barcode Scanner
-* QR Scanner
-
----
-
-# 🎯 Long-Term Vision
-
-Build RR Cafe Management System into a complete Restaurant ERP platform capable of managing:
-
-* POS Billing
-* Inventory
-* Purchase
-* Sales
-* Recipes
-* Kitchen
-* Waste
-* Employees
-* Customers
-* Finance
-* Reports
-* Analytics
-* Reservations
-* Loyalty Program
-* Multi-Branch Operations
-* Online Ordering
-* Delivery Management
-
----
-
-# 📌 Current Status
-
-| Version | Status                         |
-| ------- | ------------------------------ |
-| 1.x     | ✅ Basic POS                    |
-| 2.0.0   | 🚧 Inventory & Purchase System |
-| 2.5.0   | 🚧 Smart Restaurant ERP        |
-| 3.0.0   | 🔜 Multi Branch & Cloud ERP    |
-
----
-
-Developed with ❤️ by **Shyam Thakuri**
-
 
 # 📦 Installation
 
 ## Clone Repository
 
 ```bash
-https://github.com/thakurishyam111-stack/RR-cafe.com
+git clone https://github.com/thakurishyam11-stack/RR-cafe.com
 ```
 
-## Move Project Folder
+---
+
+## Install Client
 
 ```bash
-cd RR-cafe.com
-```
-
-## Install Dependencies
-
-```bash
+cd client
 npm install
 ```
 
-or
+---
+
+## Install Server
 
 ```bash
-pnpm install
+cd server
+npm install
 ```
 
 ---
 
-# ⚙️ Environment Variables
+## Environment Variables
 
-Create a `.env` file:
-
-```env
-MONGO_URI=mongodb://127.0.0.1:27017/CafeDB
+```
 PORT=8080
+
+MONGO_URI=mongodb://127.0.0.1:27017/CafeDB
+
 JWT_SECRET=shyamsecret
+
 
 ---
 
-# ▶️ Run Project
-
-## Development
+## Start Backend
 
 ```bash
 npm run dev
 ```
 
-or
+---
+
+## Start Frontend
 
 ```bash
-pnpm dev
-```
-
-## Production
-
-```bash
-npm run build
-npm start
+npm run dev
 ```
 
 ---
 
-# 📊 Database Collections
+# 📌 API Modules
 
-### Users
-
-```json
-{
-  "_id": "",
-  "name": "",
-  "email": "",
-  "password": "",
-  "role": "admin"
-}
-```
-
-### Menu
-
-```json
-{
-  "_id": "",
-  "name": "",
-  "price": 0,
-  "category": "",
-  "image": ""
-}
-```
-
-### Orders
-
-```json
-{
-  "_id": "",
-  "customerName": "",
-  "phone": "",
-  "tableNo": "",
-  "items": [],
-  "totalAmount": 0,
-  "status": "Pending"
-}
-```
-
-### Bills
-
-```json
-{
-  "_id": "",
-  "billNo": "",
-  "orderId": "",
-  "totalAmount": 0,
-  "paymentStatus": "Paid"
-}
-```
+- Authentication
+- Users
+- Customers
+- Categories
+- Menus
+- Recipes
+- Ingredients
+- Suppliers
+- Purchases
+- Stocks
+- Orders
+- Bills
+- Payments
+- Waste
+- Reports
+- Dashboard
 
 ---
 
-# 🔒 Security Features
+# 📊 Future Improvements
 
-* JWT Authentication
-* Protected Routes
-* Password Hashing
-* Input Validation
-* Error Handling
+- QR Ordering
+- Online Payment
+- Kitchen Display System
+- SMS Notification
+- Email Notification
+- Loyalty Program
+- Multi Branch Support
+- Offline Mode
+- AI Sales Prediction
+- AI Recipe Recommendation
 
 ---
 
-# 📈 Future Enhancements
+# 📝 Version History
 
-* QR Menu Ordering
-* eSewa Payment Integration
-* Khalti Payment Integration
-* Receipt PDF Download
-* Real-time Order Tracking
-* Kitchen Dashboard
-* Inventory Management
+## Version 1.0.0
+
+Initial Release
+
+- Authentication
+- Admin Dashboard
+- Menu CRUD
+- Category CRUD
+- Customer CRUD
+- Basic Billing
+- Order Management
+- Responsive UI
+
+---
+
+## Version 2.0.0
+
+Major Upgrade
+
+- Inventory Management
+- Supplier Management
+- Purchase Module
+- Recipe Module
+- Ingredient Management
+- Waste Management
+- Dashboard Analytics
+- Reports
+- Services Layer
+- Better Folder Structure
+- JWT Security Improvements
+
+---
+
+## Version 2.0.1
+
+Latest Stable Release
+
+- Improved UI/UX
+- Better API Structure
+- Optimized Database Relations
+- Performance Improvements
+- Bug Fixes
+- Better Error Handling
+- Protected Routes
+- Improved Validation
+- Inventory Optimization
+- Responsive Admin Dashboard
 
 ---
 
 # 👨‍💻 Author
 
-**Shyam Shah Thakuri**
+**Shyam Thakuri**
 
-BCA Student | MERN Stack Developer | Nepal 🇳🇵
+BCA Student | MERN Stack Developer
 
----
+GitHub: https://github.com/thakurishyam111-stack
+
+Email: thakurishyam111@gmail.com
 
 # ⭐ Support
 
-If you like this project, please give it a ⭐ on GitHub.
+If you like this project, don't forget to give it a ⭐ on GitHub.
+
+Happy Coding ❤️
