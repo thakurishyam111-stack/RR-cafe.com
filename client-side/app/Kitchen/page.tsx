@@ -164,7 +164,7 @@ const ItemLevelKitchenKDS = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-300 text-slate-100 flex flex-col font-sans">
       
       {/* Header Pipeline Area */}
       <header className="bg-slate-900 border-b border-slate-800 sticky top-0 z-50 px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -208,17 +208,17 @@ const ItemLevelKitchenKDS = () => {
                 <div className="p-5 bg-slate-950 border-b border-slate-800 flex flex-col sm:flex-row justify-between gap-4">
                   <div className="flex items-center gap-4">
                     <div className="h-11 w-11 bg-slate-900 rounded-xl flex flex-col justify-center items-center border border-slate-800 font-mono">
-                      <span className="text-[10px] text-slate-500 font-bold uppercase">Table</span>
-                      <span className="text-sm text-amber-500 font-black">{order.number}</span>
+                      <span className="text-[10px] text-slate-100 font-bold uppercase">Table</span>
+                      <span className="text-sm text-amber-300 font-black">{order.number}</span>
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-mono font-bold px-2 py-0.5 bg-slate-800 text-slate-300 rounded border border-slate-700">
                           #{order.billNo}
                         </span>
-                        <h2 className="text-sm font-bold text-slate-200">{order.customerName}</h2>
+                        <h2 className="text-sm font-bold text-slate-100">{order.customerName}</h2>
                       </div>
-                      <p className="text-xs text-slate-400 mt-0.5">📞 {order.phone}</p>
+                      <p className="text-xs text-slate-200 mt-0.5 py-2">📞 {order.phone}</p>
                     </div>
                   </div>
 
@@ -230,7 +230,7 @@ const ItemLevelKitchenKDS = () => {
                       </div>
                     )}
                     <div className="text-right">
-                      <span className="text-[10px] text-slate-500 block font-semibold uppercase">Overall Order State</span>
+                      <span className="text-[10px] text-slate-200 block font-semibold uppercase">Overall Order State</span>
                       <span className="text-xs font-bold text-indigo-400 bg-indigo-500/10 px-2.5 py-1 rounded-full border border-indigo-500/20 mt-1 inline-block">
                         {order.status}
                       </span>
@@ -240,7 +240,7 @@ const ItemLevelKitchenKDS = () => {
 
                 {/* Items Controller - Grid Section (Where each item behaves independently) */}
                 <div className="p-5 bg-slate-900/30">
-                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Item Cooking & Preparation Stages</h3>
+                  <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider mb-4">Item Cooking & Preparation Stages</h3>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                     {order.items.map((item) => (
