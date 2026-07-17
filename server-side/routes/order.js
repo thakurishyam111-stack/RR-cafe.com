@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import Order from "../models/Order.js";
 import Recipe from "../models/recipe.js";
 import Stock from "../models/Stock.js";
+import Table from "../models/Table.js"
 
 const router = express.Router();
 
@@ -62,20 +63,37 @@ const reduceStockForApprovedOrder = async (order) => {
 
 router.post("/create", async (req, res) => {
   try {
-    const { customerName, phone, tableNumber, items, total } = req.body;
+    const { customerName, phone, table, items, total } = req.body;
 
-    if (!customerName || !phone || !tableNumber || !items?.length) {
+    if (!customerName || !phone || !table || !items?.length) {
       return res.status(400).json({
         success: false,
         message: "All fields required",
       });
     }
+    const selectedTable = await Table.findById(table);
+    console.log(selectedTable);
+    if (!selectedTable) {
+      return res.status(404).json({
+        success: false,
+        message: "Table not found",
+      });
+    }
+    if (selectedTable.status !== "available") {
+      return res.status(400).json({
+        success: false,
+        message: "Table is already booked",
+      });
+    }
+    selectedTable.status = "occupied";
+
+    await selectedTable.save();
 
     const newOrder = await Order.create({
       billNo: generateBillNo(),
       customerName,
       phone,
-      number: parseInt(tableNumber),
+      number: selectedTable.tableNo,
       items,
       total,
       status: "pending",
@@ -89,7 +107,6 @@ router.post("/create", async (req, res) => {
       order: newOrder,
     });
   } catch (error) {
-    console.log(error);
     res.status(500).json({
       success: false,
       message: "Server Error",
@@ -261,6 +278,84 @@ router.get("/billNo/:billNo", async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
+  }
+});
+
+
+//order for kitchen 
+
+router.get("/kitchen", async (req, res) => {
+  try {
+    const orders = await Order.find({
+      status: { $in: ["pending", "approved"] },
+      paymentStatus: "unpaid",
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      orders,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+// update status of order from kitchen 
+router.put("/:orderId/items/:itemId", async (req, res) => {
+  try {
+    const { orderId, itemId } = req.params;
+    const { status } = req.body;
+
+    const order = await Order.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    console.log("Order ID:", orderId);
+    console.log("Item ID:", itemId);
+    console.log(order.items);
+
+    const item = order.items.id(itemId);
+
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: "Item not found",
+      });
+    }
+
+    item.status = status;
+
+    const allReady = order.items.every((i) =>
+      i._id.toString() === itemId
+        ? status === "Ready"
+        : i.status === "Ready"
+    );
+
+    order.status = allReady ? "Ready" : "Preparing";
+
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Item status updated successfully",
+      order,
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 });
 

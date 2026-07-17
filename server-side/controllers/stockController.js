@@ -80,6 +80,18 @@ export const updateStock = async (req, res) => {
       runValidators: true,
     });
 
+    const stockQty = stock.currentStock;
+
+    if (stock.unit === "kg") {
+      stockQty = stock.currentStock * 1000;
+    }
+    stockQty -= recipeQty;
+
+    if(stock.unit==="kg"){
+      stock.currentStock =stockQty/1000;
+    }
+
+
     if (!stock) {
       return res.status(404).json({
         success: false,

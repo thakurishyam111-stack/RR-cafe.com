@@ -103,7 +103,7 @@ Deurali-Cafe/
 │   │   ├── admin/
 │   │   │   ├── dashboard/
 │   │   │   ├── menu/
-│   │   │   ├── category/
+│   │   │   ├── login/ragister/
 │   │   │   ├── recipe/
 │   │   │   ├── purchase/
 │   │   │   ├── supplier/
@@ -111,22 +111,23 @@ Deurali-Cafe/
 │   │   │   ├── waste/
 │   │   │   ├── reports/
 │   │   │   ├── customer/
-│   │   │   ├── employee/
-│   │   │   └── settings/
+│   │   │   ├── staff/
+│   │   │  
 │   │   │
 │   │   ├── cashier/
 │   │   │   ├── dashboard/
-│   │   │   ├── order/
+│   │   │   ├── login/ragister/
 │   │   │   ├── billing/
 │   │   │   ├── customer/
 │   │   │   └── history/
 │   │   │
-│   │   ├── user/
+│   │   ├── Customers/
 │   │   │   ├── home/
 │   │   │   ├── menu/
 │   │   │   ├── cart/
 │   │   │   ├── order/
-│   │   │   ├── profile/
+│   │   │   ├── map/
+            ├── services/   
 │   │   │   └── about/
 │   │   │
 │   │   ├── login/
@@ -139,26 +140,12 @@ Deurali-Cafe/
 │   │   ├── Navbar/
 │   │   ├── Sidebar/
 │   │   ├── Footer/
-│   │   ├── Cards/
-│   │   ├── Forms/
-│   │   ├── Tables/
-│   │   ├── Charts/
-│   │   ├── Buttons/
-│   │   ├── Modals/
-│   │   ├── Loading/
-│   │   └── Shared/
-│   │
-│   ├── hooks/
-│   ├── context/
-│   ├── services/
-│   ├── utils/
-│   ├── lib/
-│   ├── public/
-│   ├── styles/
-│   ├── middleware/
-│   ├── package.json
-│   └── next.config.js
-│
+│   │   ├── AdminSidebar/
+│   │   ├── map/
+│   │   ├── hero /
+│   │   ├── about/
+│   │   ├── today's/
+│   │   
 ├── server/
 │   │
 │   ├── controllers/

@@ -67,24 +67,9 @@ export default function BillWidget({ isOpen, onClose }) {
 
     // --- CASE A: CASH PAYMENT ---
     if (method === "Cash") {
-      try {
-        setPaying(true);
-        
-        const paymentPromises = unpaidBills.map((ord) =>
-          axios.put(`http://localhost:8080/api/orders/payment/${ord._id}`, { method })
-        );
-
-        await Promise.all(paymentPromises);
-
-        // भुक्तानी सफल भएपछि लिस्टबाट तुरुन्तै हटाउने
-        setOrdersList([]); 
-        alert(`All ${unpaidBills.length} bills paid successfully via Cash!`);
-      } catch (error) {
-        alert("Bulk payment failed. Please try again.");
-      } finally {
-        setPaying(false);
-      }
-      return;
+    //   
+        alert("Plese go to Caher Depart for Cash payment...");
+    //   
     }
 
     // --- CASE B: ONLINE PAYMENT (eSewa / Khalti) ---

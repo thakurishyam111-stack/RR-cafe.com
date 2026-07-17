@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import Navbar from "@/components/Navbar";
+// import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 const API_BASE_URL =
@@ -17,6 +17,8 @@ export default function OrderPage() {
   const [phone, setPhone] = useState("");
   const [number, setNumber] = useState("");
   const [billNo, setBillNo] = useState("");
+  const [table, setTable] = useState([]);
+  const[selectedTable,setSelectedTable]=useState("")
 
   const [loading, setLoading] = useState(true);
   const [submitted, setSubmitted] = useState(false);
@@ -45,7 +47,25 @@ export default function OrderPage() {
     };
 
     fetchMenus();
+
+    getAvailableTable();
   }, []);
+
+  const getAvailableTable = async () => {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/api/table`);
+
+    if (res.data.success) {
+      const availableTables = res.data.table.filter(
+        (table) => table.status === "available"
+      );
+
+      setTable(availableTables);
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
 
   // Categories
   const categories = useMemo(() => {
@@ -92,19 +112,24 @@ export default function OrderPage() {
   };
 
   // Clear Cart
-  const clearCart = () => {
-    setCart((prev) =>
-      prev.map((item) => ({
-        ...item,
-        quantity: 0,
-      })),
-    );
-  };
+ const clearCart = () => {
+  setCart((prev) =>
+    prev.map((item) => ({
+      ...item,
+      quantity: 0,
+    }))
+  );
+
+  setName("");
+  setPhone("");
+  setSelectedTable("");
+};
 
   // Total
   const total = useMemo(() => {
     return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   }, [cart]);
+
   // Submit Order
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -122,16 +147,15 @@ export default function OrderPage() {
       return;
     }
 
+   
     try {
       const { data } = await axios.post(`${API_BASE_URL}/api/orders/create`, {
         customerName: name,
         phone: phone,
-        tableNumber: number,
+        table: selectedTable,
         items: selectedItems,
         total: total,
       });
-
-      console.log(data);
 
       if (data.success) {
         setSubmitted(true);
@@ -163,7 +187,7 @@ export default function OrderPage() {
         {/* Heading */}
         <div className="text-center mb-10">
           <h1 className="text-5xl font-bold text-black">
-            🍽 Mero Deurali cafe 
+            🍽 Mero Deurali cafe
           </h1>
 
           <p className="text-black mt-3">Order your favorite delicious foods</p>
@@ -405,16 +429,20 @@ export default function OrderPage() {
                 required
                 className="w-full rounded-2xl bg-white text-black px-4 py-3 outline-none"
               />
-              <input
-                type="number"
-                pattern="^(97|98)[0-9]{8}$"
-                placeholder="Table Number"
-                value={number}
-                onChange={(e) => setNumber(e.target.value)}
-                required
-                className="w-full rounded-2xl bg-white text-black px-4 py-3 outline-none"
-              />
+              <select
+                value={selectedTable}
+                onChange={(e) => setSelectedTable(e.target.value)}
+              >
+                <option value="" className="text-gray-900">Select Table No</option>
 
+                {table.map((table) => (
+                  <option key={table._id} value={table._id}
+                  className="text-gray-800"
+                  >
+                    Table No.{table.tableNo}
+                  </option>
+                ))}
+              </select>
               <button
                 type="submit"
                 className="w-full  bg-green-600 py-4 rounded-2xl font-bold text-lg"
@@ -480,10 +508,8 @@ export default function OrderPage() {
 
                 <span className="font-bold text-green-600">{number}</span>
               </div>
-              
+
               <div className="flex justify-between">
-               
-                
                 <span className="text-black">Bill Number</span>
 
                 <span className="font-bold text-green-600">{billNo}</span>

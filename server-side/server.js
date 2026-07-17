@@ -15,6 +15,7 @@ import wasteRoutes from "./routes/waste.js"
 import purchaseRoutes from "./routes/purchase.js"
 import supplierRoute from "./routes/supplier.js"
 import recipeRoutes from "./routes/recipe.js"
+import tableRoutes from "./routes/table.js"
 
 
 dotenv.config();
@@ -27,8 +28,8 @@ app.use(express.json());
 // Database Connect
 connectDB();
 app.use((req, res, next) => {
-    console.log(req.method, req.url);
-    next();
+  console.log(req.method, req.url);
+  next();
 });
 
 // Routes
@@ -37,12 +38,13 @@ app.use("/api/menus", menuRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/today", todayRoutes);
-app.use("/api/staff",staffRoutes);
+app.use("/api/staff", staffRoutes);
 app.use("/api/stocks", stockRoutes);
 app.use("/api/waste", wasteRoutes);
-app.use("/api/purchase",purchaseRoutes);
-app.use("/api/supplier",supplierRoute);
+app.use("/api/purchase", purchaseRoutes);
+app.use("/api/supplier", supplierRoute);
 app.use("/api/recipes", recipeRoutes);
+app.use("/api/table", tableRoutes);
 
 app.get("/", (req, res) => {
   res.send("Server Running");

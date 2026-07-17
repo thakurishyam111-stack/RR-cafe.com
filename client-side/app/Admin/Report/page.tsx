@@ -121,7 +121,7 @@ export default function RevenuePage() {
   return (
     <>
       <AdminSidebar />
-      <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 text-slate-100 md:ml-72 md:p-8 md:pt-6">
+      <main className="min-h-screen bg-gradient-to-br from-slate-200 via-slate-250 to-slate-300 p-4 text-slate-100 md:ml-72 md:p-8 md:pt-6">
         <div className="mb-8 rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 shadow-2xl shadow-black/40 backdrop-blur-xl">
           <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
             <div className="space-y-3">
