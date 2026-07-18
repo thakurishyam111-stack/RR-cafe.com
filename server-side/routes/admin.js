@@ -22,6 +22,19 @@ router.post("/register", async (req, res) => {
       });
     }
 
+    if (email.length > 100) {
+      return res.status(400).json({
+        success: false,
+        message: "email length is too long"
+      })
+    }
+    if (password.length < 8 || password.length > 64) {
+      return res.status(400).json({
+        success: false,
+        message: "password length is between 8 and 64 characters "
+      })
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const admin = await Admin.create({
@@ -38,7 +51,6 @@ router.post("/register", async (req, res) => {
 
   } catch (error) {
 
-    console.log(error);
 
     res.status(500).json({
       message: "Server Error",

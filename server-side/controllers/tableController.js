@@ -28,6 +28,8 @@ export const availableTable = async (req, res) => {
             status: "available",
         }).sort({ tableNo: 1 });
 
+        
+
         res.status(200).json({
             success: true,
             total: table.length,

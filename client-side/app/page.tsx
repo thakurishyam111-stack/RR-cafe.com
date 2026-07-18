@@ -10,7 +10,6 @@ export default function Page() {
   return (
     <div className="min-h-screen bg-slate-300 text-slate-900">
       <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-16">
-        
         {/* Hero Banner Section with fixed image scoping */}
         <section className="relative overflow-hidden rounded-[2rem] bg-slate-900 text-white shadow-xl transition-all duration-300">
           {/* Background Image scoped inside the section container */}
@@ -26,22 +25,21 @@ export default function Page() {
 
           {/* Grid Content Layout */}
           <div className="relative z-10 grid gap-12 p-6 sm:p-10 md:p-14 lg:grid-cols-12 lg:items-center">
-            
             {/* Left Column Content */}
             <div className="flex flex-col items-start lg:col-span-7">
               <span className="inline-flex rounded-full bg-amber-500/20 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-amber-300 backdrop-blur-sm">
                 Open daily · Fresh coffee
               </span>
-              
+
               <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl md:text-5xl">
                 Welcome to Cafe Deurali
               </h1>
-              
+
               <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
                 Enjoy café-style coffee, seasonal brunch dishes, and a relaxed
                 atmosphere for friends, work, and everyday moments.
               </p>
-              
+
               {/* Call To Action Buttons (Stack on mobile, row on desktop) */}
               <div className="mt-6 flex flex-col w-full gap-3 sm:flex-row sm:w-auto">
                 <Link
@@ -63,7 +61,9 @@ export default function Page() {
                 <div className="flex items-center gap-3 rounded-2xl bg-white/10 backdrop-blur-sm p-4 border border-white/5">
                   <Wifi className="h-6 w-6 text-amber-400 shrink-0" />
                   <div>
-                    <h4 className="font-semibold text-white text-sm">Free Wi-Fi</h4>
+                    <h4 className="font-semibold text-white text-sm">
+                      Free Wi-Fi
+                    </h4>
                     <p className="text-xs text-slate-300">Stay Connected</p>
                   </div>
                 </div>
@@ -71,7 +71,9 @@ export default function Page() {
                 <div className="flex items-center gap-3 rounded-2xl bg-white/10 backdrop-blur-sm p-4 border border-white/5">
                   <Clock className="h-6 w-6 text-amber-400 shrink-0" />
                   <div>
-                    <h4 className="font-semibold text-white text-sm">Open Daily</h4>
+                    <h4 className="font-semibold text-white text-sm">
+                      Open Daily
+                    </h4>
                     <p className="text-xs text-slate-300">7:00 AM - 11:00 PM</p>
                   </div>
                 </div>
@@ -107,11 +109,10 @@ export default function Page() {
                 </div>
               </div>
             </div>
-
           </div>
         </section>
 
-<Banner/>
+        <Banner />
         {/* Triple Features Grid */}
         <section className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <article className="rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm hover:shadow-md transition">
@@ -122,10 +123,11 @@ export default function Page() {
               Espresso Bar
             </h3>
             <p className="mt-2 text-sm text-slate-600 leading-relaxed">
-              House espresso, lattes, cappuccinos, and seasonal pours made with care.
+              House espresso, lattes, cappuccinos, and seasonal pours made with
+              care.
             </p>
           </article>
-          
+
           <article className="rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm hover:shadow-md transition">
             <p className="text-xs font-bold uppercase tracking-[0.15em] text-amber-700">
               Bakery fresh
@@ -134,10 +136,11 @@ export default function Page() {
               Artisan Bakes
             </h3>
             <p className="mt-2 text-sm text-slate-600 leading-relaxed">
-              Scones, croissants, muffins, and breakfast bowls baked every morning.
+              Scones, croissants, muffins, and breakfast bowls baked every
+              morning.
             </p>
           </article>
-          
+
           <article className="rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm hover:shadow-md transition sm:col-span-2 lg:col-span-1">
             <p className="text-xs font-bold uppercase tracking-[0.15em] text-amber-700">
               Every visit
@@ -146,7 +149,8 @@ export default function Page() {
               Cozy Seating
             </h3>
             <p className="mt-2 text-sm text-slate-600 leading-relaxed">
-              A calm, inviting space for meetings, laptop work, or relaxing with friends.
+              A calm, inviting space for meetings, laptop work, or relaxing with
+              friends.
             </p>
           </article>
         </section>
@@ -155,21 +159,24 @@ export default function Page() {
         <section className="mt-12 rounded-[2rem] bg-slate-900 p-6 sm:p-10 text-white shadow-xl">
           <div className="grid gap-8 lg:grid-cols-12 items-center">
             <div className="lg:col-span-7">
-              <h2 className="text-2xl sm:text-3xl font-bold text-white">A real cafe experience.</h2>
+              <h2 className="text-2xl sm:text-3xl font-bold text-white">
+                A real cafe experience.
+              </h2>
               <p className="mt-3 text-sm sm:text-base text-slate-300 leading-relaxed">
                 From handcrafted coffee to seasonal brunch plates, Cafe Deurali
                 delivers a warm, polished cafe atmosphere with friendly service
                 and memorable flavors.
               </p>
             </div>
-            
+
             <div className="space-y-3 lg:col-span-5">
               <div className="rounded-2xl bg-white/5 border border-white/5 p-4">
                 <p className="text-xs font-bold uppercase tracking-[0.15em] text-amber-400">
                   House roasted beans
                 </p>
                 <p className="mt-1 text-sm text-slate-300">
-                  Our coffee is roasted weekly to preserve its rich, aromatic flavor.
+                  Our coffee is roasted weekly to preserve its rich, aromatic
+                  flavor.
                 </p>
               </div>
               <div className="rounded-2xl bg-white/5 border border-white/5 p-4">
@@ -177,7 +184,8 @@ export default function Page() {
                   Daily fresh food
                 </p>
                 <p className="mt-1 text-sm text-slate-300">
-                  A rotating menu of baked goods and brunch specials is prepared fresh every day.
+                  A rotating menu of baked goods and brunch specials is prepared
+                  fresh every day.
                 </p>
               </div>
             </div>
@@ -201,7 +209,8 @@ export default function Page() {
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-5 flex flex-col justify-between">
               <p className="text-sm text-slate-600 italic">
-                "The coffee is amazing and the atmosphere is very relaxing. My favorite cafe in town."
+                "The coffee is amazing and the atmosphere is very relaxing. My
+                favorite cafe in town."
               </p>
               <div className="mt-4">
                 <h4 className="text-sm font-bold text-slate-900">Sarah M.</h4>
@@ -221,7 +230,8 @@ export default function Page() {
 
             <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-5 flex flex-col justify-between">
               <p className="text-sm text-slate-600 italic">
-                "Perfect place for work meetings and enjoying a quality cup of coffee."
+                "Perfect place for work meetings and enjoying a quality cup of
+                coffee."
               </p>
               <div className="mt-4">
                 <h4 className="text-sm font-bold text-slate-900">Emma R.</h4>

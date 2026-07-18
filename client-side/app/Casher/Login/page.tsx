@@ -66,7 +66,7 @@ const Page = () => {
 
       setTimeout(() => {
         router.push("/Casher");
-      }, 1200);
+      }, 1000);
     } catch (err) {
       console.error(err);
       setError("❌ Server error. Please try again.");

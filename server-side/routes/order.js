@@ -215,7 +215,14 @@ router.put("/payment/:id", async (req, res) => {
       },
       { new: true }
     );
+    order.paymentStatus = "paid";
+    await order.save();
 
+    await Table.findOneAndUpdate(
+      { number: updatedOrder.number },
+      { status: "available" }
+    );
+    
     if (!updatedOrder) {
       return res.status(404).json({
         success: false,

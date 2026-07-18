@@ -24,8 +24,10 @@ const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const validateEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-  const validatePhone = (value: string) => /^[0-9]{10,}$/.test(value.replace(/\D/g, ""));
+  const validateEmail = (value: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  const validatePhone = (value: string) =>
+    /^[0-9]{10,}$/.test(value.replace(/\D/g, ""));
 
   const checkPasswordStrength = (value: string) => {
     let strength = 0;
@@ -119,7 +121,7 @@ const RegisterPage = () => {
         setSuccess("Registration successful! Redirecting to login...");
         setTimeout(() => {
           router.push("/Casher");
-        }, 1500);
+        }, 1000);
       } else {
         setError(data.message || "Registration failed");
       }
@@ -143,8 +145,12 @@ const RegisterPage = () => {
       <div className="relative z-10 w-full max-w-md px-6 py-8">
         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
           <div className="bg-gradient-to-r from-blue-600 to-blue-600 px-6 py-10 text-white">
-            <h1 className="text-3xl font-bold text-center mb-2">Create Account</h1>
-            <p className="text-center text-blue-100 text-lg">Mero Deurali Cafe</p>
+            <h1 className="text-3xl font-bold text-center mb-2">
+              Create Account
+            </h1>
+            <p className="text-center text-blue-100 text-lg">
+              Mero Deurali Cafe
+            </p>
           </div>
 
           <div className="px-6 py-8">
@@ -156,13 +162,18 @@ const RegisterPage = () => {
 
             {success && (
               <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-500 rounded-lg">
-                <p className="text-green-700 text-sm font-semibold">{success}</p>
+                <p className="text-green-700 text-sm font-semibold">
+                  {success}
+                </p>
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label htmlFor="fullName" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label
+                  htmlFor="fullName"
+                  className="block text-sm font-semibold text-gray-700 mb-2"
+                >
                   👤 Full Name
                 </label>
                 <input
@@ -178,7 +189,10 @@ const RegisterPage = () => {
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-semibold text-gray-700 mb-2"
+                >
                   📧 Email Address
                 </label>
                 <input
@@ -194,7 +208,10 @@ const RegisterPage = () => {
               </div>
 
               <div>
-                <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label
+                  htmlFor="phone"
+                  className="block text-sm font-semibold text-gray-700 mb-2"
+                >
                   📱 Phone Number
                 </label>
                 <input
@@ -211,13 +228,20 @@ const RegisterPage = () => {
 
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <label htmlFor="password" className="block text-sm font-semibold text-gray-700">
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-semibold text-gray-700"
+                  >
                     🔒 Password
                   </label>
                   {formData.password && (
                     <span
                       className={`text-xs font-bold ${
-                        passwordStrength < 2 ? "text-red-600" : passwordStrength < 3 ? "text-yellow-600" : "text-green-600"
+                        passwordStrength < 2
+                          ? "text-red-600"
+                          : passwordStrength < 3
+                            ? "text-yellow-600"
+                            : "text-green-600"
                       }`}
                     >
                       {getPasswordStrengthLabel()}
@@ -255,7 +279,10 @@ const RegisterPage = () => {
               </div>
 
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-semibold text-gray-700 mb-2"
+                >
                   🔒 Confirm Password
                 </label>
                 <div className="relative">
@@ -279,8 +306,12 @@ const RegisterPage = () => {
                   </button>
                 </div>
                 {formData.password && formData.confirmPassword && (
-                  <p className={`text-xs mt-2 font-semibold ${formData.password === formData.confirmPassword ? "text-green-600" : "text-red-600"}`}>
-                    {formData.password === formData.confirmPassword ? "✓ Passwords match" : "✗ Passwords do not match"}
+                  <p
+                    className={`text-xs mt-2 font-semibold ${formData.password === formData.confirmPassword ? "text-green-600" : "text-red-600"}`}
+                  >
+                    {formData.password === formData.confirmPassword
+                      ? "✓ Passwords match"
+                      : "✗ Passwords do not match"}
                   </p>
                 )}
               </div>
@@ -295,13 +326,22 @@ const RegisterPage = () => {
                   disabled={loading}
                   className="w-5 h-5 text-green-600 rounded focus:ring-2 focus:ring-green-500 cursor-pointer disabled:opacity-50 mt-0.5"
                 />
-                <label htmlFor="terms" className="ml-3 text-sm text-gray-700 cursor-pointer hover:text-gray-900">
+                <label
+                  htmlFor="terms"
+                  className="ml-3 text-sm text-gray-700 cursor-pointer hover:text-gray-900"
+                >
                   I agree to the{" "}
-                  <Link href="/terms" className="text-green-600 hover:text-green-800 font-semibold">
+                  <Link
+                    href="/terms"
+                    className="text-green-600 hover:text-green-800 font-semibold"
+                  >
                     Terms and Conditions
                   </Link>{" "}
                   and{" "}
-                  <Link href="/privacy" className="text-green-600 hover:text-green-800 font-semibold">
+                  <Link
+                    href="/privacy"
+                    className="text-green-600 hover:text-green-800 font-semibold"
+                  >
                     Privacy Policy
                   </Link>
                 </label>
@@ -329,20 +369,27 @@ const RegisterPage = () => {
 
             <div className="flex items-center my-6">
               <div className="flex-1 border-t-2 border-gray-300"></div>
-              <span className="px-4 text-gray-500 text-sm font-medium">already registered?</span>
+              <span className="px-4 text-gray-500 text-sm font-medium">
+                already registered?
+              </span>
               <div className="flex-1 border-t-2 border-gray-300"></div>
             </div>
 
             <p className="text-center text-gray-700 font-medium">
-              Have an account? {" "}
-              <Link href="/Casher/Login" className="text-blue-600 hover:text-blue-800 font-bold transition">
+              Have an account?{" "}
+              <Link
+                href="/Casher/Login"
+                className="text-blue-600 hover:text-blue-800 font-bold transition"
+              >
                 Sign In
               </Link>
             </p>
           </div>
 
           <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
-            <p className="text-center text-gray-600 text-xs">© 2026 Mero Deurali Cafe. All rights reserved.</p>
+            <p className="text-center text-gray-600 text-xs">
+              © 2026 Mero Deurali Cafe. All rights reserved.
+            </p>
           </div>
         </div>
       </div>
