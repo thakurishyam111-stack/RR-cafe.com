@@ -28,12 +28,22 @@ export default function CafeMap() {
   );
 
   useEffect(() => {
-    navigator.geolocation?.getCurrentPosition(
-      (position) => {
-        setUserLocation([position.coords.latitude, position.coords.longitude]);
-      },
-      () => {},
-    );
+   navigator.geolocation.getCurrentPosition(
+  (position) => {
+    setUserLocation([
+      position.coords.latitude,
+      position.coords.longitude,
+    ]);
+  },
+  (error) => {
+    console.log(error);
+  },
+  {
+    enableHighAccuracy: true,
+    timeout: 10000,
+    maximumAge: 0,
+  }
+);
   }, []);
 
   return (
@@ -96,12 +106,11 @@ export default function CafeMap() {
             </div>
 
             <a
-              href={`https://www.google.com/maps?q=${cafeLocation[0]},${cafeLocation[1]}`}
+              href={`https://www.google.com/maps/dir/?api=1&destination=${cafeLocation[0]},${cafeLocation[1]}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-8 inline-flex w-full items-center justify-center rounded-3xl bg-amber-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-300"
             >
-              Open in Google Maps
+              Get Directions
             </a>
           </div>
 

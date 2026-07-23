@@ -2,14 +2,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Bell,
-  Menu,
-  X,
-  Search,
-  Wallet,
-  MapPin,
-} from "lucide-react";
+import { Bell, Menu, X, Search, Wallet, MapPin } from "lucide-react";
 import BillWidget from "@/components/BillWidget"; // बिल विजेट इम्पोर्ट गरियो
 
 export default function Navbar() {
@@ -27,7 +20,7 @@ export default function Navbar() {
     { label: "About", href: "/#about" },
   ];
 
-  const [notifCount] = useState(3); 
+  const [notifCount] = useState(3);
 
   const isActive = (href: string) => {
     if (!pathname) return false;
@@ -40,7 +33,7 @@ export default function Navbar() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     // यदि मोबाइल मेनु वा बिल साइडबार मध्ये कुनै एक खुला छ भने स्क्रोल बन्द गर्ने
-    document.body.style.overflow = (drawerOpen || isBillOpen) ? "hidden" : "";
+    document.body.style.overflow = drawerOpen || isBillOpen ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
@@ -52,7 +45,6 @@ export default function Navbar() {
       <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 bg-amber-50/90 backdrop-blur-md shadow-sm transition-all duration-300">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-20 items-center justify-between gap-4">
-            
             {/* Logo Section */}
             <Link href="/" className="flex items-center gap-3 shrink-0">
               <img
@@ -144,7 +136,6 @@ export default function Navbar() {
                 <Menu className="h-5 w-5" />
               </button>
             </div>
-
           </div>
         </div>
       </header>
@@ -152,7 +143,9 @@ export default function Navbar() {
       {/* Mobile Backdrop overlay */}
       <div
         className={`fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300 ${
-          drawerOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          drawerOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
         }`}
         onClick={() => setDrawerOpen(false)}
         aria-hidden={!drawerOpen}
@@ -230,13 +223,13 @@ export default function Navbar() {
                 </span>
               )}
             </Link>
-            
+
             {/* ३. अपडेटेड मोबाइल बिल बटन: मोबाइल मेनु बन्द गरेर सिधै बिल साइडबार खोल्छ */}
             <button
               type="button"
               onClick={() => {
                 setDrawerOpen(false); // पहिले मोबाइल मेनु बन्द गर्ने
-                setIsBillOpen(true);  // अनि बिल साइडबार खोल्ने
+                setIsBillOpen(true); // अनि बिल साइडबार खोल्ने
               }}
               className="flex w-full items-center gap-3 px-4 py-3 rounded-xl bg-amber-600 text-white shadow-md hover:bg-amber-700 transition text-left cursor-pointer"
             >

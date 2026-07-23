@@ -43,7 +43,7 @@ export default function WasteManagementDashboard() {
 
   return (<>
   <AdminSidebar/>
-    <div className="min-h-screen bg-slate-50 text-slate-800 antialiased font-sans">
+   <div className="min-h-screen bg-gradient-to-br from-gray-800 via-gray-800 to-black text-white p-4 md:p-8 md:pt-6 md:ml-72">
       <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
         
         {/* DASHBOARD HEADER */}
@@ -51,11 +51,11 @@ export default function WasteManagementDashboard() {
           <div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
               <span className="p-2 bg-emerald-500 text-white rounded-lg shadow-sm">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                <svg className=" w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
               </span>
-              Waste Inventory Management
+              <h1 className="text-gray-200">Waste Inventory Management</h1>
             </h1>
-            <p className="text-xs text-slate-400 mt-1">Track system loss, damages, expired items and custom financial metrics.</p>
+            <p className="text-md text-slate-100 mt-1 ">Track system loss, damages, expired items and custom financial metrics.</p>
           </div>
           <div className="flex items-center gap-2 self-end sm:self-center">
             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -206,7 +206,7 @@ export default function WasteManagementDashboard() {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-1.5 text-gray-900">
                   <label className="text-xs font-semibold text-slate-700">Reason Classification Schema <span className="text-red-500">*</span></label>
                   <select name="reason" value={formData.reason} onChange={handleInputChange} className="p-2.5 text-sm bg-white border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" required>
                     <option value="" disabled>Select valid reason enum...</option>

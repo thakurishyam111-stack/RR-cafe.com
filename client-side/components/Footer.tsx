@@ -150,7 +150,7 @@ export default function Footer() {
       </div>
 
       {/* Subfooter Copyright Strip */}
-      <div className="border-t border-slate-800/60 bg-slate-950/40 px-6 py-6 text-center text-xs text-slate-200">
+      <div className="border-t border-slate-800 bg-slate-400 px-6 py-6 text-center text-xs text-slate-950">
         <p>© {currentYear} The Deurali Cafe. All rights reserved.</p>
       </div>
     </footer>
