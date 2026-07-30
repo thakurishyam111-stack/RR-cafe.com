@@ -58,3 +58,5 @@ export const fetchUnpaidOrders = async (customerName: string, customerPhone: str
 export const submitOrderPayment = async (orderId: string, payload: { method: string; cashierId?: string; discountPercent: number }) => {
   return await axios.put(`http://localhost:8080/api/orders/payment/${orderId}`, payload);
 };
+
+// export const handalTabalStatus= async()

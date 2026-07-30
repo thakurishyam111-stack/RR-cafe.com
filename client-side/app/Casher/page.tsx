@@ -13,7 +13,7 @@ const Page = () => {
 
   // Cashier Details State
   const [casher, setCasher] = useState<CasherUser>({
-    fullName: "Cashier",
+    fullName: "Cashier",  
     email: "No email available",
     phone: "No phone available",
   });
