@@ -61,38 +61,75 @@ const reduceStockForApprovedOrder = async (order) => {
   }
 };
 
+// Create or Update Order (Append items if active order exists)
 router.post("/create", async (req, res) => {
   try {
     const { customerName, phone, table, items, total } = req.body;
 
-    if (!customerName || !phone || !table || !items?.length) {
+    if (!table || !items?.length) {
       return res.status(400).json({
         success: false,
-        message: "All fields required",
+        message: "Table and items are required",
       });
     }
+
     const selectedTable = await Table.findById(table);
-    console.log(selectedTable);
     if (!selectedTable) {
       return res.status(404).json({
         success: false,
         message: "Table not found",
       });
     }
-    if (selectedTable.status !== "available") {
-      return res.status(400).json({
-        success: false,
-        message: "Table is already booked",
+
+    // 1. Check if an active unpaid order exists for this table
+    let existingOrder = await Order.findOne({
+      number: selectedTable.tableNo,
+      paymentStatus: "unpaid",
+    });
+
+    if (existingOrder) {
+      // --- Customer le purano bill natiri item add garyo ---
+
+      // Items push or update quantity logic
+      items.forEach((newItem) => {
+        const existingItemIndex = existingOrder.items.findIndex(
+          (i) => String(i.menuId || i.title) === String(newItem.menuId || newItem.title)
+        );
+
+        if (existingItemIndex > -1) {
+          // Yo item pahile nai thiyo bhane quantity ra subtotal badhaune
+          existingOrder.items[existingItemIndex].quantity += Number(newItem.quantity || 1);
+        } else {
+          // Naya item thapne
+          existingOrder.items.push(newItem);
+        }
+      });
+
+      // Total calculate/update
+      existingOrder.total = Number(existingOrder.total || 0) + Number(total || 0);
+
+      // Status reset to pending/preparing if needed for kitchen tracking
+      if (existingOrder.status === "approved" || existingOrder.status === "Ready") {
+        existingOrder.status = "pending"; // kitchen le punah review garnuparcha
+      }
+
+      await existingOrder.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Items added to current table order",
+        order: existingOrder,
       });
     }
-    selectedTable.status = "occupied";
 
+    // 2. If NO active order exists, create a fresh order
+    selectedTable.status = "occupied";
     await selectedTable.save();
 
     const newOrder = await Order.create({
       billNo: generateBillNo(),
-      customerName,
-      phone,
+      customerName: customerName || "Guest",
+      phone: phone || "",
       number: selectedTable.tableNo,
       items,
       total,
@@ -101,12 +138,13 @@ router.post("/create", async (req, res) => {
       paymentMethod: "Unknown",
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "Order placed successfully",
       order: newOrder,
     });
   } catch (error) {
+    console.log(error);
     res.status(500).json({
       success: false,
       message: "Server Error",
@@ -202,11 +240,13 @@ router.put("/reject/:id", async (req, res) => {
   }
 });
 
+// update order payment status to paid and update table status to available
 router.put("/payment/:id", async (req, res) => {
   try {
     const { method } = req.body;
     const paymentMethod = normalizePaymentMethod(method);
 
+    // 1. Order status paid banaune
     const updatedOrder = await Order.findByIdAndUpdate(
       req.params.id,
       {
@@ -215,19 +255,21 @@ router.put("/payment/:id", async (req, res) => {
       },
       { new: true }
     );
-    order.paymentStatus = "paid";
-    await order.save();
 
-    await Table.findOneAndUpdate(
-      { number: updatedOrder.number },
-      { status: "available" }
-    );
-    
+    // Order bhetiena vane pahile nai exit garchha
     if (!updatedOrder) {
       return res.status(404).json({
         success: false,
         message: "Order not found",
       });
+    }
+
+    // 2. Table status lai occupied bata available ma switch garne
+    if (updatedOrder.number) {
+      await Table.findOneAndUpdate(
+        { tableNo: updatedOrder.number },
+        { status: "available" }
+      );
     }
 
     res.status(200).json({
@@ -243,6 +285,8 @@ router.put("/payment/:id", async (req, res) => {
     });
   }
 });
+
+
 
 router.delete("/:id", async (req, res) => {
   try {

@@ -35,6 +35,19 @@ const Banner = () => {
 
   return (
     <section>
+      <div className="p-5 my-5 bg-gray-300 relative w-full max-w-6xl mx-auto overflow-hidden rounded-2xl shadow-2xl aspect-video">
+        <video
+          src="/logo/coffee-maker.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+          controls
+          className="w-full h-full"
+        >
+          Your browser does not support the video tag.
+        </video>
+      </div>
       <div className="relative rounded-2xl my-10 shadow-xl overflow-hidden ">
         <img
           src={images[current]}

@@ -130,7 +130,7 @@ const Page = () => {
         // डाटा क्लियर गर्ने (Local States Clear)
         handleClearState();
       } catch (error) {
-        alert("Bulk payment failed. Please try again.");
+        alert("Bill payment failed. Please try again.");
       } finally {
         setPaying(false);
       }

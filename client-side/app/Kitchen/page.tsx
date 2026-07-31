@@ -175,7 +175,7 @@ const ItemLevelKitchenKDS = () => {
       );
     } catch (err) {
       console.error(
-        "Failed to update dynamic prep time minutes on selected index",
+        "Failed to update dynamic prep time minutes on selected index", 
         err,
       );
       getOrders();
