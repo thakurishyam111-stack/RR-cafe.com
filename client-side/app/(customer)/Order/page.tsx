@@ -8,20 +8,42 @@ import Footer from "@/components/Footer";
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 
+type MenuItem = {
+  _id?: string | number;
+  id?: string | number;
+  category?: string;
+  price?: number;
+  quantity?: number;
+  image?: string;
+  title?: string;
+  name?: string;
+  description?: string;
+};
+
+type TableItem = {
+  _id?: string;
+  status?: string;
+  tableNo?: string | number;
+};
+
 export default function OrderPage() {
-  const [menus, setMenus] = useState([]);
-  const [cart, setCart] = useState([]);
+  const [menus, setMenus] = useState<MenuItem[]>([]);
+  const [cart, setCart] = useState<MenuItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [number, setNumber] = useState("");
   const [billNo, setBillNo] = useState("");
-  const [table, setTable] = useState([]);
-  const[selectedTable,setSelectedTable]=useState("")
+  const [table, setTable] = useState<TableItem[]>([]);
+  const [selectedTable, setSelectedTable] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [submitted, setSubmitted] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [statusLookupBillNo, setStatusLookupBillNo] = useState("");
+  const [statusLookupLoading, setStatusLookupLoading] = useState(false);
 
   // Fetch Menu
   useEffect(() => {
@@ -29,11 +51,11 @@ export default function OrderPage() {
       try {
         const { data } = await axios.get(`${API_BASE_URL}/api/menus`);
 
-        const items = data?.menus || [];
+        const items = (data?.menus || []) as MenuItem[];
 
         setMenus(items);
 
-        const cartItems = items.map((item) => ({
+        const cartItems: MenuItem[] = items.map((item: MenuItem) => ({
           ...item,
           quantity: 0,
         }));
@@ -52,26 +74,23 @@ export default function OrderPage() {
   }, []);
 
   const getAvailableTable = async () => {
-  try {
-    const res = await axios.get(`${API_BASE_URL}/api/table`);
+    try {
+      const res = await axios.get(`${API_BASE_URL}/api/table`);
 
-    if (res.data.success) {
-      const availableTables = res.data.table.filter(
-        (table) => table.status === "available"
-      );
-
-      setTable(availableTables);
+      if (res.data.success) {
+        const tables = Array.isArray(res.data.table) ? res.data.table : [];
+        setTable(tables);
+      }
+    } catch (error) {
+      console.log(error);
     }
-  } catch (error) {
-    console.log(error);
-  }
-};
+  };
 
   // Categories
   const categories = useMemo(() => {
     const unique = Array.from(
-      new Set(menus.map((item) => item.category).filter(Boolean)),
-    );
+      new Set(menus.map((item: MenuItem) => item.category).filter(Boolean) as string[]),
+    ) as string[];
 
     return ["All", ...unique];
   }, [menus]);
@@ -80,17 +99,17 @@ export default function OrderPage() {
   const filteredItems = useMemo(() => {
     if (selectedCategory === "All") return cart;
 
-    return cart.filter((item) => item.category === selectedCategory);
+    return cart.filter((item: MenuItem) => item.category === selectedCategory);
   }, [cart, selectedCategory]);
 
   // Update Quantity
-  const updateQuantity = (id, delta) => {
+  const updateQuantity = (id: string | number, delta: number) => {
     setCart((prev) =>
-      prev.map((item) =>
+      prev.map((item: MenuItem) =>
         item._id === id || item.id === id
           ? {
               ...item,
-              quantity: Math.max(item.quantity + delta, 0),
+              quantity: Math.max((item.quantity ?? 0) + delta, 0),
             }
           : item,
       ),
@@ -98,9 +117,9 @@ export default function OrderPage() {
   };
 
   // Remove Item
-  const removeItem = (id) => {
+  const removeItem = (id: string | number) => {
     setCart((prev) =>
-      prev.map((item) =>
+      prev.map((item: MenuItem) =>
         item._id === id || item.id === id
           ? {
               ...item,
@@ -113,8 +132,8 @@ export default function OrderPage() {
 
   // Clear Cart
  const clearCart = () => {
-  setCart((prev) =>
-    prev.map((item) => ({
+  setCart((prev: MenuItem[]) =>
+    prev.map((item: MenuItem) => ({
       ...item,
       quantity: 0,
     }))
@@ -127,27 +146,38 @@ export default function OrderPage() {
 
   // Total
   const total = useMemo(() => {
-    return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    return cart.reduce(
+      (sum: number, item: MenuItem) => sum + (item.price ?? 0) * (item.quantity ?? 0),
+      0,
+    );
   }, [cart]);
 
   // Submit Order
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const phoneRegex = /^(97|98)\d{8}$/;
 
     if (!phoneRegex.test(phone)) {
-      alert("Invalid phone number. ");
+      setMessage("Please enter a valid phone number.");
       return;
     }
-    const selectedItems = cart.filter((item) => item.quantity > 0);
+
+    if (!selectedTable) {
+      setMessage("Please select a table before placing the order.");
+      return;
+    }
+
+    const selectedItems = cart.filter((item: MenuItem) => (item.quantity ?? 0) > 0);
 
     if (selectedItems.length === 0) {
-      alert("Please add items first");
+      setMessage("Please add at least one item to the cart.");
       return;
     }
 
-   
+    setIsSubmitting(true);
+    setMessage(null);
+
     try {
       const { data } = await axios.post(`${API_BASE_URL}/api/orders/create`, {
         customerName: name,
@@ -159,16 +189,39 @@ export default function OrderPage() {
 
       if (data.success) {
         setSubmitted(true);
-
-        // clearCart();
-        // setName("");
-        // setPhone("");
         setBillNo(data.order.billNo);
+        setNumber(data.order.number);
+        setMessage(data.message || "Order placed successfully.");
+        setSelectedTable("");
+      } else {
+        setMessage(data.message || "Unable to place the order.");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log("ORDER ERROR:", error);
+      const serverMessage = error?.response?.data?.message || error?.response?.data?.error || "Order failed. Please try again.";
+      setMessage(serverMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-      alert("Order failed");
+  const handleStatusLookup = async (e?: React.FormEvent<HTMLFormElement>) => {
+    e?.preventDefault();
+
+    if (!statusLookupBillNo.trim()) {
+      setMessage("Please enter a bill number to check your order status.");
+      return;
+    }
+
+    try {
+      setStatusLookupLoading(true);
+      const { data } = await axios.get(`${API_BASE_URL}/api/orders/billNo/${encodeURIComponent(statusLookupBillNo.trim())}`);
+      setMessage(data.message || "Order status fetched successfully.");
+    } catch (error: any) {
+      const serverMessage = error?.response?.data?.message || "Unable to find that bill number.";
+      setMessage(serverMessage);
+    } finally {
+      setStatusLookupLoading(false);
     }
   };
 
@@ -255,7 +308,7 @@ export default function OrderPage() {
                       <div className="flex items-center gap-3">
                         <button
                           onClick={() =>
-                            updateQuantity(item._id || item.id, -1)
+                            updateQuantity(item._id ?? item.id ?? "", -1)
                           }
                           className="w-10 h-10 rounded-full bg-green-400 hover:bg-slate-300 text-xl"
                         >
@@ -263,11 +316,11 @@ export default function OrderPage() {
                         </button>
 
                         <span className="font-bold text-lg w-6 text-center">
-                          {item.quantity}
+                          {item.quantity ?? 0}
                         </span>
 
                         <button
-                          onClick={() => updateQuantity(item._id || item.id, 1)}
+                          onClick={() => updateQuantity(item._id ?? item.id ?? "", 1)}
                           className="w-10 h-10 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-xl"
                         >
                           +
@@ -275,7 +328,7 @@ export default function OrderPage() {
                       </div>
 
                       <button
-                        onClick={() => updateQuantity(item._id || item.id, 1)}
+                        onClick={() => updateQuantity(item._id ?? item.id ?? "", 1)}
                         className="bg-black hover:bg-slate-800 text-white px-4 py-2 rounded-xl"
                       >
                         Add
@@ -301,7 +354,7 @@ export default function OrderPage() {
                 </p>
               </div>
 
-              {cart.some((item) => item.quantity > 0) && (
+              {cart.some((item) => (item.quantity ?? 0) > 0) && (
                 <button
                   onClick={clearCart}
                   className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-xl text-sm"
@@ -313,9 +366,9 @@ export default function OrderPage() {
 
             {/* Items */}
             <div className="mt-6 space-y-4 max-h-[400px] overflow-y-auto pr-1">
-              {cart.filter((item) => item.quantity > 0).length > 0 ? (
+              {cart.filter((item) => (item.quantity ?? 0) > 0).length > 0 ? (
                 cart
-                  .filter((item) => item.quantity > 0)
+                  .filter((item) => (item.quantity ?? 0) > 0)
                   .map((item) => (
                     <div
                       key={item._id || item.id}
@@ -335,7 +388,7 @@ export default function OrderPage() {
                             <h3 className="font-bold text-lg">{item.title}</h3>
 
                             <button
-                              onClick={() => removeItem(item._id || item.id)}
+                              onClick={() => removeItem(item._id ?? item.id ?? "")}
                               className="text-red-400 hover:text-red-500 text-sm"
                             >
                               ✕
@@ -351,18 +404,18 @@ export default function OrderPage() {
                             <div className="flex items-center gap-2">
                               <button
                                 onClick={() =>
-                                  updateQuantity(item._id || item.id, -1)
+                                  updateQuantity(item._id ?? item.id ?? "", -1)
                                 }
                                 className="w-8 h-8 rounded-full bg-slate-700"
                               >
                                 −
                               </button>
 
-                              <span className="font-bold">{item.quantity}</span>
+                              <span className="font-bold">{item.quantity ?? 0}</span>
 
                               <button
                                 onClick={() =>
-                                  updateQuantity(item._id || item.id, 1)
+                                  updateQuantity(item._id ?? item.id ?? "", 1)
                                 }
                                 className="w-8 h-8 rounded-full bg-amber-500"
                               >
@@ -371,7 +424,7 @@ export default function OrderPage() {
                             </div>
 
                             <span className="font-bold text-amber-400">
-                              Rs {item.price * item.quantity}
+                              Rs {((item.price ?? 0) * (item.quantity ?? 0))}
                             </span>
                           </div>
                         </div>
@@ -405,13 +458,19 @@ export default function OrderPage() {
                 </div>
 
                 <div className="text-right text-xl  text-white">
-                  <p>{cart.filter((item) => item.quantity > 0).length} Items</p>
+                  <p>{cart.filter((item) => (item.quantity ?? 0) > 0).length} Items</p>
                 </div>
               </div>
             </div>
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+              {message && (
+                <div className="rounded-2xl border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+                  {message}
+                </div>
+              )}
+
               <input
                 type="text"
                 placeholder="Your Name"
@@ -432,23 +491,29 @@ export default function OrderPage() {
               <select
                 value={selectedTable}
                 onChange={(e) => setSelectedTable(e.target.value)}
+                className="w-full rounded-2xl bg-white text-black px-4 py-3 outline-none"
               >
                 <option value="" className="text-gray-900">Select Table No</option>
 
-                {table.map((table) => (
-                  <option key={table._id} value={table._id}
-                  className="text-gray-800"
+                {table.map((tableItem) => (
+                  <option
+                    key={tableItem._id}
+                    value={tableItem._id}
+                    className="text-gray-800"
+                    disabled={tableItem.status !== "available"}
                   >
-                    Table No.{table.tableNo}
+                    Table No.{tableItem.tableNo} {tableItem.status === "available" ? "(Available)" : "(Occupied)"}
                   </option>
                 ))}
               </select>
               <button
                 type="submit"
-                className="w-full  bg-green-600 py-4 rounded-2xl font-bold text-lg"
+                disabled={isSubmitting}
+                className="w-full bg-green-600 py-4 rounded-2xl font-bold text-lg disabled:cursor-not-allowed disabled:opacity-70"
               >
-                Order
+                {isSubmitting ? "Placing Order..." : "Order"}
               </button>
+
             </form>
           </aside>
         </div>

@@ -10,7 +10,7 @@ import Navbar from "@/components/Navbar";
 export default function AdminDashboard() {
   const router = useRouter();
 
-  const [orders, setOrders] = useState([]);
+  const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // ======================
@@ -39,8 +39,8 @@ export default function AdminDashboard() {
       const res = await axios.get("http://localhost:8080/api/orders");
       const data = res.data?.orders;
       setOrders(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.log("Fetch Error:", error.message);
+    } catch (error: any) {
+      console.log("Fetch Error:", error?.message || error);
       setOrders([]);
     } finally {
       setLoading(false);
@@ -62,8 +62,8 @@ export default function AdminDashboard() {
         },
       );
       fetchOrders();
-    } catch (err) {
-      console.log("Approve Error:", err.message);
+    } catch (err: any) {
+      console.log("Approve Error:", err?.message || err);
     }
   };
 
@@ -82,8 +82,8 @@ export default function AdminDashboard() {
         },
       );
       fetchOrders();
-    } catch (err) {
-      console.log("Reject Error:", err.message);
+    } catch (err: any) {
+      console.log("Reject Error:", err?.message || err);
     }
   };
 
@@ -252,7 +252,7 @@ export default function AdminDashboard() {
                       <td className="px-6 py-4 text-gray-300">{order.phone}</td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-300">
-                          {order.items.slice(0, 2).map((item, index) => (
+                          {order.items.slice(0, 2).map((item: any, index: number) => (
                             <div key={index}>
                               {item.title} (×{item.quantity})
                             </div>

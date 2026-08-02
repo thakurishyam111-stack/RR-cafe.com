@@ -9,10 +9,10 @@ const API_BASE_URL =
 
 const Page = () => {
   const router = useRouter();
-  const [menus, setMenus] = useState([]);
+  const [menus, setMenus] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [loading, setLoading] = useState(true);
-  const [apiError, setApiError] = useState(null);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const fetchMenus = async () => {
     try {

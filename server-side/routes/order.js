@@ -3,7 +3,8 @@ import mongoose from "mongoose";
 import Order from "../models/Order.js";
 import Recipe from "../models/recipe.js";
 import Stock from "../models/Stock.js";
-import Table from "../models/Table.js"
+import Table from "../models/Table.js";
+import { evaluateRecipeStockAvailability } from "../utils/stockRecipeLogic.js";
 
 const router = express.Router();
 
@@ -24,8 +25,53 @@ const normalizePaymentMethod = (value) => {
   return "Unknown";
 };
 
-const reduceStockForApprovedOrder = async (order) => {
-  if (!order?.items?.length) return;
+const normalizeOrderStatus = (value) => {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (["approved", "approve"].includes(normalized)) return "approved";
+  if (["rejected", "reject"].includes(normalized)) return "rejected";
+  if (["preparing", "prep", "in progress"].includes(normalized)) return "preparing";
+  if (["ready", "ready to serve", "ready_to_serve", "ready-to-serve"].includes(normalized)) return "ready_to_serve";
+  if (["served", "serve", "service complete"].includes(normalized)) return "served";
+  return "pending";
+};
+
+const normalizeItemStatus = (value) => {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (["pending", "queued", "queue"].includes(normalized)) return "Pending";
+  if (["preparing", "prep", "cooking"].includes(normalized)) return "Preparing";
+  if (["ready", "ready to serve", "ready_to_serve", "ready-to-serve"].includes(normalized)) return "Ready";
+  if (["served", "serve", "service complete"].includes(normalized)) return "Served";
+  return "Pending";
+};
+
+const syncTableStateForOrder = async (order, nextStatus) => {
+  if (!order?.number) return;
+
+  const targetStatus = nextStatus === "rejected" || nextStatus === "served" ? "available" : "occupied";
+  await Table.findOneAndUpdate({ tableNo: order.number }, { status: targetStatus });
+};
+
+const buildStockCancellationMessage = (missingIngredients = []) => {
+  if (!missingIngredients.length) return "";
+
+  const details = missingIngredients
+    .map((ingredient) => {
+      const unitText = ingredient.unit ? ` ${ingredient.unit}` : "";
+      return `${ingredient.name} (${ingredient.needed}${unitText})`;
+    })
+    .join(", ");
+
+  return `Your order was canceled because the following ingredients are currently out of stock: ${details}.`;
+};
+
+const validateAndReduceStockForApprovedOrder = async (order) => {
+  if (!order?.items?.length) {
+    return { canFulfill: true, missingIngredients: [], message: "" };
+  }
+
+  const stockItems = await Stock.find({ status: "active" });
+  const plannedReductions = [];
+  const missingIngredients = [];
 
   for (const item of order.items) {
     const orderQty = Number(item.quantity || 1);
@@ -44,21 +90,43 @@ const reduceStockForApprovedOrder = async (order) => {
 
     if (!recipe?.ingredients?.length) continue;
 
-    for (const ingredient of recipe.ingredients) {
-      const ingredientQty = Number(ingredient.quantity || 0) * orderQty;
-      if (!ingredient.name || ingredientQty <= 0) continue;
+    const evaluation = evaluateRecipeStockAvailability(recipe.ingredients, stockItems, orderQty);
 
-      const stockItem = await Stock.findOne({
-        name: { $regex: new RegExp(`^${escapeRegex(ingredient.name)}$`, "i") },
+    if (!evaluation.canFulfill) {
+      missingIngredients.push(...evaluation.missingIngredients);
+      continue;
+    }
+
+    for (const entry of evaluation.requiredQuantities) {
+      plannedReductions.push({
+        name: entry.name,
+        unit: entry.unit,
+        requiredQuantity: entry.requiredQuantity,
       });
-
-      if (!stockItem) continue;
-
-      stockItem.currentStock = Math.max(0, Number(stockItem.currentStock || 0) - ingredientQty);
-      stockItem.status = stockItem.currentStock > 0 ? "active" : "inactive";
-      await stockItem.save();
     }
   }
+
+  if (missingIngredients.length) {
+    return {
+      canFulfill: false,
+      missingIngredients,
+      message: buildStockCancellationMessage(missingIngredients),
+    };
+  }
+
+  for (const reduction of plannedReductions) {
+    const stockItem = await Stock.findOne({
+      name: { $regex: new RegExp(`^${escapeRegex(reduction.name)}$`, "i") },
+    });
+
+    if (!stockItem) continue;
+
+    stockItem.currentStock = Math.max(0, Number(stockItem.currentStock || 0) - Number(reduction.requiredQuantity || 0));
+    stockItem.status = stockItem.currentStock > 0 ? "active" : "inactive";
+    await stockItem.save();
+  }
+
+  return { canFulfill: true, missingIngredients: [], message: "" };
 };
 
 // Create or Update Order (Append items if active order exists)
@@ -81,39 +149,52 @@ router.post("/create", async (req, res) => {
       });
     }
 
+    const normalizedPhone = String(phone || "").trim();
+    const normalizedCustomerName = String(customerName || "Guest").trim();
+
     // 1. Check if an active unpaid order exists for this table
     let existingOrder = await Order.findOne({
       number: selectedTable.tableNo,
       paymentStatus: "unpaid",
-    });
+      status: { $ne: "rejected" },
+    }).sort({ createdAt: -1 });
 
     if (existingOrder) {
-      // --- Customer le purano bill natiri item add garyo ---
+      if (String(existingOrder.phone || "").trim() && normalizedPhone && String(existingOrder.phone).trim() !== normalizedPhone) {
+        return res.status(409).json({
+          success: false,
+          message: "This table is already occupied by another customer. Please choose another table.",
+        });
+      }
 
-      // Items push or update quantity logic
+      existingOrder.items = [...existingOrder.items];
       items.forEach((newItem) => {
         const existingItemIndex = existingOrder.items.findIndex(
           (i) => String(i.menuId || i.title) === String(newItem.menuId || newItem.title)
         );
 
         if (existingItemIndex > -1) {
-          // Yo item pahile nai thiyo bhane quantity ra subtotal badhaune
-          existingOrder.items[existingItemIndex].quantity += Number(newItem.quantity || 1);
+          existingOrder.items[existingItemIndex].quantity = Number(existingOrder.items[existingItemIndex].quantity || 0) + Number(newItem.quantity || 1);
         } else {
-          // Naya item thapne
-          existingOrder.items.push(newItem);
+          existingOrder.items.push({
+            ...newItem,
+            status: "Pending",
+            estimatedTime: Number(newItem.estimatedTime || 15),
+          });
         }
       });
 
-      // Total calculate/update
       existingOrder.total = Number(existingOrder.total || 0) + Number(total || 0);
-
-      // Status reset to pending/preparing if needed for kitchen tracking
-      if (existingOrder.status === "approved" || existingOrder.status === "Ready") {
-        existingOrder.status = "pending"; // kitchen le punah review garnuparcha
+      existingOrder.customerName = normalizedCustomerName || existingOrder.customerName;
+      existingOrder.phone = normalizedPhone || existingOrder.phone;
+      existingOrder.status = normalizeOrderStatus(existingOrder.status);
+      if (existingOrder.status === "served") {
+        existingOrder.status = "approved";
       }
 
       await existingOrder.save();
+      selectedTable.status = "occupied";
+      await selectedTable.save();
 
       return res.status(200).json({
         success: true,
@@ -128,10 +209,14 @@ router.post("/create", async (req, res) => {
 
     const newOrder = await Order.create({
       billNo: generateBillNo(),
-      customerName: customerName || "Guest",
-      phone: phone || "",
+      customerName: normalizedCustomerName || "Guest",
+      phone: normalizedPhone || "",
       number: selectedTable.tableNo,
-      items,
+      items: items.map((item) => ({
+        ...item,
+        status: "Pending",
+        estimatedTime: Number(item.estimatedTime || 15),
+      })),
       total,
       status: "pending",
       paymentStatus: "unpaid",
@@ -171,18 +256,36 @@ router.put("/approve/:id", async (req, res) => {
       });
     }
 
-    const updatedOrder = await Order.findByIdAndUpdate(
-      req.params.id,
-      { status: "approved" },
-      { new: true }
-    );
+    const stockCheck = await validateAndReduceStockForApprovedOrder(existingOrder);
 
-    await reduceStockForApprovedOrder(updatedOrder);
+    if (!stockCheck.canFulfill) {
+      existingOrder.status = "rejected";
+      existingOrder.cancellationReason = stockCheck.message;
+      existingOrder.customerMessage = stockCheck.message;
+      await existingOrder.save();
+      await syncTableStateForOrder(existingOrder, "rejected");
+
+      return res.status(200).json({
+        success: false,
+        canceled: true,
+        message: stockCheck.message,
+        order: existingOrder,
+      });
+    }
+
+    existingOrder.status = "approved";
+    existingOrder.cancellationReason = "";
+    existingOrder.customerMessage = "";
+    await existingOrder.save();
+
+    if (existingOrder?.number) {
+      await syncTableStateForOrder(existingOrder, "approved");
+    }
 
     res.status(200).json({
       success: true,
       message: "Order Approved",
-      order: updatedOrder,
+      order: existingOrder,
     });
   } catch (error) {
     console.log(error);
@@ -219,6 +322,10 @@ router.put("/reject/:id", async (req, res) => {
       { new: true }
     );
 
+    if (updatedOrder?.number) {
+      await syncTableStateForOrder(updatedOrder, "rejected");
+    }
+
     if (!updatedOrder) {
       return res.status(404).json({
         success: false,
@@ -246,7 +353,6 @@ router.put("/payment/:id", async (req, res) => {
     const { method } = req.body;
     const paymentMethod = normalizePaymentMethod(method);
 
-    // 1. Order status paid banaune
     const updatedOrder = await Order.findByIdAndUpdate(
       req.params.id,
       {
@@ -256,7 +362,6 @@ router.put("/payment/:id", async (req, res) => {
       { new: true }
     );
 
-    // Order bhetiena vane pahile nai exit garchha
     if (!updatedOrder) {
       return res.status(404).json({
         success: false,
@@ -264,12 +369,8 @@ router.put("/payment/:id", async (req, res) => {
       });
     }
 
-    // 2. Table status lai occupied bata available ma switch garne
-    if (updatedOrder.number) {
-      await Table.findOneAndUpdate(
-        { tableNo: updatedOrder.number },
-        { status: "available" }
-      );
+    if (updatedOrder?.number) {
+      await Table.findOneAndUpdate({ tableNo: updatedOrder.number }, { status: "available" });
     }
 
     res.status(200).json({
@@ -286,7 +387,78 @@ router.put("/payment/:id", async (req, res) => {
   }
 });
 
+router.put("/:id/status", async (req, res) => {
+  try {
+    const { status } = req.body;
+    const normalizedStatus = normalizeOrderStatus(status);
 
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    if (normalizedStatus === "approved") {
+      const stockCheck = await validateAndReduceStockForApprovedOrder(order);
+
+      if (!stockCheck.canFulfill) {
+        order.status = "rejected";
+        order.cancellationReason = stockCheck.message;
+        order.customerMessage = stockCheck.message;
+        await syncTableStateForOrder(order, "rejected");
+        await order.save();
+
+        return res.status(200).json({
+          success: false,
+          canceled: true,
+          message: stockCheck.message,
+          order,
+        });
+      }
+    }
+
+    order.status = normalizedStatus;
+    if (normalizedStatus === "approved") {
+      order.cancellationReason = "";
+      order.customerMessage = "";
+    }
+
+    if (normalizedStatus === "served") {
+      order.items = order.items.map((item) => ({ ...item.toObject?.(), status: "Served" }));
+    } else if (normalizedStatus === "ready_to_serve") {
+      order.items = order.items.map((item) => ({ ...item.toObject?.(), status: "Ready" }));
+    } else if (normalizedStatus === "preparing") {
+      order.items = order.items.map((item) => ({ ...item.toObject?.(), status: "Preparing" }));
+    } else if (normalizedStatus === "approved") {
+      order.items = order.items.map((item) => ({ ...item.toObject?.(), status: item.status || "Pending" }));
+    }
+
+    if (normalizedStatus === "rejected") {
+      await syncTableStateForOrder(order, "rejected");
+    } else if (normalizedStatus === "served") {
+      await syncTableStateForOrder(order, "served");
+    } else {
+      await syncTableStateForOrder(order, normalizedStatus);
+    }
+
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Order status updated",
+      order,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
 
 router.delete("/:id", async (req, res) => {
   try {
@@ -316,16 +488,26 @@ router.get("/billNo/:billNo", async (req, res) => {
       });
     }
 
+    if (order.status === "rejected") {
+      return res.status(200).json({
+        success: true,
+        order,
+        message: order.customerMessage || "Your order was canceled.",
+      });
+    }
+
     if (order.status !== "approved") {
-      return res.status(403).json({
-        success: false,
-        message: "Order not approved yet",
+      return res.status(200).json({
+        success: true,
+        order,
+        message: "Order is still pending or being processed.",
       });
     }
 
     res.status(200).json({
       success: true,
       order,
+      message: "Order approved.",
     });
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
@@ -338,7 +520,7 @@ router.get("/billNo/:billNo", async (req, res) => {
 router.get("/kitchen", async (req, res) => {
   try {
     const orders = await Order.find({
-      status: { $in: ["pending", "approved"] },
+      status: { $in: ["pending", "approved", "preparing", "ready_to_serve", "served"] },
       paymentStatus: "unpaid",
     }).sort({ createdAt: -1 });
 
@@ -370,10 +552,6 @@ router.put("/:orderId/items/:itemId", async (req, res) => {
       });
     }
 
-    console.log("Order ID:", orderId);
-    console.log("Item ID:", itemId);
-    console.log(order.items);
-
     const item = order.items.id(itemId);
 
     if (!item) {
@@ -383,15 +561,21 @@ router.put("/:orderId/items/:itemId", async (req, res) => {
       });
     }
 
-    item.status = status;
+    item.status = normalizeItemStatus(status);
 
-    const allReady = order.items.every((i) =>
-      i._id.toString() === itemId
-        ? status === "Ready"
-        : i.status === "Ready"
-    );
+    const normalizedItemStatuses = order.items.map((entry) => normalizeItemStatus(entry.status));
+    const allServed = normalizedItemStatuses.every((entryStatus) => entryStatus === "Served");
+    const allReadyOrServed = normalizedItemStatuses.every((entryStatus) => entryStatus === "Ready" || entryStatus === "Served");
 
-    order.status = allReady ? "Ready" : "Preparing";
+    if (allServed) {
+      order.status = "served";
+    } else if (allReadyOrServed) {
+      order.status = "ready_to_serve";
+    } else if (normalizedItemStatuses.some((entryStatus) => entryStatus === "Preparing" || entryStatus === "Ready" || entryStatus === "Served")) {
+      order.status = "preparing";
+    } else {
+      order.status = normalizeOrderStatus(order.status) || "approved";
+    }
 
     await order.save();
 

@@ -15,7 +15,7 @@ import {
 import AdminSidebar from "@/components/AdminSidebar";
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState([]);
+  const [orders, setOrders] = useState<any[]>([]);
 
   const fetchOrders = async () => {
     try {
@@ -37,12 +37,32 @@ export default function OrdersPage() {
     return () => clearInterval(interval);
   }, []);
 
-  const approveOrder = async (id) => {
+  const approveOrder = async (id: string) => {
     try {
-      await axios.put(`http://localhost:8080/api/orders/approve/${id}`);
+      const { data } = await axios.put(`http://localhost:8080/api/orders/approve/${id}`);
+
+      if (!data.success && data.canceled) {
+        window.alert(data.message || "Order canceled due to missing stock.");
+      }
 
       fetchOrders();
-    } catch (error) {
+    } catch (error: any) {
+      window.alert(error?.response?.data?.message || "Unable to approve order.");
+      console.log(error);
+    }
+  };
+
+  const updateOrderStatus = async (id: string, status: string) => {
+    try {
+      const { data } = await axios.put(`http://localhost:8080/api/orders/${id}/status`, { status });
+
+      if (!data.success && data.canceled) {
+        window.alert(data.message || "Order canceled due to missing stock.");
+      }
+
+      fetchOrders();
+    } catch (error: any) {
+      window.alert(error?.response?.data?.message || "Unable to update order status.");
       console.log(error);
     }
   };
@@ -236,6 +256,30 @@ export default function OrdersPage() {
                           >
                             <CheckCircle size={18} />
                           </button>
+
+                          {/* <button
+                            onClick={() => updateOrderStatus(order._id, "preparing")}
+                            className="bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 p-2 rounded-lg transition-colors border border-indigo-500/30"
+                            title="Preparing"
+                          >
+                            🔥
+                          </button> */}
+{/* 
+                          <button
+                            onClick={() => updateOrderStatus(order._id, "ready_to_serve")}
+                            className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 p-2 rounded-lg transition-colors border border-emerald-500/30"
+                            title="Ready"
+                          >
+                            ✅
+                          </button>
+
+                          <button
+                            onClick={() => updateOrderStatus(order._id, "served")}
+                            className="bg-slate-500/20 hover:bg-slate-500/30 text-slate-300 p-2 rounded-lg transition-colors border border-slate-500/30"
+                            title="Served"
+                          >
+                            🍽️
+                          </button> */}
 
                           <button
                             onClick={() => rejectOrder(order._id)}

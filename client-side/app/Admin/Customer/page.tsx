@@ -5,15 +5,30 @@ import axios from "axios";
 import { Trash2, Phone, User, AlertCircle } from "lucide-react";
 import AdminSidebar from "@/components/AdminSidebar";
 
+type CustomerSummary = {
+  _id: string;
+  customerName: string;
+  phone: string;
+  totalOrders: number;
+  lastOrder: string;
+};
+
 export default function CustomersPage() {
-  const [customers, setCustomers] = useState([]);
+  const [customers, setCustomers] = useState<CustomerSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchCustomers = async () => {
     try {
       const res = await axios.get("http://localhost:8080/api/orders");
 
-      const uniqueCustomers = res.data.orders.reduce((acc, order) => {
+      const orders = res.data.orders as Array<{
+        _id: string;
+        customerName: string;
+        phone: string;
+        createdAt: string;
+      }>;
+
+      const uniqueCustomers = orders.reduce((acc: CustomerSummary[], order) => {
         const exists = acc.find((c) => c.phone === order.phone);
 
         if (!exists) {
@@ -57,10 +72,10 @@ export default function CustomersPage() {
     try {
       const res = await axios.get("http://localhost:8080/api/orders");
 
-      const customerOrders = res.data.orders.filter((o) => o.phone === phone);
+      const customerOrders = res.data.orders.filter((o: { phone: string }) => o.phone === phone);
 
       await Promise.all(
-        customerOrders.map((o) =>
+        customerOrders.map((o: { _id: string }) =>
           axios.delete(`http://localhost:8080/api/orders/${o._id}`),
         ),
       );

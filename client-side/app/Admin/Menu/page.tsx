@@ -8,12 +8,21 @@ import { Plus, Search } from "lucide-react";
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 
+type MenuItem = {
+  _id?: string;
+  title?: string;
+  price?: number;
+  category?: string;
+  description?: string;
+  image?: string;
+};
+
 export default function AdminMenuPage() {
-  const [menus, setMenus] = useState([]);
+  const [menus, setMenus] = useState<MenuItem[]>([]);
   const [search, setSearch] = useState("");
 
   const [showModal, setShowModal] = useState(false);
-  const [editId, setEditId] = useState(null);
+  const [editId, setEditId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("All");
 
   const [loading, setLoading] = useState(false);
@@ -31,8 +40,8 @@ export default function AdminMenuPage() {
     try {
       const { data } = await axios.get(`${API_BASE_URL}/api/menus`);
       setMenus(data.menus || []);
-    } catch (err) {
-      console.log("FETCH ERROR:", err.response?.data || err.message);
+    } catch (err: any) {
+      console.log("FETCH ERROR:", err?.response?.data || err?.message || err);
     }
   };
 
@@ -43,8 +52,8 @@ export default function AdminMenuPage() {
   const total = menus.length;
   const categories = useMemo(() => {
     const uniqueCategories = [
-      ...new Set(menus.map((item) => item.category).filter(Boolean)),
-    ];
+      ...new Set(menus.map((item) => item.category).filter(Boolean) as string[]),
+    ] as string[];
 
     return ["All", ...uniqueCategories];
   }, [menus]);
@@ -89,8 +98,8 @@ export default function AdminMenuPage() {
   };
 
   // ================= OPEN EDIT =================
-  const openEdit = (menu) => {
-    setEditId(menu._id);
+  const openEdit = (menu: MenuItem) => {
+    setEditId(menu._id || null);
 
     setForm({
       title: menu.title || "",
@@ -127,10 +136,10 @@ export default function AdminMenuPage() {
 
       setShowModal(false);
       fetchMenus();
-    } catch (err) {
-      console.log("SAVE ERROR:", err.response?.data || err.message);
+    } catch (err: any) {
+      console.log("SAVE ERROR:", err?.response?.data || err?.message || err);
       alert(
-        err.response?.data?.message ||
+        err?.response?.data?.message ||
           "Save failed! Check backend or API route.",
       );
     } finally {
@@ -139,14 +148,14 @@ export default function AdminMenuPage() {
   };
 
   // ================= DELETE =================
-  const deleteMenu = async (id) => {
+  const deleteMenu = async (id: string) => {
     if (!confirm("Delete this menu?")) return;
 
     try {
       await axios.delete(`${API_BASE_URL}/api/menus/${id}`);
       fetchMenus();
-    } catch (err) {
-      console.log("DELETE ERROR:", err.response?.data || err.message);
+    } catch (err: any) {
+      console.log("DELETE ERROR:", err?.response?.data || err?.message || err);
     }
   };
 
@@ -179,7 +188,7 @@ export default function AdminMenuPage() {
           {categories.map((cat) => (
             <button
               key={cat}
-              onClick={() => setSelectedCategory(cat)}
+              onClick={() => setSelectedCategory(cat || "All")}
               className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
                 selectedCategory === cat
                   ? "bg-amber-500 text-white shadow-lg"

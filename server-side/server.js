@@ -17,7 +17,7 @@ import supplierRoute from "./routes/supplier.js"
 import recipeRoutes from "./routes/recipe.js"
 import tableRoutes from "./routes/table.js"
 
-
+//dotenv config 
 dotenv.config();
 
 const app = express();
