@@ -160,45 +160,42 @@ router.post("/create", async (req, res) => {
     }).sort({ createdAt: -1 });
 
     if (existingOrder) {
-      if (String(existingOrder.phone || "").trim() && normalizedPhone && String(existingOrder.phone).trim() !== normalizedPhone) {
-        return res.status(409).json({
-          success: false,
-          message: "This table is already occupied by another customer. Please choose another table.",
-        });
-      }
+      // ===== MULTIPLE ORDER / GROUP ORDER IN SAME TABLE =====
 
-      existingOrder.items = [...existingOrder.items];
+      // नयाँ थपिएका items हरूलाई सधैं Pending status मा Push गर्ने (ताकि किचनले नयाँ अर्डर चिनोस्)
       items.forEach((newItem) => {
-        const existingItemIndex = existingOrder.items.findIndex(
-          (i) => String(i.menuId || i.title) === String(newItem.menuId || newItem.title)
-        );
-
-        if (existingItemIndex > -1) {
-          existingOrder.items[existingItemIndex].quantity = Number(existingOrder.items[existingItemIndex].quantity || 0) + Number(newItem.quantity || 1);
-        } else {
-          existingOrder.items.push({
-            ...newItem,
-            status: "Pending",
-            estimatedTime: Number(newItem.estimatedTime || 15),
-          });
-        }
+        existingOrder.items.push({
+          ...newItem,
+          status: "Pending", // नयाँ थपिएको item किचनको लागि 'Pending' हुनेछ
+          estimatedTime: Number(newItem.estimatedTime || 15),
+        });
       });
 
+      // Total रकम जोड्ने
       existingOrder.total = Number(existingOrder.total || 0) + Number(total || 0);
-      existingOrder.customerName = normalizedCustomerName || existingOrder.customerName;
-      existingOrder.phone = normalizedPhone || existingOrder.phone;
-      existingOrder.status = normalizeOrderStatus(existingOrder.status);
-      if (existingOrder.status === "served") {
+
+      // नाम/फोन छैन भने नयाँ ग्राहकको विवरणले अपडेट गर्ने (वा पुरानै राख्ने)
+      if (!existingOrder.phone && normalizedPhone) {
+        existingOrder.phone = normalizedPhone;
+      }
+      if ((existingOrder.customerName === "Guest" || !existingOrder.customerName) && normalizedCustomerName) {
+        existingOrder.customerName = normalizedCustomerName;
+      }
+
+      // यदि अर्डर 'served' वा 'ready_to_serve' भइसकेको थियो भने, नयाँ item आउँदा Status लाई 'approved' वा 'preparing' बनाउने
+      if (["served", "ready_to_serve"].includes(existingOrder.status)) {
         existingOrder.status = "approved";
       }
 
       await existingOrder.save();
+
+      // टेबल status occupied नै राख्ने
       selectedTable.status = "occupied";
       await selectedTable.save();
 
       return res.status(200).json({
         success: true,
-        message: "Items added to current table order",
+        message: "New items added to your table order successfully!",
         order: existingOrder,
       });
     }
@@ -217,7 +214,7 @@ router.post("/create", async (req, res) => {
         status: "Pending",
         estimatedTime: Number(item.estimatedTime || 15),
       })),
-      total,
+      total: Number(total || 0),
       status: "pending",
       paymentStatus: "unpaid",
       paymentMethod: "Unknown",
@@ -358,6 +355,7 @@ router.put("/payment/:id", async (req, res) => {
       {
         paymentStatus: "paid",
         paymentMethod,
+        status: "served",
       },
       { new: true }
     );
@@ -370,7 +368,9 @@ router.put("/payment/:id", async (req, res) => {
     }
 
     if (updatedOrder?.number) {
-      await Table.findOneAndUpdate({ tableNo: updatedOrder.number }, { status: "available" });
+      await Table.findOneAndUpdate(
+        { tableNo: updatedOrder.number }, 
+        { status: "available" });
     }
 
     res.status(200).json({
@@ -379,7 +379,6 @@ router.put("/payment/:id", async (req, res) => {
       order: updatedOrder,
     });
   } catch (error) {
-    console.log(error);
     res.status(500).json({
       success: false,
       message: "Server Error",

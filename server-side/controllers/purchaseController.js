@@ -120,7 +120,6 @@ export const addPurchase = async (req, res) => {
     try {
         const { purchaseNumber, supplier, items, subTotal, discount, grandTotal, paymentStatus, paymentMethod, paidAmount, dueAmount, note } = req.body;
         const resolvedSupplier = await resolveSupplier(supplier);
-
         if (!resolvedSupplier) {
             return res.status(400).json({
                 success: false,
@@ -164,7 +163,9 @@ export const addPurchase = async (req, res) => {
 // 4. UPDATE PURCHASE (Smart calculation to avoid stock imbalance)
 export const updatePurchase = async (req, res) => {
     try {
+
         const oldPurchase = await Purchase.findById(req.params.id);
+
         if (!oldPurchase) {
             return res.status(404).json({ success: false, message: "Purchase not found" });
         }

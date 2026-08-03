@@ -24,9 +24,10 @@ const StockSchema = new mongoose.Schema(
 
     unit: {
       type: String,
-      enum: ["kg", "grm", "ltr", "ml", "pcs", "pack"],
+      enum: [, "gm", "ml", "pcs", "pack"],
       required: true,
     },
+
 
     currentStock: {
       type: Number,
