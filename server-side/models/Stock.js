@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const StockSchema = new mongoose.Schema(
   {
@@ -7,7 +7,6 @@ const StockSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-
     sku: {
       type: String,
       unique: true,
@@ -15,57 +14,58 @@ const StockSchema = new mongoose.Schema(
       uppercase: true,
       trim: true,
     },
-
     category: {
       type: String,
       required: true,
       trim: true,
     },
-
-    unit: {
+    baseUnit: {
       type: String,
-      enum: [, "gm", "ml", "pcs", "pack"],
+      enum: ['gm', 'ml', 'pcs'],
       required: true,
+      default: 'pcs',
     },
-
-
+    purchaseUnit: {
+      type: String,
+      default: 'pcs',
+      trim: true,
+    },
+    displayUnit: {
+      type: String,
+      default: 'pcs',
+      trim: true,
+    },
     currentStock: {
       type: Number,
       default: 0,
       min: 0,
     },
-
     minimumStock: {
       type: Number,
       default: 0,
       min: 0,
     },
-
-    costPerUnit: {
+    costPerBaseUnit: {
       type: Number,
       required: true,
       min: 0,
     },
-
     sellingPrice: {
       type: Number,
       default: 0,
       min: 0,
     },
-
     expiryDate: {
       type: Date,
     },
-
     description: {
       type: String,
-      default: "",
+      default: '',
     },
-
     status: {
       type: String,
-      enum: ["active", "inactive"],
-      default: "active",
+      enum: ['active', 'inactive'],
+      default: 'active',
     },
   },
   {
@@ -73,6 +73,6 @@ const StockSchema = new mongoose.Schema(
   }
 );
 
-const Stock = mongoose.models.Stock || mongoose.model("Stock", StockSchema);
+const Stock = mongoose.models.Stock || mongoose.model('Stock', StockSchema);
 
 export default Stock;

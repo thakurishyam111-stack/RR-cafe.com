@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Purchase from "../models/Purchase.js";
 import Stock from "../models/Stock.js";
 import Supplier from "../models/supplier.js";
+import { convertToBaseUnit } from "../utils/inventoryUnitUtils.js";
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -39,6 +40,7 @@ const syncStockFromPurchaseItem = async (item) => {
     const quantity = Number(item.quantity || 0);
     const purchasePrice = Number(item.purchasePrice || 0);
     const unit = item.unit || "pcs";
+    const baseQuantity = convertToBaseUnit(quantity, unit);
 
     let stockItem = await Stock.findOne({
         name: { $regex: new RegExp(`^${escapeRegex(itemName)}$`, "i") },
@@ -51,17 +53,20 @@ const syncStockFromPurchaseItem = async (item) => {
             name: itemName,
             sku: randomSku,
             category: "General",
-            unit,
-            currentStock: quantity,
+            baseUnit: unit === "kg" || unit === "gm" ? "gm" : unit === "ltr" || unit === "ml" ? "ml" : "pcs",
+            purchaseUnit: unit,
+            displayUnit: unit,
+            currentStock: baseQuantity,
             minimumStock: 5,
-            costPerUnit: purchasePrice,
+            costPerBaseUnit: purchasePrice,
             sellingPrice: purchasePrice * 1.2,
             status: "active",
         });
     } else {
-        stockItem.currentStock = Math.max(0, Number(stockItem.currentStock || 0) + quantity);
-        stockItem.unit = unit;
-        stockItem.costPerUnit = purchasePrice || stockItem.costPerUnit || 0;
+        stockItem.currentStock = Math.max(0, Number(stockItem.currentStock || 0) + baseQuantity);
+        stockItem.purchaseUnit = unit;
+        stockItem.displayUnit = unit;
+        stockItem.costPerBaseUnit = purchasePrice || stockItem.costPerBaseUnit || 0;
         stockItem.sellingPrice = stockItem.sellingPrice || purchasePrice * 1.2;
         await stockItem.save();
     }
@@ -116,9 +121,23 @@ export const singlePurchae = async (req, res) => {
 };
 
 // 3. ADD PURCHASE (With smart stock creation or adjustment)
+
 export const addPurchase = async (req, res) => {
     try {
-        const { purchaseNumber, supplier, items, subTotal, discount, grandTotal, paymentStatus, paymentMethod, paidAmount, dueAmount, note } = req.body;
+        const {
+            supplier,
+            items = [],
+            purchaseNumber,
+            subTotal = 0,
+            discount = 0,
+            grandTotal = 0,
+            paymentStatus = "Paid",
+            paymentMethod = "Cash",
+            paidAmount = 0,
+            dueAmount = 0,
+            note = "",
+        } = req.body;
+
         const resolvedSupplier = await resolveSupplier(supplier);
         if (!resolvedSupplier) {
             return res.status(400).json({
@@ -163,7 +182,6 @@ export const addPurchase = async (req, res) => {
 // 4. UPDATE PURCHASE (Smart calculation to avoid stock imbalance)
 export const updatePurchase = async (req, res) => {
     try {
-
         const oldPurchase = await Purchase.findById(req.params.id);
 
         if (!oldPurchase) {
@@ -178,7 +196,21 @@ export const updatePurchase = async (req, res) => {
             }
         }
 
-        const resolvedSupplier = await resolveSupplier(req.body.supplier);
+        const {
+            supplier,
+            items = [],
+            purchaseNumber = oldPurchase.purchaseNumber,
+            subTotal = 0,
+            discount = 0,
+            grandTotal = 0,
+            paymentStatus = oldPurchase.paymentStatus,
+            paymentMethod = oldPurchase.paymentMethod,
+            paidAmount = 0,
+            dueAmount = 0,
+            note = oldPurchase.note || "",
+        } = req.body;
+
+        const resolvedSupplier = await resolveSupplier(supplier);
         if (!resolvedSupplier) {
             return res.status(400).json({
                 success: false,
@@ -187,20 +219,24 @@ export const updatePurchase = async (req, res) => {
         }
 
         const processedItems = [];
-        for (const item of req.body.items || []) {
+        for (const item of items || []) {
             const processedItem = await syncStockFromPurchaseItem(item);
             processedItems.push(processedItem);
         }
 
         const updatedBody = {
             ...req.body,
+            purchaseNumber,
             supplier: resolvedSupplier,
             items: processedItems,
-            subTotal: Number(req.body.subTotal || 0),
-            discount: Number(req.body.discount || 0),
-            grandTotal: Number(req.body.grandTotal || 0),
-            paidAmount: Number(req.body.paidAmount || 0),
-            dueAmount: Number(req.body.dueAmount || 0),
+            subTotal: Number(subTotal || 0),
+            discount: Number(discount || 0),
+            grandTotal: Number(grandTotal || 0),
+            paymentStatus,
+            paymentMethod,
+            paidAmount: Number(paidAmount || 0),
+            dueAmount: Number(dueAmount || 0),
+            note,
         };
         const purchaseitems = await Purchase.findByIdAndUpdate(
             req.params.id,

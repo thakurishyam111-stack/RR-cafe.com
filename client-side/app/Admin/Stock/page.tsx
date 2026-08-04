@@ -163,7 +163,10 @@ const {
                   </tr>
                 ) : (
                   filteredStocks.map((item) => {
-                    const isLowStock = item.currentStock <= item.minimumStock;
+                    const displayStock = Number(item.displayStock ?? item.currentStock ?? 0);
+                    const displayUnit = item.displayUnit || item.purchaseUnit || item.baseUnit || item.unit || 'pcs';
+                    const unitCost = Number(item.costPerBaseUnit ?? item.costPerUnit ?? 0);
+                    const isLowStock = Number(item.currentStock ?? 0) <= Number(item.minimumStock ?? 0);
                     
                     return (
                       <tr key={item._id} className="hover:bg-slate-700/40 transition">
@@ -179,14 +182,14 @@ const {
                           <div className="flex flex-col">
                             <div className="flex items-center gap-1.5">
                               <span className={`font-bold text-base ${isLowStock ? 'text-amber-400 animate-pulse' : 'text-white'}`}>
-                                {item.currentStock}
+                                {displayStock}
                               </span>
-                              <span className="text-xs text-slate-500 font-medium uppercase">{item.unit}</span>
+                              <span className="text-xs text-slate-500 font-medium uppercase">{displayUnit}</span>
                             </div>
                             <span className="text-[10px] text-slate-400">Min threshold: {item.minimumStock}</span>
                           </div>
                         </td>
-                        <td className="py-4 px-6 font-medium text-slate-300">Rs. {item.costPerUnit.toLocaleString()}</td>
+                        <td className="py-4 px-6 font-medium text-slate-300">Rs. {unitCost.toLocaleString()}</td>
                         <td className="py-4 px-6 font-semibold text-emerald-400">Rs. {item.sellingPrice.toLocaleString()}</td>
                         <td className="py-4 px-6">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize ${

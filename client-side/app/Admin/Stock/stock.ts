@@ -1,7 +1,15 @@
 "use client"
 import { useEffect, useState } from "react";
 
- 
+const normalizeUnit = (value: string = 'pcs') => String(value || 'pcs').trim().toLowerCase();
+
+const normalizeUnitToBase = (value: string = 'pcs') => {
+  const unit = normalizeUnit(value);
+  if (unit === 'grm' || unit === 'gm') return 'gm';
+  if (unit === 'ltr' || unit === 'liter' || unit === 'litre' || unit === 'l' || unit === 'ml') return 'ml';
+  return 'pcs';
+};
+
 const initialFormState = {
   name: '',
   sku: '',
@@ -11,19 +19,28 @@ const initialFormState = {
   costPerUnit: 0,
   sellingPrice: 0,
   unit: 'pcs',
+  baseUnit: 'pcs',
+  purchaseUnit: 'pcs',
+  displayUnit: 'pcs',
   status: 'active',
   description: ''
 };
+
 export interface IStock {
   _id: string;
   name: string;
   sku: string;
   category: string;
-  unit: 'kg' | 'grm' | 'ltr' | 'ml' | 'pcs' | 'pack';
+  unit?: 'kg' | 'grm' | 'ltr' | 'ml' | 'pcs' | 'pack' | string;
+  baseUnit?: string;
+  purchaseUnit?: string;
+  displayUnit?: string;
   currentStock: number;
   minimumStock: number;
-  costPerUnit: number;
+  costPerUnit?: number;
+  costPerBaseUnit?: number;
   sellingPrice: number;
+  displayStock?: number;
   expiryDate?: string | Date;
   description?: string;
   status: 'active' | 'inactive';
@@ -69,7 +86,8 @@ export default function useStock(){
           if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
           
           const data = await response.json();
-          const cleanData: IStock[] = Array.isArray(data) ? data : (data.stocks || data.data || []);
+          const safeData = Array.isArray(data) ? data : (data?.stocks || data?.data || []);
+          const cleanData: IStock[] = Array.isArray(safeData) ? safeData : [];
           setStocks(cleanData);
           updateSummaryCards(cleanData);
         } catch (err) {
@@ -86,8 +104,8 @@ export default function useStock(){
     
       // Summary Update गर्ने common function
       const updateSummaryCards = (data: IStock[]) => {
-        const lowStockItems = data.filter(item => item.currentStock <= item.minimumStock);
-        const totalStockValue = data.reduce((acc, item) => acc + (item.currentStock * item.costPerUnit), 0);
+        const lowStockItems = data.filter(item => Number(item.currentStock || 0) <= Number(item.minimumStock || 0));
+        const totalStockValue = data.reduce((acc, item) => acc + (Number(item.currentStock || 0) * Number(item.costPerBaseUnit ?? item.costPerUnit ?? 0)), 0);
         const uniqueCats = new Set(data.map(item => item.category)).size;
     
         setSummary({
@@ -111,11 +129,14 @@ export default function useStock(){
           name: item.name,
           sku: item.sku,
           category: item.category,
-          currentStock: item.currentStock,
-          minimumStock: item.minimumStock,
-          costPerUnit: item.costPerUnit,
-          sellingPrice: item.sellingPrice,
-          unit: item.unit || 'pcs' ,
+          currentStock: Number(item.displayStock ?? item.currentStock ?? 0),
+          minimumStock: Number(item.minimumStock || 0),
+          costPerUnit: Number(item.costPerBaseUnit ?? item.costPerUnit ?? 0),
+          sellingPrice: Number(item.sellingPrice || 0),
+          unit: normalizeUnit(item.displayUnit || item.purchaseUnit || item.baseUnit || item.unit || 'pcs'),
+          baseUnit: normalizeUnitToBase(item.baseUnit || item.unit || 'pcs'),
+          purchaseUnit: normalizeUnit(item.purchaseUnit || item.unit || 'pcs'),
+          displayUnit: normalizeUnit(item.displayUnit || item.purchaseUnit || item.baseUnit || item.unit || 'pcs'),
           status: item.status,
           description: item.description || ''
         });
@@ -143,12 +164,16 @@ export default function useStock(){
           const method = editingItem ? 'PUT' : 'POST';
     
           // ⚠️ Senior Tip: पठाउनु अघि डेटा Format मिलेको छ कि छैन पक्का गर्ने
+          const unit = normalizeUnit(formData.unit);
           const payload = {
             ...formData,
             currentStock: Number(formData.currentStock),
             minimumStock: Number(formData.minimumStock),
-            costPerUnit: Number(formData.costPerUnit),
+            costPerBaseUnit: Number(formData.costPerUnit),
             sellingPrice: Number(formData.sellingPrice),
+            baseUnit: normalizeUnitToBase(unit),
+            purchaseUnit: unit,
+            displayUnit: unit,
           };
     
           const response = await fetch(url, {

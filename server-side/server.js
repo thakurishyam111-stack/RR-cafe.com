@@ -16,6 +16,7 @@ import purchaseRoutes from "./routes/purchase.js"
 import supplierRoute from "./routes/supplier.js"
 import recipeRoutes from "./routes/recipe.js"
 import tableRoutes from "./routes/table.js"
+import inventoryRoutes from "./routes/inventory.js"
 
 //dotenv config 
 dotenv.config();
@@ -45,6 +46,7 @@ app.use("/api/purchase", purchaseRoutes);
 app.use("/api/supplier", supplierRoute);
 app.use("/api/recipes", recipeRoutes);
 app.use("/api/table", tableRoutes);
+app.use("/api/inventory", inventoryRoutes);
 
 app.get("/", (req, res) => {
   res.send("Server Running");

@@ -16,6 +16,7 @@ const purchaseItemSchema = new mongoose.Schema(
 
         unit: {
             type: String,
+            enum:['kg','gm','ltr','ml','pcs'],
             required: true,
         },
 
