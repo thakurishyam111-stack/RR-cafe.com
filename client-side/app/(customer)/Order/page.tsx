@@ -5,8 +5,9 @@ import axios from "axios";
 // import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
+const API_BASE_URL = (
+  process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080"
+).replace(/\/$/, "");
 
 type MenuItem = {
   _id?: string | number;
@@ -35,15 +36,21 @@ export default function OrderPage() {
   const [phone, setPhone] = useState("");
   const [number, setNumber] = useState("");
   const [billNo, setBillNo] = useState("");
-  const [table, setTable] = useState<TableItem[]>([]);
-  const [selectedTable, setSelectedTable] = useState("");
+  const [table, setTable] = useState<TableItem | null>(null);
+  const qrToken = typeof window === "undefined"
+    ? ""
+    : new URLSearchParams(window.location.search).get("qrToken") || window.localStorage.getItem("tableQrToken") || "";
+  const [tableVerified, setTableVerified] = useState(false);
+  const [tableMessage, setTableMessage] = useState<string | null>(
+    qrToken ? null : "Please scan the table QR code to confirm your table before ordering."
+  );
+  const [showTableSuccess, setShowTableSuccess] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [submitted, setSubmitted] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [statusLookupBillNo, setStatusLookupBillNo] = useState("");
-  const [statusLookupLoading, setStatusLookupLoading] = useState(false);
+
 
   // Fetch Menu
   useEffect(() => {
@@ -68,23 +75,44 @@ export default function OrderPage() {
       }
     };
 
-    fetchMenus();
+    const token = qrToken;
 
-    getAvailableTable();
-  }, []);
-
-  const getAvailableTable = async () => {
-    try {
-      const res = await axios.get(`${API_BASE_URL}/api/table`);
-
-      if (res.data.success) {
-        const tables = Array.isArray(res.data.table) ? res.data.table : [];
-        setTable(tables);
-      }
-    } catch (error) {
-      console.log(error);
+    if (token && typeof window !== "undefined") {
+      window.localStorage.setItem("tableQrToken", token);
     }
-  };
+
+    fetchMenus();
+  }, [qrToken]);
+
+  useEffect(() => {
+    if (!qrToken) return;
+
+    const verify = async () => {
+      try {
+        const { data } = await axios.get(`${API_BASE_URL}/api/orders/qr/${encodeURIComponent(qrToken)}/active`);
+
+        if (data?.success && data.table) {
+          setTable({
+            _id: data.table.id,
+            tableNo: data.table.tableNo,
+            status: data.table.status,
+          });
+          setTableVerified(true);
+          setTableMessage(`Table ${data.table.tableNo} verified successfully.`);
+          setShowTableSuccess(true);
+        } else {
+          setTableVerified(false);
+          setTableMessage(data?.message || "Invalid or expired table QR code.");
+        }
+      } catch (error: unknown) {
+        console.error(error);
+        setTableVerified(false);
+        setTableMessage("Unable to verify table QR code. Please try again.");
+      }
+    };
+
+    verify();
+  }, [qrToken]);
 
   // Categories
   const categories = useMemo(() => {
@@ -130,19 +158,18 @@ export default function OrderPage() {
     );
   };
 
-  // Clear Cart
- const clearCart = () => {
-  setCart((prev: MenuItem[]) =>
-    prev.map((item: MenuItem) => ({
-      ...item,
-      quantity: 0,
-    }))
-  );
+    // Clear Cart
+  const clearCart = () => {
+    setCart((prev: MenuItem[]) =>
+      prev.map((item: MenuItem) => ({
+        ...item,
+        quantity: 0,
+      }))
+    );
 
-  setName("");
-  setPhone("");
-  setSelectedTable("");
-};
+    setName("");
+    setPhone("");
+  };
 
   // Total
   const total = useMemo(() => {
@@ -163,8 +190,8 @@ export default function OrderPage() {
       return;
     }
 
-    if (!selectedTable) {
-      setMessage("Please select a table before placing the order.");
+    if (!qrToken || !tableVerified || !table) {
+      setMessage("Please confirm your table QR code before placing the order.");
       return;
     }
 
@@ -179,51 +206,44 @@ export default function OrderPage() {
     setMessage(null);
 
     try {
-      const { data } = await axios.post(`${API_BASE_URL}/api/orders/create`, {
+      const payload: {
+        customerName: string;
+        phone: string;
+        items: MenuItem[];
+        total: number;
+        qrToken?: string;
+      } = {
         customerName: name,
         phone: phone,
-        table: selectedTable,
         items: selectedItems,
         total: total,
-      });
+      };
+
+      if (qrToken) {
+        payload.qrToken = qrToken;
+      }
+
+      const { data } = await axios.post(`${API_BASE_URL}/api/orders/create`, payload);
 
       if (data.success) {
         setSubmitted(true);
         setBillNo(data.order.billNo);
         setNumber(data.order.number);
         setMessage(data.message || "Order placed successfully.");
-        setSelectedTable("");
       } else {
         setMessage(data.message || "Unable to place the order.");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.log("ORDER ERROR:", error);
-      const serverMessage = error?.response?.data?.message || error?.response?.data?.error || "Order failed. Please try again.";
+      const serverMessage = axios.isAxiosError(error)
+        ? error.response?.data?.message || error.response?.data?.error || "Order failed. Please try again."
+        : "Order failed. Please try again.";
       setMessage(serverMessage);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleStatusLookup = async (e?: React.FormEvent<HTMLFormElement>) => {
-    e?.preventDefault();
-
-    if (!statusLookupBillNo.trim()) {
-      setMessage("Please enter a bill number to check your order status.");
-      return;
-    }
-
-    try {
-      setStatusLookupLoading(true);
-      const { data } = await axios.get(`${API_BASE_URL}/api/orders/billNo/${encodeURIComponent(statusLookupBillNo.trim())}`);
-      setMessage(data.message || "Order status fetched successfully.");
-    } catch (error: any) {
-      const serverMessage = error?.response?.data?.message || "Unable to find that bill number.";
-      setMessage(serverMessage);
-    } finally {
-      setStatusLookupLoading(false);
-    }
-  };
 
   // Loading
   if (loading) {
@@ -266,7 +286,7 @@ export default function OrderPage() {
         {/* Main Grid */}
         <div className="grid lg:grid-cols-[1.5fr_0.7fr] gap-8">
           {/* LEFT */}
-          <div>
+          <div className="max-h-[78vh] overflow-y-auto pr-2">
             <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredItems.map((item) => (
                 <div
@@ -365,7 +385,7 @@ export default function OrderPage() {
             </div>
 
             {/* Items */}
-            <div className="mt-6 space-y-4 max-h-[400px] overflow-y-auto pr-1">
+            <div className="mt-6 space-y-4 overflow-y-auto pr-1 max-h-[55vh]">
               {cart.filter((item) => (item.quantity ?? 0) > 0).length > 0 ? (
                 cart
                   .filter((item) => (item.quantity ?? 0) > 0)
@@ -488,24 +508,21 @@ export default function OrderPage() {
                 required
                 className="w-full rounded-2xl bg-white text-black px-4 py-3 outline-none"
               />
-              <select
-                value={selectedTable}
-                onChange={(e) => setSelectedTable(e.target.value)}
-                className="w-full rounded-2xl bg-white text-black px-4 py-3 outline-none"
-              >
-                <option value="" className="text-gray-900">Select Table No</option>
 
-                {table.map((tableItem) => (
-                  <option
-                    key={tableItem._id}
-                    value={tableItem._id}
-                    className="text-gray-800"
-                    disabled={tableItem.status !== "available"}
-                  >
-                    Table No.{tableItem.tableNo} {tableItem.status === "available" ? "(Available)" : "(Occupied)"}
-                  </option>
-                ))}
-              </select>
+              <div className="rounded-2xl border border-white/20 bg-white/90 p-4 text-black">
+                <p className="font-semibold">Table Confirmation</p>
+                <p className="text-sm mt-2">
+                  {tableVerified && table
+                    ? `Table ${table.tableNo} confirmed via QR code.`
+                    : tableMessage || "Please scan your table QR code first."}
+                </p>
+                {showTableSuccess && table && (
+                  <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-emerald-500/15 px-3 py-2 text-emerald-900 text-sm font-semibold">
+                    ✅ Table {table.tableNo} verified
+                  </div>
+                )}
+              </div>
+
               <button
                 type="submit"
                 disabled={isSubmitting}

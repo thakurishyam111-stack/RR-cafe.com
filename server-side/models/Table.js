@@ -8,6 +8,14 @@ const tableSchema = new mongoose.Schema(
             required: true,
             unique: true,
         },
+
+        qrToken: {
+            type: String,
+            required: true,
+            unique: true,
+            index: true,
+        },
+
         status: {
             type: String,
             required: true,

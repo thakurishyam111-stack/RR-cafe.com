@@ -23,7 +23,13 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin:"*"
+}));
+
+// const limit = ratelimit({
+  
+// })
 app.use(express.json());
 
 // Database Connect

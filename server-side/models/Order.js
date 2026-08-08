@@ -2,6 +2,11 @@ import mongoose from "mongoose";
 
 const orderSchema = new mongoose.Schema(
   {
+    table: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Table",
+      required: true,
+    },
     billNo: {
       type: String,
       unique: true,

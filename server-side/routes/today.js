@@ -11,7 +11,6 @@ const router = express.Router();
 
 router.get("/", getToday);
 router.get("/:id", getsingleToday);
-
 router.post("/add", createToday);
 router.put("/:id", updateToday);
 router.delete("/:id", deletToday);

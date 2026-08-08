@@ -132,105 +132,139 @@ const validateAndReduceStockForApprovedOrder = async (order) => {
 // Create or Update Order (Append items if active order exists)
 router.post("/create", async (req, res) => {
   try {
-    const { customerName, phone, table, items, total } = req.body;
+    const { customerName, phone, table, qrToken, items } = req.body;
 
-    if (!table || !items?.length) {
-      return res.status(400).json({
-        success: false,
-        message: "Table and items are required",
-      });
+    if (!items?.length) {
+      return res.status(400).json({ success: false, message: "Please select at least one item" });
     }
 
-    const selectedTable = await Table.findById(table);
+    // Resolve table from qrToken (preferred) or table id (backwards compat)
+    let selectedTable = null;
+    if (qrToken) {
+      selectedTable = await Table.findOne({ qrToken });
+    } else if (table) {
+      selectedTable = await Table.findById(table);
+    }
+
     if (!selectedTable) {
-      return res.status(404).json({
-        success: false,
-        message: "Table not found",
-      });
+      return res.status(404).json({ success: false, message: "Table not found" });
+    }
+
+    // Respect table availability rules
+    if (["reserved", "cleaning"].includes(selectedTable.status)) {
+      return res.status(400).json({ success: false, message: "This table is currently unavailable" });
     }
 
     const normalizedPhone = String(phone || "").trim();
     const normalizedCustomerName = String(customerName || "Guest").trim();
 
-    // 1. Check if an active unpaid order exists for this table
-    let existingOrder = await Order.findOne({
-      number: selectedTable.tableNo,
-      paymentStatus: "unpaid",
-      status: { $ne: "rejected" },
-    }).sort({ createdAt: -1 });
+    // Build canonical items and compute authoritative total (use menu price when possible)
+    const builtItems = [];
+    let computedTotal = 0;
 
-    if (existingOrder) {
-      // ===== MULTIPLE ORDER / GROUP ORDER IN SAME TABLE =====
+    for (const it of items) {
+      const qty = Math.max(0, Number(it.quantity || 1));
+      if (qty <= 0) continue;
 
-      // नयाँ थपिएका items हरूलाई सधैं Pending status मा Push गर्ने (ताकि किचनले नयाँ अर्डर चिनोस्)
-      items.forEach((newItem) => {
-        existingOrder.items.push({
-          ...newItem,
-          status: "Pending", // नयाँ थपिएको item किचनको लागि 'Pending' हुनेछ
-          estimatedTime: Number(newItem.estimatedTime || 15),
-        });
-      });
+      let price = Number(it.price || 0);
+      let title = it.title || "";
 
-      // Total रकम जोड्ने
-      existingOrder.total = Number(existingOrder.total || 0) + Number(total || 0);
-
-      // नाम/फोन छैन भने नयाँ ग्राहकको विवरणले अपडेट गर्ने (वा पुरानै राख्ने)
-      if (!existingOrder.phone && normalizedPhone) {
-        existingOrder.phone = normalizedPhone;
-      }
-      if ((existingOrder.customerName === "Guest" || !existingOrder.customerName) && normalizedCustomerName) {
-        existingOrder.customerName = normalizedCustomerName;
+      if (it.menuId) {
+        const menu = await (await import("../models/menu.js")).default.findById(it.menuId);
+        if (menu) {
+          price = Number(menu.price || price || 0);
+          title = menu.title || title;
+        }
       }
 
-      // यदि अर्डर 'served' वा 'ready_to_serve' भइसकेको थियो भने, नयाँ item आउँदा Status लाई 'approved' वा 'preparing' बनाउने
-      if (["served", "ready_to_serve"].includes(existingOrder.status)) {
-        existingOrder.status = "approved";
-      }
+      const itemTotal = price * qty;
+      computedTotal += itemTotal;
 
-      await existingOrder.save();
-
-      // टेबल status occupied नै राख्ने
-      selectedTable.status = "occupied";
-      await selectedTable.save();
-
-      return res.status(200).json({
-        success: true,
-        message: "New items added to your table order successfully!",
-        order: existingOrder,
+      builtItems.push({
+        menuId: it.menuId,
+        title,
+        price,
+        quantity: qty,
+        image: it.image || "",
+        category: it.category || "",
+        status: "Pending",
+        estimatedTime: Number(it.estimatedTime || 15),
       });
     }
 
-    // 2. If NO active order exists, create a fresh order
-    selectedTable.status = "occupied";
-    await selectedTable.save();
+    if (!builtItems.length) {
+      return res.status(400).json({ success: false, message: "Please select at least one valid item" });
+    }
 
-    const newOrder = await Order.create({
-      billNo: generateBillNo(),
-      customerName: normalizedCustomerName || "Guest",
-      phone: normalizedPhone || "",
-      number: selectedTable.tableNo,
-      items: items.map((item) => ({
-        ...item,
-        status: "Pending",
-        estimatedTime: Number(item.estimatedTime || 15),
-      })),
-      total: Number(total || 0),
-      status: "pending",
-      paymentStatus: "unpaid",
-      paymentMethod: "Unknown",
-    });
+    // Atomic upsert: append to existing unpaid order or create a new one if none exists
+    const filter = { number: selectedTable.tableNo, paymentStatus: "unpaid", status: { $ne: "rejected" } };
+    const update = {
+      $push: { items: { $each: builtItems } },
+      $inc: { total: computedTotal },
+      $setOnInsert: {
+        billNo: generateBillNo(),
+        customerName: normalizedCustomerName || "Guest",
+        phone: normalizedPhone || "",
+        number: selectedTable.tableNo,
+        table: selectedTable._id,
+        status: "pending",
+        paymentStatus: "unpaid",
+        paymentMethod: "Unknown",
+      },
+    };
 
-    return res.status(201).json({
+    const options = { new: true, upsert: true, rawResult: true };
+
+    const result = await Order.findOneAndUpdate(filter, update, options);
+    const orderDoc = result.value;
+    const createdNew = result.lastErrorObject && !result.lastErrorObject.updatedExisting;
+
+    // If existing order was returned, optionally update missing customer info
+    if (!createdNew) {
+      const updates = {};
+      if ((!orderDoc.phone || orderDoc.phone === "") && normalizedPhone) updates.phone = normalizedPhone;
+      if ((!orderDoc.customerName || orderDoc.customerName === "Guest") && normalizedCustomerName) updates.customerName = normalizedCustomerName;
+      if (Object.keys(updates).length) {
+        await Order.findByIdAndUpdate(orderDoc._id, { $set: updates }, { new: true });
+      }
+    }
+
+    // Ensure table is marked occupied
+    if (selectedTable.status !== "occupied") {
+      selectedTable.status = "occupied";
+      await selectedTable.save();
+    }
+
+    return res.status(createdNew ? 201 : 200).json({ success: true, message: createdNew ? "Order placed successfully" : "New items added to your table order successfully!", order: orderDoc });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+});
+
+// Get active unpaid order for a table by qrToken
+router.get("/qr/:qrToken/active", async (req, res) => {
+  try {
+    const { qrToken } = req.params;
+    const table = await Table.findOne({ qrToken });
+    if (!table) {
+      return res.status(404).json({ success: false, message: "Invalid table QR code" });
+    }
+
+    const activeOrder = await Order.findOne({ number: table.tableNo, paymentStatus: "unpaid", status: { $ne: "rejected" } }).sort({ createdAt: -1 });
+
+    res.status(200).json({
       success: true,
-      message: "Order placed successfully",
-      order: newOrder,
+      table: {
+        id: table._id,
+        tableNo: table.tableNo,
+        status: table.status,
+      },
+      activeOrder: activeOrder || null,
     });
   } catch (error) {
     console.log(error);
-    res.status(500).json({
-      success: false,
-      message: "Server Error",
-    });
+    res.status(500).json({ success: false, message: "Server Error" });
   }
 });
 
