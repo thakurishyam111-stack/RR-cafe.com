@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { apiFetch } from "@/lib/api";
 import TableQRCode from "../../(customer)/Qr/qr";
 
 type TableItem = {
@@ -19,8 +20,7 @@ export default function AdminTablesPage() {
     const fetchTables = async () => {
       try {
         setLoading(true);
-        const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080").replace(/\/$/, "");
-        const res = await fetch(`${API_URL}/api/table`);
+        const res = await apiFetch("/api/table");
         const data = await res.json();
         if (!res.ok) {
           setError(data?.message || "Failed to load tables");

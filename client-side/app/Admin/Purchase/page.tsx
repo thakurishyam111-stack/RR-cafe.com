@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import { apiFetch } from "@/lib/api";
 import { Purchase, PurchaseItem } from "../Purchase/purchase";
 import AdminSidebar from "@/components/AdminSidebar";
 
@@ -18,9 +19,6 @@ interface SupplierOption {
   name?: string;
 }
 
-const PURCHASE_API_URL = "http://localhost:8080/api/purchase";
-const STOCK_API_URL = "http://localhost:8080/api/stocks";
-const SUPPLIER_API_URL = "http://localhost:8080/api/supplier";
 
 export default function PurchasePage() {
   const [purchases, setPurchases] = useState<Purchase[]>([]);
@@ -52,13 +50,13 @@ export default function PurchasePage() {
     try {
       setLoading(true);
 
-      const purchaseRes = await fetch(PURCHASE_API_URL);
+      const purchaseRes = await apiFetch("/api/purchase");
       const purchaseData = await purchaseRes.json();
       if (purchaseData.success) {
         setPurchases(purchaseData.purchase || purchaseData.data || []);
       }
 
-      const supplierRes = await fetch(SUPPLIER_API_URL);
+      const supplierRes = await apiFetch("/api/supplier");
       const supplierData = await supplierRes.json();
       if (supplierData.success) {
         setSuppliers(supplierData.suppliers || supplierData.data || []);
@@ -66,7 +64,7 @@ export default function PurchasePage() {
         setSuppliers(supplierData);
       }
 
-      const stockRes = await fetch(STOCK_API_URL);
+      const stockRes = await apiFetch("/api/stocks");
       const stockData = await stockRes.json();
       if (stockData.success) {
         setStocks(stockData.data || stockData.stocks || []);
@@ -169,12 +167,13 @@ export default function PurchasePage() {
         dueAmount: calculatedTotals.dueAmount,
       };
 
+      const baseUrl = "/api/purchase";
       const url = editingPurchase
-        ? `${PURCHASE_API_URL}/${editingPurchase._id}`
-        : `${PURCHASE_API_URL}/add`;
+        ? `${baseUrl}/${editingPurchase._id}`
+        : `${baseUrl}/add`;
       const method = editingPurchase ? "PUT" : "POST";
 
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -182,16 +181,17 @@ export default function PurchasePage() {
 
       const data = await res.json();
       if (data.success) {
-        alert(data.message);
+        alert(data.message || "Purchase saved successfully.");
         setIsModalOpen(false);
         setEditingPurchase(null);
         resetForm();
         fetchData(); // टेबल र स्टक परिमाण दुवै रिफ्रेस गर्नका लागि
       } else {
-        alert(data.message);
+        alert(data.message || "Unable to save purchase.");
       }
     } catch (error) {
       console.error("Error saving purchase:", error);
+      alert("Unable to save purchase. Please check the console for details.");
     }
   };
 
@@ -199,7 +199,7 @@ export default function PurchasePage() {
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this purchase?")) {
       try {
-        const res = await fetch(`${PURCHASE_API_URL}/${id}`, {
+        const res = await apiFetch(`/api/purchase/${id}`, {
           method: "DELETE",
         });
         const data = await res.json();

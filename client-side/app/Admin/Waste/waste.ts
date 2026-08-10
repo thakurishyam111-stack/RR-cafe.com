@@ -1,15 +1,12 @@
 "use client"
 import { useEffect, useState } from "react";
-
- 
+import { apiFetch } from "@/lib/api";
 
 export default function useWaste(){
-
-
- const [wasteData, setWasteData] = useState([]);
-const [activeTab, setActiveTab] = useState("view");
-const [searchQuery, setSearchQuery] = useState("");
-const [formData, setFormData] = useState({
+  const [wasteData, setWasteData] = useState([]);
+  const [activeTab, setActiveTab] = useState("view");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [formData, setFormData] = useState({
     stock: "",
     wasteName: "",
     unit: "",
@@ -18,21 +15,20 @@ const [formData, setFormData] = useState({
     cost: "",
     note: "",
   });
-const [isLoading, setIsLoading] = useState(true);
-const [error, setError] = useState<string | null>(null);
-const [isEditMode, setIsEditMode] = useState(false);
-const [activeRecordId, setActiveRecordId] = useState(null);
-const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
- 
- 
- const API_BASE_URL = 'http://localhost:8080/api/waste';
- const STOCK_API_BASE_URL = 'http://localhost:8080/api/stocks';
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [activeRecordId, setActiveRecordId] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+const API_BASE_URL = "/api/waste";
+const STOCK_API_BASE_URL = "/api/stocks";
 
  const fetchWastes = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(API_BASE_URL);
+      const response = await apiFetch(API_BASE_URL);
       if (!response.ok) throw new Error('Database server integration failed.');
       const data = await response.json();
       
@@ -73,7 +69,7 @@ fetchWastes();
         throw new Error('Waste cost must be a valid number.');
       }
 
-      const stockListResponse = await fetch(STOCK_API_BASE_URL);
+      const stockListResponse = await apiFetch(STOCK_API_BASE_URL);
       const stockListData = await stockListResponse.json();
 
       if (!stockListResponse.ok || !stockListData?.success) {
@@ -98,7 +94,7 @@ fetchWastes();
       }
 
       const updatedStock = currentStock - wasteQuantity;
-      const stockUpdateResponse = await fetch(`${STOCK_API_BASE_URL}/${stockId}`, {
+      const stockUpdateResponse = await apiFetch(`${STOCK_API_BASE_URL}/${stockId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -115,7 +111,7 @@ fetchWastes();
       const url = isEditMode ? `${API_BASE_URL}/${activeRecordId}` : `${API_BASE_URL}/add`;
       const method = isEditMode ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method: method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -141,10 +137,10 @@ fetchWastes();
   // 3. DELETE HANDLER
   const handleDeleteConfirm = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/${activeRecordId}`, { method: 'DELETE' });
+      const response = await apiFetch(`${API_BASE_URL}/${activeRecordId}`, { method: 'DELETE' });
       const data = await response.json();
       
-      if (!data.success) throw new Error(data.message);
+      if (!response.ok || !data.success) throw new Error(data.message || 'Delete failed');
       
       setWasteData(prev => prev.filter(item => item._id !== activeRecordId));
       setIsDeleteModalOpen(false);

@@ -1,5 +1,5 @@
 // casher.ts
-import axios from "axios";
+import { api } from "@/lib/api";
 
 export type CasherUser = {
   id?: string;
@@ -35,7 +35,7 @@ export const fetchUnpaidOrders = async (customerName: string, customerPhone: str
     throw new Error("Please enter both Customer Name and Phone Number");
   }
 
-  const res = await axios.get("http://localhost:8080/api/orders");
+  const res = await api.get("/api/orders");
   const allOrders = res.data.orders || [];
 
   const inputName = customerName.trim().toLowerCase();
@@ -56,7 +56,7 @@ export const fetchUnpaidOrders = async (customerName: string, customerPhone: str
  * निश्चित अर्डरको लागि भुक्तानी स्थिति ब्याकेन्डमा अपडेट गर्ने कार्य
  */
 export const submitOrderPayment = async (orderId: string, payload: { method: string; cashierId?: string; discountPercent: number }) => {
-  return await axios.put(`http://localhost:8080/api/orders/payment/${orderId}`, payload);
+  return await api.put(`/api/orders/payment/${orderId}`, payload);
 };
 
 // export const handalTabalStatus= async()

@@ -1,6 +1,7 @@
 import express from "express";
 import mongoose from "mongoose";
 import Order from "../models/Order.js";
+import Menu from "../models/menu.js";
 import Recipe from "../models/recipe.js";
 import Stock from "../models/Stock.js";
 import Table from "../models/Table.js";
@@ -131,114 +132,161 @@ const validateAndReduceStockForApprovedOrder = async (order) => {
 
 // Create or Update Order (Append items if active order exists)
 router.post("/create", async (req, res) => {
-  try {
-    const { customerName, phone, table, qrToken, items } = req.body;
+  const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(String(value || ""));
+  const normalizeString = (value, fallback = "") => String(value || "").trim() || fallback;
 
-    if (!items?.length) {
-      return res.status(400).json({ success: false, message: "Please select at least one item" });
+  try {
+    const { customerName, phone, paymentMethod, table, tableNumber, qrToken, items } = req.body;
+
+    if (!Array.isArray(items) || !items.length) {
+      return res.status(400).json({ success: false, message: "Please select at least one item." });
     }
 
-    // Resolve table from qrToken (preferred) or table id (backwards compat)
+    const normalizedPhone = normalizeString(phone);
+    const normalizedCustomerName = normalizeString(customerName, "Guest");
+    const normalizedPaymentMethod = normalizePaymentMethod(paymentMethod);
+
     let selectedTable = null;
-    if (qrToken) {
-      selectedTable = await Table.findOne({ qrToken });
-    } else if (table) {
-      selectedTable = await Table.findById(table);
+    if (normalizeString(qrToken)) {
+      selectedTable = await Table.findOne({ qrToken: normalizeString(qrToken) });
+    }
+
+    if (!selectedTable && normalizeString(tableNumber)) {
+      const parsedNumber = Number(String(tableNumber).trim());
+      if (!Number.isFinite(parsedNumber) || parsedNumber <= 0) {
+        return res.status(400).json({ success: false, message: "Invalid table number." });
+      }
+      selectedTable = await Table.findOne({ tableNo: parsedNumber });
+    }
+
+    if (!selectedTable && table) {
+      if (isValidObjectId(table)) {
+        selectedTable = await Table.findById(table);
+      } else {
+        const parsedTableNo = Number(String(table).trim());
+        if (Number.isFinite(parsedTableNo) && parsedTableNo > 0) {
+          selectedTable = await Table.findOne({ tableNo: parsedTableNo });
+        }
+      }
     }
 
     if (!selectedTable) {
-      return res.status(404).json({ success: false, message: "Table not found" });
+      return res.status(404).json({ success: false, message: "Table not found." });
     }
 
-    // Respect table availability rules
     if (["reserved", "cleaning"].includes(selectedTable.status)) {
-      return res.status(400).json({ success: false, message: "This table is currently unavailable" });
+      return res.status(400).json({ success: false, message: "This table is currently unavailable." });
     }
 
-    const normalizedPhone = String(phone || "").trim();
-    const normalizedCustomerName = String(customerName || "Guest").trim();
-
-    // Build canonical items and compute authoritative total (use menu price when possible)
     const builtItems = [];
-    let computedTotal = 0;
+    const validationErrors = [];
 
-    for (const it of items) {
-      const qty = Math.max(0, Number(it.quantity || 1));
-      if (qty <= 0) continue;
+    const normalizedItems = items.map((item) => ({
+      ...item,
+      menuId: item.menuId || item._id || item.itemId || item.id,
+      quantity: item.quantity ?? 0,
+    }));
 
-      let price = Number(it.price || 0);
-      let title = it.title || "";
-
-      if (it.menuId) {
-        const menu = await (await import("../models/menu.js")).default.findById(it.menuId);
-        if (menu) {
-          price = Number(menu.price || price || 0);
-          title = menu.title || title;
-        }
+    for (const item of normalizedItems) {
+      if (!item || !item.menuId || !isValidObjectId(item.menuId)) {
+        validationErrors.push("Each item must contain a valid menuId or itemId.");
+        continue;
       }
 
-      const itemTotal = price * qty;
-      computedTotal += itemTotal;
+      const quantity = Number(item.quantity);
+      if (!Number.isFinite(quantity) || quantity <= 0 || !Number.isInteger(quantity)) {
+        validationErrors.push("Each item quantity must be a positive whole number.");
+        continue;
+      }
+
+      const menu = await Menu.findById(item.menuId);
+      if (!menu) {
+        validationErrors.push(`Menu item not found for menuId: ${item.menuId}`);
+        continue;
+      }
 
       builtItems.push({
-        menuId: it.menuId,
-        title,
-        price,
-        quantity: qty,
-        image: it.image || "",
-        category: it.category || "",
-        status: "Pending",
-        estimatedTime: Number(it.estimatedTime || 15),
+        menuId: menu._id,
+        title: menu.title,
+        price: Number(menu.price || 0),
+        quantity,
+        image: menu.image || "",
+        category: menu.category || "",
       });
     }
 
-    if (!builtItems.length) {
-      return res.status(400).json({ success: false, message: "Please select at least one valid item" });
+    if (validationErrors.length) {
+      return res.status(400).json({ success: false, message: "Invalid order items.", errors: [...new Set(validationErrors)] });
     }
 
-    // Atomic upsert: append to existing unpaid order or create a new one if none exists
+    if (!builtItems.length) {
+      return res.status(400).json({ success: false, message: "Please select at least one valid item." });
+    }
+
+    const computedTotal = builtItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const filter = { number: selectedTable.tableNo, paymentStatus: "unpaid", status: { $ne: "rejected" } };
     const update = {
       $push: { items: { $each: builtItems } },
       $inc: { total: computedTotal },
       $setOnInsert: {
         billNo: generateBillNo(),
-        customerName: normalizedCustomerName || "Guest",
-        phone: normalizedPhone || "",
+        customerName: normalizedCustomerName,
+        phone: normalizedPhone,
         number: selectedTable.tableNo,
         table: selectedTable._id,
         status: "pending",
         paymentStatus: "unpaid",
-        paymentMethod: "Unknown",
+        paymentMethod: normalizedPaymentMethod || "Unknown",
       },
     };
-
-    const options = { new: true, upsert: true, rawResult: true };
+    const options = { upsert: true, new: true, returnDocument: "after", rawResult: true };
 
     const result = await Order.findOneAndUpdate(filter, update, options);
-    const orderDoc = result.value;
-    const createdNew = result.lastErrorObject && !result.lastErrorObject.updatedExisting;
+    let orderDoc = result?.value;
+    const createdNew = Boolean(
+      result?.lastErrorObject?.upserted || result?.lastErrorObject?.updatedExisting === false
+    );
 
-    // If existing order was returned, optionally update missing customer info
+    if (!orderDoc) {
+      orderDoc = await Order.findOne(filter).sort({ updatedAt: -1 });
+    }
+
+    if (!orderDoc) {
+      return res.status(500).json({ success: false, message: "Failed to create order." });
+    }
+
     if (!createdNew) {
       const updates = {};
-      if ((!orderDoc.phone || orderDoc.phone === "") && normalizedPhone) updates.phone = normalizedPhone;
-      if ((!orderDoc.customerName || orderDoc.customerName === "Guest") && normalizedCustomerName) updates.customerName = normalizedCustomerName;
+      if ((!orderDoc.phone || orderDoc.phone === "") && normalizedPhone) {
+        updates.phone = normalizedPhone;
+      }
+      if ((orderDoc.customerName === "" || orderDoc.customerName === "Guest") && normalizedCustomerName && normalizedCustomerName !== "Guest") {
+        updates.customerName = normalizedCustomerName;
+      }
       if (Object.keys(updates).length) {
-        await Order.findByIdAndUpdate(orderDoc._id, { $set: updates }, { new: true });
+        await Order.findByIdAndUpdate(orderDoc._id, { $set: updates }, { returnDocument: "after" });
       }
     }
 
-    // Ensure table is marked occupied
     if (selectedTable.status !== "occupied") {
       selectedTable.status = "occupied";
       await selectedTable.save();
     }
 
-    return res.status(createdNew ? 201 : 200).json({ success: true, message: createdNew ? "Order placed successfully" : "New items added to your table order successfully!", order: orderDoc });
+    return res.status(createdNew ? 201 : 200).json({
+      success: true,
+      message: createdNew ? "Order placed successfully." : "New items added to your unpaid order successfully.",
+      order: orderDoc,
+    });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ success: false, message: "Server Error" });
+    console.error("POST /api/orders/create error:", error);
+    if (error?.message?.includes("Invalid table identifier")) {
+      return res.status(400).json({ success: false, message: error.message });
+    }
+    if (error?.message?.includes("Please select at least one")) {
+      return res.status(400).json({ success: false, message: error.message });
+    }
+    return res.status(500).json({ success: false, message: "Failed to create order." });
   }
 });
 

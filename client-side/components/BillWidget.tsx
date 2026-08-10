@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import axios from "axios";
+import { api } from "@/lib/api";
 
 export default function BillWidget({ isOpen, onClose }) {
   const [customerName, setCustomerName] = useState("");
@@ -25,7 +25,7 @@ export default function BillWidget({ isOpen, onClose }) {
       setMessage("");
       setOrdersList([]);
 
-      const res = await axios.get("http://localhost:8080/api/orders");
+      const res = await api.get("/api/orders");
       const allOrders = res.data.orders || [];
 
       const inputName = customerName.trim().toLowerCase();

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import axios from "axios";
+import { api } from "@/lib/api";
 import {
   ArrowUpRight,
   DollarSign,
@@ -53,8 +53,6 @@ type StockItem = {
   sellingPrice?: number;
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
-
 const monthlyLabels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export default function RevenuePage() {
@@ -67,9 +65,9 @@ export default function RevenuePage() {
     const fetchData = async () => {
       try {
         const [ordersRes, purchasesRes, stocksRes] = await Promise.all([
-          axios.get(`${API_BASE_URL}/api/orders`),
-          axios.get(`${API_BASE_URL}/api/purchase`),
-          axios.get(`${API_BASE_URL}/api/stocks`),
+          api.get("/api/orders"),
+          api.get("/api/purchase"),
+          api.get("/api/stocks"),
         ]);
 
         setOrders(Array.isArray(ordersRes.data.orders) ? ordersRes.data.orders : []);

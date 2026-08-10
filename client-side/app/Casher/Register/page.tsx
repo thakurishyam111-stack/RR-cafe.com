@@ -2,8 +2,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+import { apiFetch } from "@/lib/api";
 
 const RegisterPage = () => {
   const router = useRouter();
@@ -101,7 +100,7 @@ const RegisterPage = () => {
     try {
       setLoading(true);
 
-      const res = await fetch(`${API_BASE_URL}/api/users/register`, {
+      const res = await apiFetch("/api/users/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

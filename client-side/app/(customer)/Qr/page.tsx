@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import TableQRCode from "./qr";
+import { apiFetch } from "@/lib/api";
 
 type TableItem = {
   _id: string;
@@ -19,8 +20,7 @@ export default function QrIndexPage() {
     const fetchTables = async () => {
       try {
         setLoading(true);
-        const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080").replace(/\/$/, "");
-        const res = await fetch(`${API_URL}/api/table`);
+        const res = await apiFetch("/api/table");
         const data = await res.json();
         if (!res.ok) {
           setError(data?.message || "Failed to load tables");

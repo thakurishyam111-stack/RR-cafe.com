@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { apiFetch } from "@/lib/api";
 
 type Item = {
   _id?: string;
@@ -33,8 +34,7 @@ export default function QROrderPage() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080").replace(/\/$/, "");
-        const res = await fetch(`${API_URL}/api/orders/qr/${encodeURIComponent(qrToken)}/active`);
+        const res = await apiFetch(`/api/orders/qr/${encodeURIComponent(qrToken)}/active`);
         const data = await res.json();
 
         if (!res.ok || !data?.success || !data?.table) {

@@ -2,8 +2,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+import { apiFetch } from "@/lib/api";
 
 const Page = () => {
   const router = useRouter();
@@ -41,7 +40,7 @@ const Page = () => {
     try {
       setLoading(true);
 
-      const response = await fetch(`${API_BASE_URL}/api/users/login`, {
+      const response = await apiFetch("/api/users/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

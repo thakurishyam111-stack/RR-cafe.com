@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import { api } from "@/lib/api";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import AdminSidebar from "@/components/AdminSidebar";
 
-const API = "http://localhost:8080/api/today";
+const API = "/api/today";
 
 export default function TodayAdmin() {
   const [items, setItems] = useState([]);
@@ -22,8 +22,13 @@ export default function TodayAdmin() {
 
   // FETCH
   const fetchData = async () => {
-    const res = await axios.get(API);
-    setItems(res.data.today || []);
+    try {
+      const response = await api.get(API);
+      setItems(response.data.today || []);
+    } catch (err) {
+      console.error("Failed to fetch today specials:", err);
+      setItems([]);
+    }
   };
 
   useEffect(() => {
@@ -48,21 +53,31 @@ export default function TodayAdmin() {
   const save = async () => {
     if (!form.title || !form.price) return alert("Required fields missing");
 
-    if (editId) {
-      await axios.put(`${API}/${editId}`, form);
-    } else {
-      await axios.post(`${API}/add`, form);
+    try {
+      if (editId) {
+        await api.put(`${API}/${editId}`, form);
+      } else {
+        await api.post(`${API}/add`, form);
+      }
+      setOpen(false);
+      fetchData();
+    } catch (err) {
+      console.error("Failed to save today special:", err);
+      alert("Unable to save item. Check console for details.");
     }
-
-    setOpen(false);
-    fetchData();
   };
 
   // DELETE
   const remove = async (id) => {
     if (!confirm("Delete item?")) return;
-    await axios.delete(`${API}/${id}`);
-    fetchData();
+
+    try {
+      await api.delete(`${API}/${id}`);
+      fetchData();
+    } catch (err) {
+      console.error("Failed to delete today special:", err);
+      alert("Unable to delete item. Check console for details.");
+    }
   };
 
   return ( <>

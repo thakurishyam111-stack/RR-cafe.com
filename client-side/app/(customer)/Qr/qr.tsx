@@ -3,6 +3,7 @@
 
 import { QRCodeCanvas } from "qrcode.react";
 import { useRef } from "react";
+import { getCustomerOrderUrlBase } from "@/lib/api";
 
 interface TableQRCodeProps {
   tableNo: number;
@@ -13,8 +14,7 @@ export default function TableQRCode({
   tableNo,
   qrToken,
 }: TableQRCodeProps) {
-  // Build customer-facing order URL using environment variable
-  const base = (process.env.NEXT_PUBLIC_CUSTOMER_ORDER_URL || "").replace(/\/$/, "") || "http://192.168.1.85:3000";
+  const base = getCustomerOrderUrlBase();
   const qrUrl = `${base}/order/${qrToken}`;
 
   const containerRef = useRef<HTMLDivElement | null>(null);

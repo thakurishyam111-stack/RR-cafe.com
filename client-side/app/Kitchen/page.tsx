@@ -1,5 +1,5 @@
 "use client";
-import axios from "axios";
+import { api } from "@/lib/api";
 import { useEffect, useState, useRef } from "react";
 
 // TypeScript Interface mirroring exact dynamic item-level state schema updates
@@ -57,7 +57,7 @@ const ItemLevelKitchenKDS = () => {
 
   const getOrders = async () => {
     try {
-      const res = await axios.get("http://localhost:8080/api/orders/kitchen");
+      const res = await api.get("/api/orders/kitchen");
       const fetchedOrders: Order[] = res.data.orders || res.data;
 
       
@@ -134,8 +134,8 @@ const ItemLevelKitchenKDS = () => {
       );
 
       // Backend API call target: updates specific index object properties safely
-      await axios.put(
-        `http://localhost:8080/api/orders/${orderId}/items/${itemId}`,
+      await api.put(
+        `/api/orders/${orderId}/items/${itemId}`,
         {
           status: newStatus,
         },
@@ -167,8 +167,8 @@ const ItemLevelKitchenKDS = () => {
       );
 
       // Backend API call payload triggers subdocument parameter dynamic changes
-      await axios.put(
-        `http://localhost:8080/api/orders/${orderId}/items/${itemId}`,
+      await api.put(
+        `/api/orders/${orderId}/items/${itemId}`,
         {
           estimatedTime: newTime,
         },

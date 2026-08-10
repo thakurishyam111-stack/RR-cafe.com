@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Mail, Phone, RefreshCw, User } from 'lucide-react';
 import AdminSidebar from '@/components/AdminSidebar';
+import { apiFetch } from '@/lib/api';
 
 interface StaffMember {
   _id: string;
@@ -26,12 +27,12 @@ const StaffManagement = () => {
     name: '', email: '', phone: '', role: 'Waiter', salary: '', image: '', status: 'Active'
   });
 
-  const API_URL = "http://localhost:8080/api/staff";
+  const API_URL = "/api/staff";
 
   const fetchStaff = async () => {
     setFetchLoading(true);
     try {
-      const res = await fetch(API_URL, { cache: 'no-store' });
+      const res = await apiFetch(API_URL, { cache: 'no-store' });
       if (!res.ok) throw new Error("Backend server error");
       const result = await res.json();
       
@@ -60,7 +61,7 @@ const StaffManagement = () => {
     const method = editingStaff ? 'PUT' : 'POST';
 
     try {
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method: method,
         headers: { 
           'Content-Type': 'application/json',
@@ -94,7 +95,7 @@ const StaffManagement = () => {
   const handleDelete = async (id: string) => {
     if (window.confirm("you want to delete this staff ?")) {
       try {
-        const res = await fetch(`${API_URL}/delete/${id}`, { method: 'DELETE' });
+        const res = await apiFetch(`${API_URL}/delete/${id}`, { method: 'DELETE' });
         if (!res.ok) throw new Error("Delete failed");
         const data = await res.json();
         if (data.success) {

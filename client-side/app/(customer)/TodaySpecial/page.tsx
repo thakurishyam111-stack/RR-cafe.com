@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import axios from "axios";
+import { api } from "@/lib/api";
 import { Sparkles, Star, Clock3, Heart, ShoppingCart, Trash2, X, CheckCircle, AlertTriangle } from "lucide-react";
 import Footer from "@/components/Footer";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 
 interface MenuItem {
   id: string | number;
@@ -41,7 +40,7 @@ export default function TodaySpecialPage() {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get(`${API_BASE_URL}/api/Today`);
+      const response = await api.get("/api/Today");
       const data = response.data;
       const fetchedItems = Array.isArray(data) ? data : data?.today || [];
       
@@ -109,7 +108,7 @@ export default function TodaySpecialPage() {
         isCombo: item.isCombo || false
       }));
 
-      const { data } = await axios.post(`${API_BASE_URL}/api/orders/create`, {
+      const { data } = await api.post("/api/orders/create", {
         customerName: name.trim(),
         phone: phone.trim(),
         tableNumber: tableNumber,

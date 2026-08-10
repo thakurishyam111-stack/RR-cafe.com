@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Lock, Mail, ShieldCheck } from "lucide-react";
 import Link from "next/link";
+import { apiFetch } from "@/lib/api";
 
 const Page = () => {
   const router = useRouter();
@@ -37,13 +38,11 @@ const Page = () => {
     try {
       setLoading(true);
 
-      const response = await fetch("http://localhost:8080/api/admin/login", {
+      const response = await apiFetch("/api/admin/login", {
         method: "POST",
-
         headers: {
           "Content-Type": "application/json",
         },
-
         body: JSON.stringify({
           email,
           password,

@@ -15,6 +15,7 @@ import {
   ChefHat
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { apiFetch } from "@/lib/api";
 
 type MenuItem = {
   _id: string;
@@ -41,7 +42,7 @@ type RecipeFormData = {
 
 type StoredRecipes = Record<string, RecipeFormData>;
 
-const API_BASE_URL = "http://localhost:8080/api/recipes";
+const API_BASE_URL = "/api/recipes";
 
 const createEmptyIngredient = (): IngredientRow => ({
   name: "",
@@ -79,7 +80,7 @@ export default function RecipePage() {
   useEffect(() => {
     const loadMenus = async () => {
       try {
-        const response = await fetch("http://localhost:8080/api/menus");
+        const response = await apiFetch("/api/menus");
         const data = await response.json();
         if (response.ok && data?.success) {
           const fetchedMenus = Array.isArray(data.menus) ? data.menus : [];
@@ -95,7 +96,7 @@ export default function RecipePage() {
 
     const loadRecipes = async () => {
       try {
-        const response = await fetch(API_BASE_URL);
+        const response = await apiFetch(API_BASE_URL);
         const data = await response.json();
         if (response.ok && data?.success) {
           const fetchedRecipes = Array.isArray(data.recipes) ? data.recipes : [];
@@ -223,7 +224,7 @@ export default function RecipePage() {
     };
 
     try {
-      const response = await fetch(API_BASE_URL, {
+      const response = await apiFetch(API_BASE_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -246,7 +247,7 @@ export default function RecipePage() {
     if (!window.confirm("Are you sure you want to completely remove this recipe?")) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/${targetId}`, { method: "DELETE" });
+      const response = await apiFetch(`${API_BASE_URL}/${targetId}`, { method: "DELETE" });
       const data = await response.json();
 
       if (!response.ok || !data?.success) {

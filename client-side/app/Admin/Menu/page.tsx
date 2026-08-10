@@ -1,12 +1,10 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import axios from "axios";
+import { api } from "@/lib/api";
 import AdminSidebar from "@/components/AdminSidebar";
 import { Plus, Search } from "lucide-react";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 
 type MenuItem = {
   _id?: string;
@@ -38,7 +36,7 @@ export default function AdminMenuPage() {
   // ================= FETCH MENUS =================
   const fetchMenus = async () => {
     try {
-      const { data } = await axios.get(`${API_BASE_URL}/api/menus`);
+      const { data } = await api.get("/api/menus");
       setMenus(data.menus || []);
     } catch (err: any) {
       console.log("FETCH ERROR:", err?.response?.data || err?.message || err);
@@ -128,10 +126,10 @@ export default function AdminMenuPage() {
       };
 
       if (editId) {
-        await axios.put(`${API_BASE_URL}/api/menus/${editId}`, payload);
+        await api.put(`/api/menus/${editId}`, payload);
       } else {
         // ✅ FIXED ROUTE (your backend uses /add)
-        await axios.post(`${API_BASE_URL}/api/menus/add`, payload);
+        await api.post("/api/menus/add", payload);
       }
 
       setShowModal(false);
@@ -152,7 +150,7 @@ export default function AdminMenuPage() {
     if (!confirm("Delete this menu?")) return;
 
     try {
-      await axios.delete(`${API_BASE_URL}/api/menus/${id}`);
+      await api.delete(`/api/menus/${id}`);
       fetchMenus();
     } catch (err: any) {
       console.log("DELETE ERROR:", err?.response?.data || err?.message || err);

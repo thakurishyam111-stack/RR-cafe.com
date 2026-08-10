@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import { api } from "@/lib/api";
 import {
   CheckCircle,
   XCircle,
@@ -19,7 +19,7 @@ export default function OrdersPage() {
 
   const fetchOrders = async () => {
     try {
-      const res = await axios.get("http://localhost:8080/api/orders");
+      const res = await api.get("/api/orders");
 
       setOrders(res.data.orders);
     } catch (error) {
@@ -39,7 +39,7 @@ export default function OrdersPage() {
 
   const approveOrder = async (id: string) => {
     try {
-      const { data } = await axios.put(`http://localhost:8080/api/orders/approve/${id}`);
+      const { data } = await api.put(`/api/orders/approve/${id}`);
 
       if (!data.success && data.canceled) {
         window.alert(data.message || "Order canceled due to missing stock.");
@@ -54,7 +54,7 @@ export default function OrdersPage() {
 
   const updateOrderStatus = async (id: string, status: string) => {
     try {
-      const { data } = await axios.put(`http://localhost:8080/api/orders/${id}/status`, { status });
+      const { data } = await api.put(`/api/orders/${id}/status`, { status });
 
       if (!data.success && data.canceled) {
         window.alert(data.message || "Order canceled due to missing stock.");
@@ -69,10 +69,7 @@ export default function OrdersPage() {
 
   const rejectOrder = async (id) => {
     try {
-   await axios.put(`http://localhost:8080/api/orders/reject/${id}`);
-
-
-      
+      await api.put(`/api/orders/reject/${id}`);
       fetchOrders();
     } catch (error) {
       console.log(error);
@@ -85,7 +82,7 @@ export default function OrdersPage() {
     if (!ok) return;
 
     try {
-      await axios.delete(`http://localhost:8080/api/orders/${id}`);
+      await api.delete(`/api/orders/${id}`);
 
       fetchOrders();
     } catch (error) {

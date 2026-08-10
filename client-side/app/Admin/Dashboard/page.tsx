@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import AdminSidebar from "@/components/AdminSidebar";
 import { TrendingUp, Clock, CheckCircle, XCircle } from "lucide-react";
@@ -36,7 +36,7 @@ export default function AdminDashboard() {
   // ======================
   const fetchOrders = async () => {
     try {
-      const res = await axios.get("http://localhost:8080/api/orders");
+      const res = await api.get("/api/orders");
       const data = res.data?.orders;
       setOrders(Array.isArray(data) ? data : []);
     } catch (error: any) {
@@ -52,8 +52,8 @@ export default function AdminDashboard() {
   // ======================
   const approveOrder = async (id: string) => {
     try {
-      await axios.put(
-        `http://localhost:8080/api/orders/approve/${id}`,
+      await api.put(
+        `/api/orders/approve/${id}`,
         {},
         {
           headers: {
@@ -72,8 +72,8 @@ export default function AdminDashboard() {
   // ======================
   const rejectOrder = async (id: string) => {
     try {
-      await axios.put(
-        `http://localhost:8080/api/orders/reject/${id}`,
+      await api.put(
+        `/api/orders/reject/${id}`,
         {},
         {
           headers: {

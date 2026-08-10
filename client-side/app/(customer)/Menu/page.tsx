@@ -2,10 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
+import { api } from "@/lib/api";
 
 const Page = () => {
   const router = useRouter();
@@ -16,7 +13,7 @@ const Page = () => {
 
   const fetchMenus = async () => {
     try {
-      const { data } = await axios.get(`${API_BASE_URL}/api/menus`);
+      const { data } = await api.get("/api/menus");
       const items = data?.menus || [];
       setMenus(items);
       setApiError(

@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { User, Mail, Lock, Eye, EyeOff, Shield } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 export default function AdminRegister() {
   const router = useRouter();
@@ -32,7 +33,7 @@ export default function AdminRegister() {
     try {
       setLoading(true);
 
-      const res = await fetch("http://localhost:8080/api/admin/register", {
+      const res = await apiFetch("/api/admin/register", {
         method: "POST",
 
         headers: {

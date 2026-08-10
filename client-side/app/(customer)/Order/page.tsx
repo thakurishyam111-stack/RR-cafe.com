@@ -1,13 +1,10 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import axios from "axios";
+import { api } from "@/lib/api";
 // import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
-const API_BASE_URL = (
-  process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080"
-).replace(/\/$/, "");
 
 type MenuItem = {
   _id?: string | number;
@@ -56,7 +53,7 @@ export default function OrderPage() {
   useEffect(() => {
     const fetchMenus = async () => {
       try {
-        const { data } = await axios.get(`${API_BASE_URL}/api/menus`);
+        const { data } = await api.get("/api/menus");
 
         const items = (data?.menus || []) as MenuItem[];
 
@@ -89,7 +86,7 @@ export default function OrderPage() {
 
     const verify = async () => {
       try {
-        const { data } = await axios.get(`${API_BASE_URL}/api/orders/qr/${encodeURIComponent(qrToken)}/active`);
+        const { data } = await api.get(`/api/orders/qr/${encodeURIComponent(qrToken)}/active`);
 
         if (data?.success && data.table) {
           setTable({
@@ -223,7 +220,7 @@ export default function OrderPage() {
         payload.qrToken = qrToken;
       }
 
-      const { data } = await axios.post(`${API_BASE_URL}/api/orders/create`, payload);
+      const { data } = await api.post("/api/orders/create", payload);
 
       if (data.success) {
         setSubmitted(true);
@@ -235,10 +232,13 @@ export default function OrderPage() {
       }
     } catch (error: unknown) {
       console.log("ORDER ERROR:", error);
-      const serverMessage = axios.isAxiosError(error)
-        ? error.response?.data?.message || error.response?.data?.error || "Order failed. Please try again."
-        : "Order failed. Please try again.";
-      setMessage(serverMessage);
+      const serverMessage =
+        typeof error === "object" && error !== null && "response" in error
+          ? ((error as any).response?.data?.message || (error as any).response?.data?.error)
+          : error instanceof Error
+          ? error.message
+          : "Order failed. Please try again.";
+      setMessage(serverMessage || "Order failed. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

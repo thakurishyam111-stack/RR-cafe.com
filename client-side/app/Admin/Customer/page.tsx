@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import { api } from "@/lib/api";
 import { Trash2, Phone, User, AlertCircle } from "lucide-react";
 import AdminSidebar from "@/components/AdminSidebar";
 
@@ -19,7 +19,7 @@ export default function CustomersPage() {
 
   const fetchCustomers = async () => {
     try {
-      const res = await axios.get("http://localhost:8080/api/orders");
+      const res = await api.get("/api/orders");
 
       const orders = res.data.orders as Array<{
         _id: string;
@@ -70,13 +70,13 @@ export default function CustomersPage() {
     if (!confirmDelete) return;
 
     try {
-      const res = await axios.get("http://localhost:8080/api/orders");
+      const res = await api.get("/api/orders");
 
       const customerOrders = res.data.orders.filter((o: { phone: string }) => o.phone === phone);
 
       await Promise.all(
         customerOrders.map((o: { _id: string }) =>
-          axios.delete(`http://localhost:8080/api/orders/${o._id}`),
+          api.delete(`/api/orders/${o._id}`),
         ),
       );
 

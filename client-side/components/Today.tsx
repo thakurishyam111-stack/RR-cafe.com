@@ -1,13 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { api } from "@/lib/api";
 import { Sparkles, Star, Clock3, Heart, ShoppingCart } from "lucide-react";
 import { Router } from "next/router";
 import Link from "next/link";
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 
 export default function TodaySpecialPage() {
   const [items, setItems] = useState<any[]>([]);
@@ -22,10 +19,7 @@ export default function TodaySpecialPage() {
     try {
       setLoading(true);
 
-      const response = await axios.get(
-        `${API_BASE_URL}/api/Today`
-      );
-
+      const response = await api.get("/api/Today");
       const data = response.data;
 
       // safe mapping
