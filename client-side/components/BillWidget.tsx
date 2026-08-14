@@ -51,13 +51,20 @@ export default function BillWidget({ isOpen, onClose }) {
     }
   };
 
-  // स्वीकृत (Approved) भएका र भुक्तानी हुन बाँकी बिलहरू मात्र
-  const unpaidBills = ordersList.filter(
-    (ord) => ord.status === "approved"
-  );
+  const visibleBillStatuses = new Set([
+    "approved",
+    "preparing",
+    "ready_to_serve",
+    "served",
+  ]);
+
+  const unpaidBills = ordersList.filter((ord) => {
+    const orderStatus = String(ord.status || "").trim().toLowerCase();
+    return ord.paymentStatus !== "paid" && visibleBillStatuses.has(orderStatus);
+  });
 
   // सबै Unpaid बिलहरूको कुल जम्मा रकम (Grand Total)
-  const grandTotal = unpaidBills.reduce((sum, ord) => sum + ord.total, 0);
+  const grandTotal = unpaidBills.reduce((sum, ord) => sum + (Number(ord.total) || 0), 0);
 
   // ======================
   // BULK PAYMENT (CASH / ESEWA / KHALTI)
@@ -169,7 +176,8 @@ export default function BillWidget({ isOpen, onClose }) {
               <p className="text-[11px] text-slate-400 font-medium px-1">Active Bills ({ordersList.length}):</p>
               
               {ordersList.map((order) => {
-                const isNotApproved = order.status !== "approved";
+                const orderStatus = String(order.status || "").trim().toLowerCase();
+                const isVisibleStatus = visibleBillStatuses.has(orderStatus);
 
                 return (
                   <div key={order._id} className="bg-slate-800/80 p-4 rounded-2xl border border-slate-700/60 shadow-md">
@@ -180,7 +188,15 @@ export default function BillWidget({ isOpen, onClose }) {
                       </div>
                       <div className="flex flex-col items-end gap-1">
                         <span className={`px-1.5 py-0.5 rounded text-[8px] uppercase font-bold tracking-wider ${
-                          order.status === "approved" ? "bg-green-600/20 text-green-400 border border-green-500/20" : "bg-yellow-600/20 text-yellow-400 border border-yellow-500/20"
+                          orderStatus === "approved"
+                            ? "bg-green-600/20 text-green-400 border border-green-500/20"
+                            : orderStatus === "preparing"
+                              ? "bg-blue-600/20 text-blue-400 border border-blue-500/20"
+                              : orderStatus === "ready_to_serve"
+                                ? "bg-orange-600/20 text-orange-300 border border-orange-500/20"
+                                : orderStatus === "served"
+                                  ? "bg-purple-600/20 text-purple-300 border border-purple-500/20"
+                                  : "bg-yellow-600/20 text-yellow-400 border border-yellow-500/20"
                         }`}>
                           {order.status}
                         </span>
@@ -192,14 +208,10 @@ export default function BillWidget({ isOpen, onClose }) {
 
                     <hr className="my-2.5 border-slate-700/60" />
 
-                    {isNotApproved ? (
-                      <p className="text-center text-xs text-yellow-400/80 py-1 font-medium">
-                        ⏳ Waiting for Admin Approval...
-                      </p>
-                    ) : (
+                    {isVisibleStatus ? (
                       <>
                         <div className="space-y-1.5">
-                          {order.items.map((item, i) => (
+                          {order.items?.map((item, i) => (
                             <div key={i} className="flex justify-between text-xs text-slate-300">
                               <span>{item.title} <span className="text-slate-500 font-mono">×{item.quantity}</span></span>
                               <span className="font-semibold text-slate-200">Rs. {item.price * item.quantity}</span>
@@ -212,6 +224,10 @@ export default function BillWidget({ isOpen, onClose }) {
                           <span>Rs. {order.total}</span>
                         </div>
                       </>
+                    ) : (
+                      <p className="text-center text-xs text-yellow-400/80 py-1 font-medium">
+                        This bill is not ready to show yet.
+                      </p>
                     )}
                   </div>
                 );

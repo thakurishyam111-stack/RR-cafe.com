@@ -3,12 +3,12 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell, Menu, X, Search, Wallet, MapPin } from "lucide-react";
-import BillWidget from "@/components/BillWidget"; // बिल विजेट इम्पोर्ट गरियो
+import BillWidget from "@/components/BillWidget";
 
 export default function Navbar() {
   const [search, setSearch] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [isBillOpen, setIsBillOpen] = useState(false); // १. बिल साइडबार खोल्ने स्टेट
+  const [isBillOpen, setIsBillOpen] = useState(false);
   const pathname = usePathname();
 
   const navItems = [
@@ -32,17 +32,23 @@ export default function Navbar() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    // यदि मोबाइल मेनु वा बिल साइडबार मध्ये कुनै एक खुला छ भने स्क्रोल बन्द गर्ने
     document.body.style.overflow = drawerOpen || isBillOpen ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
   }, [drawerOpen, isBillOpen]);
 
+  const handleOpenBill = () => {
+    setDrawerOpen(false);
+    setTimeout(() => {
+      setIsBillOpen(true);
+    }, 300);
+  };
+
   return (
     <>
-      {/* 1. Header Wrapper with glassmorphism */}
-      <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 bg-amber-50/90 backdrop-blur-md shadow-sm transition-all duration-300">
+      {/* 1. Header Wrapper */}
+      <header className="sticky top-0 z-30 w-full border-b border-slate-200/80 bg-amber-50/90 backdrop-blur-md shadow-sm transition-all duration-300">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-20 items-center justify-between gap-4">
             {/* Logo Section */}
@@ -50,7 +56,7 @@ export default function Navbar() {
               <img
                 src="/logo/cafelogo.png"
                 alt="Cafe logo"
-                className="h-10 w-10 rounded-full object-cover ring-2 ring-amber-500/20"
+                className="h-15 w-15 rounded-full object-cover ring-2 ring-amber-500/20"
               />
               <span className="hidden sm:block font-serif text-lg font-bold text-slate-800 tracking-wide italic">
                 Mero Deurali Cafe
@@ -95,7 +101,7 @@ export default function Navbar() {
               </button>
             </form>
 
-            {/* Desktop Action Icons */}
+            {/* Action Icons */}
             <div className="flex items-center gap-2 sm:gap-4">
               <Link
                 href="/Notification"
@@ -116,10 +122,9 @@ export default function Navbar() {
                 <MapPin className="h-5 w-5" />
               </Link>
 
-              {/* २. अपडेटेड डेस्कटप बिल बटन: अब यो लिंक होइन, बटन हो जसले साइडबार खोल्छ */}
               <button
                 type="button"
-                onClick={() => setIsBillOpen(true)}
+                onClick={handleOpenBill}
                 className="hidden sm:inline-flex items-center gap-2 h-10 px-4 rounded-xl text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-amber-600 hover:text-white shadow-sm transition-all duration-200 cursor-pointer"
               >
                 <Wallet className="h-4 w-4" />
@@ -130,51 +135,55 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() => setDrawerOpen(true)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white hover:bg-slate-800 shadow-md transition lg:hidden"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 text-white hover:bg-slate-800 active:scale-95 shadow-md transition touch-manipulation cursor-pointer lg:hidden"
                 aria-label="Open menu"
               >
-                <Menu className="h-5 w-5" />
+                <Menu className="h-6 w-6" />
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Mobile Backdrop overlay */}
+      {/* 2. Backdrop Overlay (z-[60] मा राखिएको) */}
       <div
-        className={`fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300 ${
+        className={`fixed inset-0 z-[60] bg-slate-900/50 backdrop-blur-sm transition-opacity duration-300 ${
           drawerOpen
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none"
         }`}
         onClick={() => setDrawerOpen(false)}
-        aria-hidden={!drawerOpen}
       />
 
-      {/* Slide-out Mobile Sheet / Sidebar */}
+      {/* 3. Slide-out Mobile Sheet / Sidebar (z-[70] मा राखिएको छ जसले गर्दा सधैं अगाडि देखिन्छ) */}
       <aside
-        className={`fixed right-0 top-0 z-50 h-full w-full max-w-xs transform bg-white shadow-2xl transition-transform duration-300 ease-in-out ${
+        className={`fixed inset-y-0 right-0 z-[70] w-full max-w-xs bg-white shadow-2xl transition-transform duration-300 ease-in-out transform ${
           drawerOpen ? "translate-x-0" : "translate-x-full"
         }`}
-        aria-hidden={!drawerOpen}
       >
         {/* Mobile Header */}
         <div className="flex h-20 items-center justify-between border-b border-slate-100 px-6 bg-slate-50">
           <span className="font-serif text-lg font-bold text-slate-900 italic">
-            The Deurali Cafe
+            <img
+                src="/logo/cafelogo.png"
+                alt="Cafe logo"
+                className="h-10 w-10 rounded-full object-cover ring-2 ring-amber-500/20"
+              />
+            Mero Deurali Cafe
           </span>
           <button
+            type="button"
             onClick={() => setDrawerOpen(false)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 active:scale-95 transition cursor-pointer"
             aria-label="Close menu"
           >
-            <X className="h-5 w-5" />
+            <X className="h-6 w-6" />
           </button>
         </div>
 
-        {/* Mobile Nav Actions */}
+        {/* Mobile Nav Actions / Item List */}
         <div className="flex flex-col gap-6 p-6 overflow-y-auto h-[calc(100vh-5rem)]">
-          {/* Mobile Search input */}
+          {/* Search input */}
           <form
             onSubmit={(e) => e.preventDefault()}
             className="flex md:hidden items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 h-11"
@@ -208,7 +217,7 @@ export default function Navbar() {
 
           <hr className="border-slate-100" />
 
-          {/* Core App Integrations on Sidebar Bottom */}
+          {/* Bottom Actions */}
           <div className="flex flex-col gap-2.5">
             <Link
               href="/Notification"
@@ -224,14 +233,13 @@ export default function Navbar() {
               )}
             </Link>
 
-            {/* ३. अपडेटेड मोबाइल बिल बटन: मोबाइल मेनु बन्द गरेर सिधै बिल साइडबार खोल्छ */}
             <button
               type="button"
               onClick={() => {
-                setDrawerOpen(false); // पहिले मोबाइल मेनु बन्द गर्ने
-                setIsBillOpen(true); // अनि बिल साइडबार खोल्ने
+                setDrawerOpen(false);
+                setIsBillOpen(true);
               }}
-              className="flex w-full items-center gap-3 px-4 py-3 rounded-xl bg-amber-600 text-white shadow-md hover:bg-amber-700 transition text-left cursor-pointer"
+              className="flex w-full items-center gap-3 px-4 py-3 rounded-xl bg-amber-600 text-white shadow-md hover:bg-amber-700 active:scale-98 transition text-left cursor-pointer"
             >
               <Wallet className="h-5 w-5" />
               <span className="text-sm font-semibold">View My Bill</span>
@@ -240,7 +248,7 @@ export default function Navbar() {
         </div>
       </aside>
 
-      {/* ४. बिल साइडबार विजेट (यो यहाँ रहन्छ र isOpen true हुँदा दायाँबाट बाहिर आउँछ) */}
+      {/* Bill Sidebar Widget */}
       <BillWidget isOpen={isBillOpen} onClose={() => setIsBillOpen(false)} />
     </>
   );

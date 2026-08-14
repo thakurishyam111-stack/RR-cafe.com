@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Facebook, Instagram, Phone, Mail, Clock } from "lucide-react";
 
 export default function Footer() {
-  const currentYear = new Date().getFullYear();
+  const currentYear = new Date().getFullYear(); 
 
   return (
     <footer className="mt-16 w-full border-t border-slate-800 bg-slate-900 text-slate-300 rounded-t-[2rem] sm:rounded-t-[3rem]">

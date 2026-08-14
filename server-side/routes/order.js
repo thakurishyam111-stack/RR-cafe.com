@@ -452,7 +452,7 @@ router.put("/payment/:id", async (req, res) => {
     if (updatedOrder?.number) {
       await Table.findOneAndUpdate(
         { tableNo: updatedOrder.number }, 
-        { status: "available" });
+        { status: "available"},);
     }
 
     res.status(200).json({
@@ -582,6 +582,13 @@ router.get("/billNo/:billNo", async (req, res) => {
         success: true,
         order,
         message: "Order is still pending or being processed.",
+      });
+    }
+    if(order.status ==="approved"|| "preparing"|| "ready_to_serve"|| "served"){
+      return res.status(200).json({
+        success: true,
+        order,
+        message: "Order is being processed.",
       });
     }
 
