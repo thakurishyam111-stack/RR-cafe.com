@@ -112,7 +112,7 @@ export default function useStock() {
     setSummary({
       totalItems: data.length,
       lowStockCount: lowStockItems.length,
-      totalValue: totalStockValue,
+      totalValue: totalStockValue/1000,
       uniqueCategories: uniqueCats
     });
   };
