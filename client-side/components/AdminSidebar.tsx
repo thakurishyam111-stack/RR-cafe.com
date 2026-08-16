@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import {
@@ -23,6 +23,16 @@ export default function AdminSidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [adminName, setAdminName] = useState("");
+  const [adminEmail, setAdminEmail] = useState("");
+
+  useEffect(() => {
+    // Get admin data from localStorage
+    const name = localStorage.getItem("adminName") || "";
+    const email = localStorage.getItem("adminEmail") || "";
+    setAdminName(name);
+    setAdminEmail(email);
+  }, []);
 
   const menuItems = [
     {
@@ -146,6 +156,17 @@ export default function AdminSidebar() {
 
         {/* Divider */}
         <div className="border-t border-gray-800 mb-8"></div>
+
+        {/* User Info */}
+        {adminName && (
+          <div className="bg-gray-800/50 rounded-lg p-4 mb-6 border border-gray-700">
+            <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">
+              Logged in as
+            </p>
+            <p className="text-white font-semibold truncate">{adminName}</p>
+            <p className="text-gray-400 text-xs truncate">{adminEmail}</p>
+          </div>
+        )}
 
         {/* Logout Button */}
         <button

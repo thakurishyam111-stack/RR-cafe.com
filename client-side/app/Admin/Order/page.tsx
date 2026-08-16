@@ -165,6 +165,9 @@ export default function OrdersPage() {
                       Table
                     </th>
                     <th className="px-6 py-4 text-center text-sm font-semibold text-gray-300">
+                      Items
+                    </th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-300">
                       Amount
                     </th>
                     <th className="px-6 py-4 text-center text-sm font-semibold text-gray-300">
@@ -209,6 +212,20 @@ export default function OrdersPage() {
                         <div className="flex items-center justify-center gap-2 text-gray-300">
                           <Table size={16} className="text-orange-400" />
                           {order.number}
+                        </div>
+                      </td>
+                   <td className="px-6 py-4">
+                        <div className="text-sm text-gray-300">
+                          {order.items.slice(0, 2).map((item: any, index: number) => (
+                            <div key={index}>
+                              {item.title} (×{item.quantity})
+                            </div>
+                          ))}
+                          {order.items.length > 5 && (
+                            <div className="text-gray-400">
+                              +{order.items.length - 5} more
+                            </div>
+                          )}
                         </div>
                       </td>
 

@@ -4,17 +4,15 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Lock, Mail, ShieldCheck } from "lucide-react";
 import Link from "next/link";
+import { apiFetch } from "@/lib/api";
 
 const Page = () => {
   const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [showPassword, setShowPassword] = useState(false);
-
   const [loading, setLoading] = useState(false);
-
   const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -39,11 +37,9 @@ const Page = () => {
 
       const response = await apiFetch("/api/admin/login", {
         method: "POST",
-
         headers: {
           "Content-Type": "application/json",
         },
-
         body: JSON.stringify({
           email,
           password,
@@ -53,17 +49,18 @@ const Page = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.message);
+        setError(data.message || "Login failed");
         return;
       }
 
       localStorage.setItem("adminToken", data.token);
-
-      localStorage.setItem("adminToken", data.token);
+      localStorage.setItem("adminName", data.admin.name);
+      localStorage.setItem("adminEmail", data.admin.email);
 
       router.push("/Admin/Dashboard");
     } catch (error) {
-      setError("Server Error");
+      setError("Unable to connect to server. Please check your connection.");
+      console.error("Login error:", error);
     } finally {
       setLoading(false);
     }
