@@ -6,6 +6,7 @@ import Recipe from "../models/recipe.js";
 import Stock from "../models/Stock.js";
 import Table from "../models/Table.js";
 import { evaluateRecipeStockAvailability } from "../utils/stockRecipeLogic.js";
+import { getKitchen, handalCancle, updateOrderStatus } from "../controllers/orderControlle.js";
 
 const router = express.Router();
 
@@ -451,8 +452,8 @@ router.put("/payment/:id", async (req, res) => {
 
     if (updatedOrder?.number) {
       await Table.findOneAndUpdate(
-        { tableNo: updatedOrder.number }, 
-        { status: "available"},);
+        { tableNo: updatedOrder.number },
+        { status: "available" },);
     }
 
     res.status(200).json({
@@ -584,7 +585,7 @@ router.get("/billNo/:billNo", async (req, res) => {
         message: "Order is still pending or being processed.",
       });
     }
-    if(order.status ==="approved"|| "preparing"|| "ready_to_serve"|| "served"){
+    if (order.status === "approved" || "preparing" || "ready_to_serve" || "served") {
       return res.status(200).json({
         success: true,
         order,
@@ -604,82 +605,10 @@ router.get("/billNo/:billNo", async (req, res) => {
 
 
 //order for kitchen 
-
-router.get("/kitchen", async (req, res) => {
-  try {
-    const orders = await Order.find({
-      status: { $in: ["pending", "approved", "preparing", "ready_to_serve", "served"] },
-      paymentStatus: "unpaid",
-    }).sort({ createdAt: -1 });
-
-    res.status(200).json({
-      success: true,
-      orders,
-    });
-
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-});
-
+router.get("/kitchen", getKitchen);
 // update status of order from kitchen 
-router.put("/:orderId/items/:itemId", async (req, res) => {
-  try {
-    const { orderId, itemId } = req.params;
-    const { status } = req.body;
-
-    const order = await Order.findById(orderId);
-
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found",
-      });
-    }
-
-    const item = order.items.id(itemId);
-
-    if (!item) {
-      return res.status(404).json({
-        success: false,
-        message: "Item not found",
-      });
-    }
-
-    item.status = normalizeItemStatus(status);
-
-    const normalizedItemStatuses = order.items.map((entry) => normalizeItemStatus(entry.status));
-    const allServed = normalizedItemStatuses.every((entryStatus) => entryStatus === "Served");
-    const allReadyOrServed = normalizedItemStatuses.every((entryStatus) => entryStatus === "Ready" || entryStatus === "Served");
-
-    if (allServed) {
-      order.status = "served";
-    } else if (allReadyOrServed) {
-      order.status = "ready_to_serve";
-    } else if (normalizedItemStatuses.some((entryStatus) => entryStatus === "Preparing" || entryStatus === "Ready" || entryStatus === "Served")) {
-      order.status = "preparing";
-    } else {
-      order.status = normalizeOrderStatus(order.status) || "approved";
-    }
-
-    await order.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Item status updated successfully",
-      order,
-    });
-
-  } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-});
+router.put("/:orderId/items/:itemId", updateOrderStatus);
+// cancle route 
+router.put("/:id/cancel", handalCancle)
 
 export default router;

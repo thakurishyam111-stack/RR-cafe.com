@@ -58,6 +58,7 @@ const orderSchema = new mongoose.Schema(
         "ready_to_serve",
         "Served",
         "served",
+        "cancelled",
       ],
       default: "pending",
     },
