@@ -15,7 +15,7 @@ export default function Footer() {
         <div className="flex flex-col justify-between space-y-6 sm:col-span-2 lg:col-span-1">
           <div>
             <h2 className="font-serif text-2xl font-black tracking-wide text-white italic">
-              The Deurali Cafe
+              Mero Deurali Cafe
             </h2>
             <p className="mt-3 max-w-xs text-sm text-slate-400 leading-relaxed">
               Crafting premium specialty coffee and seasonal brunch memories for
@@ -142,7 +142,7 @@ export default function Footer() {
                 Social
               </span>
               <span className="font-medium text-slate-200">
-                @TheDeuraliCafe
+                @MeroDeuraliCafe
               </span>
             </div>
           </div>
@@ -151,7 +151,7 @@ export default function Footer() {
 
       {/* Subfooter Copyright Strip */}
       <div className="border-t border-slate-800 bg-slate-400 px-6 py-6 text-center text-xs text-slate-950">
-        <p>© {currentYear} The Deurali Cafe. All rights reserved.</p>
+        <p>© {currentYear} Mero Deurali Cafe. All rights reserved.</p>
       </div>
     </footer>
   );
