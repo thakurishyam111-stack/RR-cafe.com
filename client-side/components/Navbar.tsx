@@ -45,6 +45,8 @@ export default function Navbar() {
     }, 300);
   };
 
+  //search 
+  
   return (
     <>
       {/* 1. Header Wrapper */}
@@ -81,6 +83,8 @@ export default function Navbar() {
             </nav>
 
             {/* Search Input Box */}
+
+
             <form
               onSubmit={(e) => e.preventDefault()}
               className="hidden md:flex max-w-md flex-1 items-center gap-2 rounded-full border border-slate-200 bg-slate-50/50 px-3.5 h-11 focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-500/20 transition-all"

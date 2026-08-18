@@ -187,13 +187,13 @@ const Page = () => {
 
           {/* Footer */}
 
-          <div className="flex items-center my-6">
+          {/* <div className="flex items-center my-6">
             <div className="flex-1 border-t-2 border-gray-300"></div>
             <span className="px-4 text-white text-lg">or</span>
             <div className="flex-1 border-t-2 border-gray-300"></div>
-          </div>
+          </div> */}
 
-          <p className="text-center text-white">
+          {/* <p className="text-center text-white">
             Don't have an account?{" "}
             <Link
               href="/Admin/Register"
@@ -201,7 +201,7 @@ const Page = () => {
             >
               Sign Up
             </Link>
-          </p>
+          </p> */}
         </div>
       </div>
     </div>

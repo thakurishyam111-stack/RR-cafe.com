@@ -160,7 +160,7 @@ export default function AdminSidebar() {
         {/* User Info */}
         {adminName && (
           <div className="bg-gray-800/50 rounded-lg p-4 mb-6 border border-gray-700">
-            <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">
+            <p className="text-gray-400 text-center text-xs uppercase tracking-wider mb-1">
               Logged in as
             </p>
             <p className="text-white font-semibold truncate">{adminName}</p>
